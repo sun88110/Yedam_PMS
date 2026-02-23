@@ -21,9 +21,9 @@ public class ProjectAuthorizationManager implements AuthorizationManager<Request
 	@Override
 	public AuthorizationDecision check(Supplier<Authentication> authentication, RequestAuthorizationContext context) {
 		Authentication auth = authentication.get();
-		if (auth == null || !auth.isAuthenticated()) {
-			return new AuthorizationDecision(false);
-		}
+		if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() instanceof String) {
+	        return new AuthorizationDecision(false);
+	    }
 		
 		// 관리자 확인
 		CustomUserDetails customUser = (CustomUserDetails) auth.getPrincipal();
