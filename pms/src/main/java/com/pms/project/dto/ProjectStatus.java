@@ -1,5 +1,6 @@
 package com.pms.project.dto;
 
+// 새프로젝트 등록시 사용할 상태값 이넘
 public enum ProjectStatus {
 	ACTIVE   (330, "진행중"),
 	PAUSED   (340, "중단"),

@@ -57,7 +57,9 @@
             <div class="row mb-3 align-items-top">
                 <label class="col-sm-2 col-form-label text-end pe-0">식별자 <i class="cil-asterisk text-danger"></i></label>
                 <div class="col-sm-9">
-                    <input type="text" class="form-control" th:field="*{projectCode}"/>
+                    <input type="text" class="form-control" 
+                    pattern="[a-z0-9_-]{1,100}"  th:attr="maxlength=100"
+                    th:field="*{projectCode}"/>
                     <small class="form-text text-muted">
                         1 에서 100, 글자 소문자(a-z), 숫자, 대시(-)와 밑줄(_)만 가능합니다.<br/>
                         식별자는 저장후에는 수정할 수 없습니다.
@@ -80,7 +82,7 @@
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="publicCheck" th:field="*{publicYn}" value="1"/>
                         <label class="form-check-label" for="publicCheck">
-                            Public projects and their contents are openly available on the network.
+                            공개 프로젝트는 프로젝트에 소속되지 않은 인원들도 조회할 수 있습니다.
                         </label>
                     </div>
                 </div>
@@ -91,7 +93,7 @@
                 <label class="col-sm-2 col-form-label text-end pe-0">상위 프로젝트</label>
                 <div class="col-sm-9">
                     <select class="form-select" th:field="*{parentProjectNo}">
-                    	<option value="" disabled selected hidden></option>
+                    	<option value="0" selected></option>
 						<option th:each="project : ${parentProjects}" 
 						            th:value="${project.projectNo}" 
 						            th:text="${project.projectName}">
@@ -150,6 +152,7 @@
 	</div>
 </div>
 
+<!--/* Toast Tag */-->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
     <div th:if="${successMessage != null or errorMessage != null}" 
          id="liveToast" 
@@ -166,6 +169,7 @@
             </div>
     </div>
 </div>
+<!--/* Toast Script */-->
 <script th:if="${successMessage != null or errorMessage != null}">
     document.addEventListener('DOMContentLoaded', function () {
         const toastElement = document.getElementById('liveToast');
@@ -176,6 +180,45 @@
     });
 </script>
 <script>
+// 식별자 입력기능에 정규표현식 적용
+const projectCodeInput = document.getElementById('projectCode');
+
+if (projectCodeInput) {
+    projectCodeInput.addEventListener('input', function(e) {
+        let value = e.target.value;
+
+        // 1. 영어 대문자를 소문자로 즉시 변환
+        value = value.toLowerCase();
+
+        // 2. 허용된 문자(소문자, 숫자, _, -)를 제외한 모든 문자를 제거
+        //    [^a-z0-9_-]는 '허용된 문자 이외의 모든 문자'를 의미하는 정규식입니다.
+        value = value.replace(/[^a-z0-9_-]/g, '');
+
+        // 3. 필터링된 값으로 입력 필드의 값을 다시 설정
+        e.target.value = value;
+    });
+}
+
+// 상위 프로젝트 선택에 따른 멤버 상속 체크박스 제어
+const parentProjectSelect = document.getElementById('parentProjectNo'); // 상위 프로젝트 드롭다운
+const inheritMemberCheck = document.getElementById('inheritCheck');   // 멤버 상속 체크박스
+// 체크박스 상태를 토글하는 함수
+function toggleInheritCheckbox() {
+    // 상위 프로젝트 드롭다운의 값이 '0'이면 (상위 프로젝트가 없으면)
+    if (parentProjectSelect.value === '0') {
+       inheritMemberCheck.disabled = true; // 체크박스를 비활성화
+       inheritMemberCheck.checked = false; // 체크박스 선택을 해제
+    } else {
+        inheritMemberCheck.disabled = false; // 그 외의 경우 (상위 프로젝트가 선택된 경우) 체크박스를 활성화
+    }
+}
+
+// 1. 페이지 로드 시 초기 상태 설정
+toggleInheritCheckbox();
+
+// 2. '상위 프로젝트' 드롭다운 값이 변경될 때마다 상태 업데이트
+parentProjectSelect.addEventListener('change', toggleInheritCheckbox);
+
 document.addEventListener('DOMContentLoaded', function() {
     // 오늘 날짜를 yyyy-mm-dd 형식으로 가져오기
     const today = new Date().toISOString().split('T')[0];

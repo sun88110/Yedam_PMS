@@ -1,7 +1,5 @@
 package com.pms.project.controller;
 
-import java.util.List;
-
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,11 +8,11 @@ import org.springframework.web.bind.annotation.ModelAttribute; // 추가
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.pms.config.CustomUserDetails;
 import com.pms.project.common.mapper.ProjectCommonStatusMapper;
-import com.pms.project.dto.GanttDTO;
 import com.pms.project.dto.ProjectInsertDTO;
 import com.pms.project.dto.ProjectSearchDTO; // 추가
 import com.pms.project.service.ProjectService;
@@ -78,32 +76,33 @@ public class ProjectController {
     
     // 프로젝트 입력 처리
     @PostMapping("/new")
-	// TODO: dev 머지 이후 수정 - 매개변수에 추가
     public String addProject(
     		@ModelAttribute ProjectInsertDTO dto
     		, @AuthenticationPrincipal CustomUserDetails customUser 
-    		, RedirectAttributes redirectAttributes ) {
+    		, RedirectAttributes redirectAttributes
+    		, @RequestParam(name = "continue", required = false) String continueParam) {
     	// 로그인 사용자 정보에서 id 추출
-    	dto.setUserId(customUser.getUserEntity().getUserId());
+    	dto.setUserId(customUser.getUserEntity().getUserId()); 
     	
-    	// 중복코드 검사 -> 중복된값이 있다면 true 반환
-    	if (projectService.findByProjectCode(dto.getProjectCode())) {
-    		redirectAttributes.addFlashAttribute("errorMessage", "중복되는 식별자는 등록할 수 없습니다.");
-        } else {
-        	// 부모프로젝트 멤버 상속여부에따라 분기
-        	if (dto.getParentMemberYn() == 1) {
-				// 멤버상속 있으면 ..
-			}else {
-				
-				//projectService.addProject(dto); 부모프로젝트 멤버상속 없으면 단순 생성
-			}
-        	redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 정상적으로 등록 되었습니다.");
-        	
-        	return "redirect:/project/list"; // 성공 시 목록 페이지로 이동
-        }
+    	if(!projectService.findParentProjectDuration(dto)) {
+    		redirectAttributes.addFlashAttribute("errorMessage", "하위프로젝트의 작업기간은 상위프로젝트의 작업기간을 벗어날 수 없습니다.");
+			redirectAttributes.addFlashAttribute("project", dto);
+			return "redirect:/project/new";
+    	}
     	
-    	return "redirect:/project/new";
+    	boolean isSuccess = projectService.addProject(dto);
+    	if (isSuccess) {
+    		// 임시 flash 메모리에 Toast 표시값 저장 
+    		redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 정상적으로 등록 되었습니다.");
+    		// 만들기 : 만들고 계속하기
+    		return continueParam != null ? "redirect:/project/new" : "redirect:/project/";
+		}else {
+			redirectAttributes.addFlashAttribute("errorMessage", "중복되는 식별자는 등록할 수 없습니다.");
+			redirectAttributes.addFlashAttribute("project", dto);
+			return "redirect:/project/new";
+		}
     }
+    
     
     // @PathVariable: 단일값 처리 + 매개변수에 어노테이션선언으로 필수값 선언, 반드시 받을거라 default 사용하지않기로
     @GetMapping("/user/{projectCode}/info")
@@ -111,6 +110,7 @@ public class ProjectController {
     	// 세션을 활용하여 pathVal 사용하지않는 페이지에서 프로젝트 코드값 조회
     	session.setAttribute("projectCode", projectCode);
     	
+    	model.addAttribute("trackerData", projectService.findJobTrackerPivot(projectCode));
     	model.addAttribute("groupMembers", projectService.findGroupMemberByCode(projectCode));
     	model.addAttribute("childProjects", projectService.findFirstChildsByCode(projectCode));
 		model.addAttribute("news", projectService.findNoties());

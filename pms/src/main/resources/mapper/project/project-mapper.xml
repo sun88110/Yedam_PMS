@@ -121,32 +121,28 @@
 		WHERE status != 390
 		ORDER BY project_no
 	</select>
-	<!--/* insert 실행 전 projectCode 중복 체크*/-->
-	<select id="selectByProjectCode" resultType="Integer">
-		SELECT COUNT(*)
-		FROM project
-		WHERE project_code=#{projectCode}
-	</select>
-	
+	<!--/* insert 실행 전 projectCode 중복 체크 코드와 insert 통합 - 더미(Dual)테이블 활용*/-->
 	<!--/* insert update delete: MyBatis가 내부적으로 실행 후 결과(Row 수)를 반환하는 구조 */-->
 	<insert id="insertProject" parameterType="projectInsertDTO">
-		INSERT INTO project (
-		    project_no,         -- 식별자
-		    parent_project_no,  -- 상위프로젝트
-		    project_name,       -- 프로젝트명
-		    user_id,            -- 제작자
-		    project_desc,       -- 설명
-		    project_home,       -- 홈페이지
-		    project_code,       -- URI
-		    create_at,          -- 생성일
-		    update_at,          -- 수정일
-		    start_date,         -- 시작일
-		    end_date,           -- 종료일
-		    parent_member_yn,   -- 멤버상속
-		    public_yn,          -- 공개여부
-		    status              -- 상태
-		) VALUES (
-	        PROJECT_SEQ.NEXTVAL               -- 시퀀스 자동 생성
+    <selectKey keyProperty="projectNo" resultType="Integer" order="BEFORE">
+        SELECT PROJECT_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+	    INSERT INTO project (
+	        project_no,         -- 식별자
+	        parent_project_no,  -- 상위프로젝트
+	        project_name,       -- 프로젝트명
+	        user_id,            -- 제작자
+	        project_desc,       -- 설명
+	        project_home,       -- 홈페이지
+	        project_code,       -- URI
+	        create_at,          -- 생성일
+	        update_at,          -- 수정일
+	        start_date,         -- 시작일
+	        end_date,           -- 종료일
+	        public_yn,          -- 공개여부
+	        status              -- 상태
+	    ) SELECT 
+	        #{projectNo}                      -- selectKey에서 세팅된 시퀀스 값 사용
 	        , NVL(#{parentProjectNo}, 0)      -- null able, default: 0
 	        , #{projectName}                  -- 필수값: 중복 가능
 	        , #{userId}                       -- 필수값: Service 에서 세팅
@@ -157,13 +153,52 @@
 	        , NULL                            -- 수정일은 생성 시 null
 	        , #{startDate}                    -- 필수값(오늘 이전 날짜 불가)
 	        , #{endDate}                      -- 필수값(오늘 이전 날짜 불가)
-	        , NVL(#{parentMemberYn}, 0)       -- null able, default: 0
 	        , NVL(#{publicYn}, 0)             -- null able, default: 0
 	        , #{status}                       -- 필수값: Service 에서 세팅
-    )
+	    FROM DUAL
+	    WHERE NOT EXISTS (
+	        SELECT 1
+	        FROM project
+	        WHERE project_code = #{projectCode}
+	    ) 
 	</insert>
+	<!--/* 상위프로젝트 멤버 상속 */-->
+	<insert id="insertInheritedGroups">
+	    INSERT INTO g_project (project_no, group_no, pm)
+	    SELECT 
+	        #{newProjectNo},  group_no, 
+	        pm                FROM g_project
+	    WHERE project_no = #{parentProjectNo}
+	</insert>
+	<!--/* 상위프로젝트 기간 조회 */-->
+	<select id="selectParentProjectDuration">
+		SELECT
+		  start_date
+		  , end_date
+		FROM project
+		WHERE project_no = #{parentProjectNo}
+	</select>
 	
 	<!--/* 개요페이지 */-->
+	<select id="selectJobStatusNames" resultType="string">
+		SELECT job_status
+		FROM   job_status
+		ORDER BY job_status_no
+	</select>
+	<select id="selectJobTrackerPivot" resultType="map">
+		select * from (
+		    SELECT job_type , js.job_status
+		    FROM job j
+		    JOIN job_status js ON js.job_status_no = j.job_status_no
+		    RIGHT OUTER JOIN job_type jt ON j.job_type_no = jt.job_type_no
+		                                AND j.project_no in (SELECT project_no
+		                              FROM project
+		                              START WITH project_code = #{projectCode}
+		                              CONNECT BY NOCYCLE parent_project_no = PRIOR project_no)
+		    )
+		    PIVOT ( count(job_status) FOR job_status IN(${pivotInSQL}) )
+		ORDER BY job_type
+	</select>
 	<!--/* 프로젝트의 모든 그룹의 모든 멤버 조회 */-->
 	<select id="selectGroupMemberByCode" resultType="ProjectGMemberDTO">
 		SELECT 

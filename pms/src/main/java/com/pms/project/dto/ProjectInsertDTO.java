@@ -33,7 +33,7 @@ public class ProjectInsertDTO {
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date endDate;   
 	
-	private Integer parentMemberYn; // 부모프로젝트맴버상속여부(0: False, 1: True): 부모프로젝트의 멤버를 상속할때 사용, 만들때만 체
+	private Integer parentMemberYn = 0; // 부모프로젝트맴버상속여부(0: False, 1: True): 부모프로젝트의 멤버를 상속할때 사용, 만들때만 사용
 	private Integer publicYn; // 공개여부(0: False, 1: True): 1이면 프로젝트에 소속되어있지 않아도 조회 가능 
 	private Integer status;   // 프로젝트 상태 코드 (330: 진행, 360: 종료, 390: 삭제)
 }

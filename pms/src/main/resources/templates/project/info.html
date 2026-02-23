@@ -34,37 +34,35 @@
     <div class="card bg-light border mb-0">
       <div class="card-body p-0">
         <div class="table-responsive">
-          <table class="table table-hover table-bordered mb-0">
-            <thead class="table-light">
-              <tr>
-                <th></th>
-                <th class="text-center">진행중</th>
-                <th class="text-center">완료됨</th>
-                <th class="text-center">합계</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="text-left col-2 col-md-1"><a class="text-decoration-none">결함</a></td>
-                <td class="text-center text-primary fw-bold">4</td>
-                <td class="text-center text-success fw-bold">1</td>
-                <td class="text-center text-indigo fw-bold">5</td>
-              </tr>
-              <tr>
-                <td class="text-left col-2 col-md-1"><a class="text-decoration-none">새기능</a></td>
-                <td class="text-center text-primary fw-bold">5</td>
-                <td class="text-center text-success fw-bold">0</td>
-                <td class="text-center text-indigo fw-bold">5</td>
-              </tr>
-              <tr>
-                <td class="text-left col-2 col-md-1"><a class="text-decoration-none">지원</a></td>
-                <td class="text-center text-primary fw-bold">2</td>
-                <td class="text-center text-success fw-bold">1</td>
-                <td class="text-center text-indigo fw-bold">3</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <table class="table table-hover table-bordered mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>유형</th>
+        <th class="text-center" 
+            th:each="statusName : ${trackerData.headers}" 
+            th:text="${statusName}">상태명</th>
+        <th class="text-center">합계</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr th:each="row : ${trackerData.rows}">
+        
+        <td class="text-left col-2 col-md-1">
+          <a class="text-decoration-none" th:text="${row['JOB_TYPE']}">유형</a>
+        </td>
+        
+        <td class="text-center fw-bold"
+            th:each="statusName : ${trackerData.headers}"
+            th:text="${row.get(statusName) ?: 0}"
+            th:classappend="${statusName == '완료' ? 'text-success' : 'text-primary'}">
+          0
+        </td>
+        
+        <td class="text-center text-indigo fw-bold"  th:text="${row['합계'] ?: 0}">          0 </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
       </div>
     </div>
   </div>
@@ -78,7 +76,8 @@
   </div>
 </div>
 
-<!--/* ━━━━━━━━━━━━━━━━━━━━ 카드 2: 최근 뉴스 ━━━━━━━━━━━━━━━━━━━━ */-->
+<!--/* ━━━━━━━━━━━━━━━━━━━━ 카드 2: 최근 뉴스 - 사용안하는건데 잘못알고 넣어뒀던거라 제거함 ━━━━━━━━━━━━━━━━━━━━ */-->
+<!--/* 
 <div class="card">
   <div class="card-header d-flex align-items-center gap-2 fs-4">
     <i class="cil-newspaper"></i>
@@ -86,7 +85,7 @@
   </div>
 
   <div class="card-body d-flex flex-column gap-2">
-  	<!--/* 개별 뉴스 항목 */-->
+  	/* 개별 뉴스 항목 */
   	<div th:each="notice : ${news}" class="card border mb-0">
 	<div class="card-body py-2 px-3">
 	    <div class="d-flex align-items-center gap-2 mb-1">
@@ -103,7 +102,8 @@
   <div class="card-footer d-flex gap-2">
     <a class="text-decoration-none">모든 뉴스</a>
   </div>
-</div>
+</div> 
+*/-->
 
 <!--/* ━━━━━━━━━━━━━━━━━━━━ 카드 3: 구성 인원 ━━━━━━━━━━━━━━━━━━━━ */-->
 <div class="card">

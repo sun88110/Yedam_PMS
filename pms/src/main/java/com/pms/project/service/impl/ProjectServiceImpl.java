@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.pms.project.dto.GanttDTO;
+import com.pms.project.dto.IssueTrackerDTO;
 import com.pms.project.dto.JobDTO;
 import com.pms.project.dto.MemberDTO;
 import com.pms.project.dto.NoticeDTO;
@@ -169,24 +170,65 @@ public class ProjectServiceImpl implements ProjectService {
 		return projectMapper.selectParentProjects();
 	}
 
-	
+	// 새 프로젝트 페이지
 	@Override
-	public boolean findByProjectCode(String projectCode) {
-		return projectMapper.selectByProjectCode(projectCode) > 0;
+	public boolean findParentProjectDuration(ProjectInsertDTO projectInsertDTO) {
+		// 1. 부모 프로젝트가 지정되지 않은 경우 (최상위 프로젝트 생성) 바로 통과
+	    if (projectInsertDTO.getParentProjectNo() == null || projectInsertDTO.getParentProjectNo() == 0) {
+	        return true; 
+	    }
+		ProjectInsertDTO parent = projectMapper.selectParentProjectDuration(projectInsertDTO);
+		
+		// 2. 조회결과에 오류있을 시
+		if (parent == null || parent.getStartDate() == null || parent.getEndDate() == null) {
+	        return false;
+	    }
+		
+		// 3. 기간설정 잘못된 경우 (자식 시작일 < 부모시작일 || 자식종료일 > 부모 종료일) 에러반환 
+		if ( convertToLocalDate(projectInsertDTO.getStartDate()).isBefore(convertToLocalDate(parent.getStartDate()))
+				|| 
+			convertToLocalDate(projectInsertDTO.getEndDate()).isAfter( convertToLocalDate(parent.getEndDate())) ) {
+			return false;
+		}
+		return true;
 	}
+	// INSERT 결과로 생성된 row count 확인하여 성공 여부 판단, 복수테이블에 복수컬럼에 작업이 들어가야해서 트랜잭션
 	@Override
+	@Transactional
 	public boolean addProject(ProjectInsertDTO projectInsertDTO) {
-		// INSERT 결과로 생성된 row count 확인하여 성공 여부 판단
+		// 프로젝트 생성일이 오늘이면 활성프로젝트 아니면 보관 프로젝트로 생성
 		LocalDate startDate = convertToLocalDate(projectInsertDTO.getStartDate());
 	    LocalDate today = LocalDate.now();
-	    
 		if (startDate.equals(today)) {
-			projectInsertDTO.setStatus( ProjectStatus.ACTIVE.getCode());
+			projectInsertDTO.setStatus(ProjectStatus.ACTIVE.getCode());
 		} else {
-			projectInsertDTO.setStatus( ProjectStatus.PAUSED.getCode());
+			projectInsertDTO.setStatus(ProjectStatus.PAUSED.getCode());
 		}
 		
-		return projectMapper.insertProject(projectInsertDTO) > 0;
+		// 2. 프로젝트 단일 INSERT 실행
+	    // 결과가 0이면 WHERE NOT EXISTS에 걸려 중복 처리된 것임
+	    int insertCount = projectMapper.insertProject(projectInsertDTO);
+	    if (insertCount == 0) {
+	        return false; // 중복 식별자 발생으로 생성 실패
+	    }
+		
+		
+	    // 이 시점에서 insertProject 매퍼의 <selectKey> 덕분에 
+	    // projectInsertDTO.getProjectNo()에는 방금 생성된 PK 값이 들어있습니다.
+
+	    // 3. 부모 프로젝트 멤버 상속 여부에 따라 분기 (Null 방어를 위해 Integer.valueOf 활용)
+	    if (Integer.valueOf(1).equals(projectInsertDTO.getParentMemberYn()) 
+	        && projectInsertDTO.getParentProjectNo() != null 
+	        && projectInsertDTO.getParentProjectNo() > 0) {
+	        
+	        // 부모의 그룹-프로젝트 매핑 정보를 내 프로젝트로 복사
+	        projectMapper.insertInheritedGroups(
+	            projectInsertDTO.getProjectNo(),     // 내 프로젝트 번호 (새로 생성됨)
+	            projectInsertDTO.getParentProjectNo() // 부모 프로젝트 번호
+	        );
+	    }
+	    
+	    return true;
 	}
 	
 	// Date → LocalDate 변환 헬퍼 메서드
@@ -198,6 +240,50 @@ public class ProjectServiceImpl implements ProjectService {
 
 
 	// 개요페이지
+	@Override
+	@Transactional(readOnly = true)
+	public IssueTrackerDTO findJobTrackerPivot(String projectCode) {
+		
+		IssueTrackerDTO trackerDTO = new IssueTrackerDTO();
+		
+		// 피벗 In 절 쿼리를 만들기 위한 상태목록조회 쿼리 - oracle g11 에는 피벗 in 절 동적쿼리 지원안한다고함
+		List<String> headers = projectMapper.selectJobStatusNames();
+		trackerDTO.setHeaders(headers);
+
+		if (headers != null && !headers.isEmpty()) {
+	        // 3. 가져온 리스트로 반복문을 돌려 오라클 PIVOT IN 절 문자열 조립
+	        StringBuilder pivotBuilder = new StringBuilder();
+	        for (int i = 0; i < headers.size(); i++) {
+	            String status = headers.get(i);
+	            pivotBuilder.append("'").append(status).append("' AS \"").append(status).append("\"");
+	            
+	            // 마지막 요소가 아니면 쉼표 추가
+	            if (i < headers.size() - 1) {
+	                pivotBuilder.append(", ");
+	            }
+	        }
+	        
+	        String pivotInSQL = pivotBuilder.toString(); 
+	        
+	        // 조립된 문자열을 매퍼로 넘겨 피벗 데이터(Map 리스트) 조회
+	        List<Map<String, Object>> rows = projectMapper.selectJobTrackerPivot(projectCode, pivotInSQL);
+	        
+	        // 5. 가로행 합계(Total) 계산 로직
+	        for (Map<String, Object> row : rows) {
+	            long total = 0;
+	            for (String header : headers) {
+	                Object val = row.get(header); // AS "상태명" 덕분에 키값은 상태명과 동일
+	                if (val instanceof Number) {
+	                    total += ((Number) val).longValue();
+	                }
+	            }
+	            row.put("합계", total); // 계산된 합계를 Map에 추가
+	        }
+	        trackerDTO.setRows(rows);
+	    }
+		
+		return trackerDTO;
+	}
 	
 	@Override
 	public Map<String, List<String>> findGroupMemberByCode(String projectCode) {
@@ -236,5 +322,5 @@ public class ProjectServiceImpl implements ProjectService {
 	    result.put("links", List.of());
 	    return result;
 	}
-	
+
 }

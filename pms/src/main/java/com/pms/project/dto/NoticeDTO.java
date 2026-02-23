@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+// News 제거해서 이제 필요없음
 @Getter
 @Setter
 @ToString
