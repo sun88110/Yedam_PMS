@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="https://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{common/layouts/default-layout}">
+
+<style>
+/* 모달 및 카드 디자인 */
+.modal-content { border-radius: 15px !important; border: none !important; }
+.group-item-card { transition: all 0.2s ease; border: 1px solid #ebedf0 !important; cursor: pointer; border-radius: 12px !important; }
+.group-item-card:hover { border-color: #4361ee !important; background-color: #f8faff !important; }
+
+/* 📍 역할 배지 색상 정의 (추가됨) */
+.bg-info-light { background-color: #eef2ff !important; color: #4361ee !important; }
+.border-info-subtle { border-color: #dbeafe !important; }
+.count-badge { background: #e8f0fe; color: #1967d2; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+
+/* 페이지네이션 스타일 */
+.pagination-sm .page-link { border: none; color: #666; font-size: 0.75rem; border-radius: 5px; margin: 0 2px; }
+.pagination-sm .page-item.active .page-link { background-color: #4361ee; color: white; }
+#joinedGroupList { min-height: 350px; }
+</style>
+
+<div layout:fragment="Content">
+	<div class="container-lg px-4">
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h2 class="h4 fw-bold mb-0 text-dark">프로젝트 관리 설정</h2>
+			<button type="button" class="btn btn-sm btn-outline-secondary px-3" onclick="history.back();">이전으로</button>
+		</div>
+
+		<div class="row g-4">
+			<div class="col-lg-8">
+				<div class="card border-0 shadow-sm overflow-hidden">
+					<div class="card-header bg-white py-3 border-0">
+						<h5 class="mb-0 fw-bold fs-6">프로젝트 상세 정보</h5>
+					</div>
+					<div class="card-body p-4 pt-0">
+						<form id="projectUpdateForm">
+							<input type="hidden" id="projectNo" th:value="${project.projectNo}">
+							<div class="row g-3">
+								<div class="col-12">
+									<label class="form-label small fw-bold">프로젝트명</label> 
+                                    <input type="text" id="projectName" class="form-control shadow-none" th:value="${project.projectName}">
+								</div>
+								<div class="col-md-4">
+									<label class="form-label small fw-bold">상태</label> 
+                                    <select id="projectStatus" class="form-select shadow-none">
+										<option value="330" th:selected="${project.status == 330}">🚀 진행 중</option>
+										<option value="340" th:selected="${project.status == 340}">⏸️ 중단</option>
+										<option value="350" th:selected="${project.status == 350}">🔒 잠금</option>
+									</select>
+								</div>
+								<div class="col-md-4">
+									<label class="form-label small fw-bold">시작일</label> 
+                                    <input type="date" id="startDate" class="form-control shadow-none" th:value="${#temporals.format(project.startDate, 'yyyy-MM-dd')}">
+								</div>
+								<div class="col-md-4">
+									<label class="form-label small fw-bold">종료일</label> 
+                                    <input type="date" id="endDate" class="form-control shadow-none" th:value="${#temporals.format(project.endDate, 'yyyy-MM-dd')}">
+								</div>
+								<div class="col-md-12">
+									<label class="form-label small fw-bold">공개 여부 설정</label> 
+                                    <select id="publicYn" class="form-select shadow-none">
+										<option value="1" th:selected="${(project.publicYn ?: 0) == 1}">공개 (모든 임직원 조회)</option>
+										<option value="0" th:selected="${(project.publicYn ?: 0) == 0}">비공개 (참여자 전용)</option>
+									</select>
+								</div>
+								<div class="col-12">
+									<label class="form-label small fw-bold">상세 설명</label>
+									<textarea id="projectDesc" class="form-control shadow-none" rows="5" th:text="${project.projectDesc}" style="resize: none;"></textarea>
+								</div>
+								<div class="col-12 text-end mt-4">
+									<button type="button" id="btnUpdateBasic" class="btn btn-primary px-4 fw-bold shadow-sm">변경사항 저장</button>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-lg-4">
+				<div class="card border-0 shadow-sm h-100">
+					<div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+						<div>
+							<h5 class="mb-0 fw-bold fs-6">참여 그룹</h5>
+							<small class="text-muted" id="joinedCountText">총 0개</small>
+						</div>
+						<button class="btn btn-sm btn-success text-white rounded-pill px-3 shadow-sm" data-coreui-toggle="modal" data-coreui-target="#groupAddModal">추가</button>
+					</div>
+					<div class="card-body p-0">
+						<div id="joinedGroupList" class="list-group list-group-flush border-top"></div>
+						<nav class="py-3 bg-light-subtle border-top">
+							<ul class="pagination pagination-sm justify-content-center mb-0" id="joinedPagination"></ul>
+						</nav>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="groupAddModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content shadow-lg">
+				<div class="modal-header border-0 px-4 pt-4 pb-0">
+					<h5 class="fw-bold mb-0">그룹 추가 <small class="text-muted ms-2 fs-6" id="totalGroupsText">전체 0개</small></h5>
+					<button type="button" class="btn-close shadow-none" data-coreui-dismiss="modal"></button>
+				</div>
+				<div class="modal-body px-4">
+					<div class="input-group mb-3 mt-3 border rounded-3 p-1">
+						<span class="input-group-text bg-transparent border-0"><i class="cil-search"></i></span> 
+                        <input type="text" id="groupSearchInput" class="form-control bg-transparent border-0 shadow-none ps-0" placeholder="그룹명 검색...">
+					</div>
+					<div id="groupCheckboxList" class="overflow-auto pe-1" style="max-height: 350px;"></div>
+					<div class="text-end mt-2">
+						<small id="modalSelectedCount" class="text-primary fw-bold">0개 선택됨</small>
+					</div>
+				</div>
+				<div class="modal-footer border-0 px-4 pb-4 pt-3 d-flex flex-column">
+					<div class="w-100 d-flex align-items-center mb-3">
+						<div class="form-check form-switch me-2">
+							<input class="form-check-input shadow-none" type="checkbox" id="modalIsPmAll">
+						</div>
+						<label class="small fw-bold text-danger mb-0" for="modalIsPmAll">선택 그룹에 PM 권한 부여</label>
+					</div>
+					<button type="button" id="btnAddGroupConfirm" class="btn btn-primary w-100 fw-bold py-2 shadow-sm">프로젝트에 추가</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script th:inline="javascript">
+        $(document).ready(function() {
+            const projectNo = $('#projectNo').val();
+            let joinedGroups = /*[[${project.groups}]]*/ []; 
+            let allAvailableGroups = []; 
+            
+            const joinedPageSize = 5;
+            let joinedCurrentPage = 1;
+
+            // 1. 메인 리스트 렌더링
+            function renderJoinedList() {
+                const total = joinedGroups.length;
+                $('#joinedCountText').text(`총 ${total}개`);
+                const totalPages = Math.ceil(total / joinedPageSize);
+                const start = (joinedCurrentPage - 1) * joinedPageSize;
+                const pagedData = joinedGroups.slice(start, start + joinedPageSize);
+
+                const $list = $('#joinedGroupList').empty();
+                if(total === 0) {
+                    $list.append('<div class="text-center py-5 text-muted small">참여 중인 그룹이 없습니다.</div>');
+                    return;
+                }
+
+                pagedData.forEach(g => {
+                    $list.append(`
+                        <div class="list-group-item px-4 py-3 d-flex justify-content-between align-items-center border-light">
+                            <div>
+                                <div class="fw-bold text-dark mb-1">${g.groupName}</div>
+                                <div class="d-flex gap-2">
+                                    ${g.isPm == 1 ? '<span class="badge bg-danger-light text-danger fw-normal border border-danger-subtle">PM (책임)</span>' 
+                                                 : '<span class="badge bg-light text-muted fw-normal border">참여원</span>'}
+                                </div>
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm border-0 btn-remove-group shadow-none" data-group-no="${g.groupNo}">제외</button>
+                        </div>
+                    `);
+                });
+                renderJoinedPagination(totalPages);
+            }
+
+            function renderJoinedPagination(totalPages) {
+                const $pager = $('#joinedPagination').empty();
+                if(totalPages <= 1) return;
+                for(let i=1; i<=totalPages; i++) {
+                    $pager.append(`
+                        <li class="page-item ${i === joinedCurrentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changeJoinedPage(${i}); return false;">${i}</a>
+                        </li>
+                    `);
+                }
+            }
+
+            window.changeJoinedPage = function(page) {
+                joinedCurrentPage = page;
+                renderJoinedList();
+            };
+
+            // 📍 2. 모달 리스트 렌더링 (역할 배지 포함)
+            function renderModalGroupList(groups) {
+                const $list = $('#groupCheckboxList').empty();
+                $('#totalGroupsText').text(`전체 ${groups.length}개`);
+
+                if(groups.length === 0) {
+                    $list.append('<div class="text-center py-5 text-muted small">추가 가능한 그룹이 없습니다.</div>');
+                    return;
+                }
+
+                groups.forEach(g => {
+                    const roleLabel = g.roleName ? g.roleName : '일반';
+                    const roleBadgeClass = g.roleName ? 'bg-info-light text-info border-info-subtle' : 'bg-light text-muted';
+
+                    $list.append(`
+                        <div class="group-item-card p-3 mb-2 d-flex align-items-center bg-white shadow-sm">
+                            <input class="form-check-input group-checkbox me-3 shadow-none" type="checkbox" value="${g.groupNo}" id="chk_${g.groupNo}">
+                            <label class="form-check-label flex-grow-1 mb-0 cursor-pointer d-flex justify-content-between align-items-center" for="chk_${g.groupNo}">
+                                <div>
+                                    <div class="fw-bold text-dark">${g.groupName}</div>
+                                    <div class="mt-1">
+                                        <span class="badge ${roleBadgeClass} border fw-normal" style="font-size: 0.72rem; padding: 3px 8px;">
+                                            <i class="cil-shield-alt me-1" style="font-size: 0.65rem;"></i>${roleLabel}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="count-badge">${g.memberCount || 0}명</span>
+                                </div>
+                            </label>
+                        </div>
+                    `);
+                });
+            }
+
+            // 모달 이벤트
+            $(document).on('change', '.group-checkbox', function() {
+                const count = $('.group-checkbox:checked').length;
+                $('#modalSelectedCount').text(`${count}개 선택됨`);
+            });
+
+            $('#groupAddModal').on('show.coreui.modal', function () {
+                const joinedIds = joinedGroups.map(g => String(g.groupNo));
+                $.get('/settings/api/groups', function(groups) {
+                    allAvailableGroups = groups.filter(g => !joinedIds.includes(String(g.groupNo)));
+                    renderModalGroupList(allAvailableGroups); // 📍 함수명 일치시킴
+                    $('#modalSelectedCount').text('0개 선택됨');
+                });
+            });
+
+         // 그룹 추가 실행
+            $('#btnAddGroupConfirm').on('click', function() {
+                const $checked = $('.group-checkbox:checked');
+                const checkedCount = $checked.length;
+
+                if (checkedCount === 0) {
+                    return alert('그룹을 선택해주세요.');
+                }
+
+                // 📍 요청하신 확인 알럿 추가
+                if (!confirm(`${checkedCount}개의 그룹을 프로젝트에 추가하시겠습니까?`)) {
+                    return; // 사용자가 '취소'를 누르면 중단
+                }
+
+                const isPm = $('#modalIsPmAll').is(':checked') ? 1 : 0;
+                const reqs = $checked.map(function() {
+                    return $.ajax({
+                        url: `/settings/api/projects/${projectNo}/groups`,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ groupNo: parseInt($(this).val()), isPm: isPm })
+                    });
+                }).get();
+
+                Promise.all(reqs).then(() => {
+                    alert('성공적으로 추가되었습니다.'); // 완료 알럿
+                    location.reload(); 
+                }).catch(() => {
+                    alert('추가 중 오류가 발생했습니다.');
+                });
+            });
+
+            // 기본 정보 수정
+            $('#btnUpdateBasic').on('click', function() {
+                const data = {
+                    projectName: $('#projectName').val(),
+                    status: parseInt($('#projectStatus').val()),
+                    projectDesc: $('#projectDesc').val(),
+                    publicYn: parseInt($('#publicYn').val()),
+                    startDate: $('#startDate').val() ? $('#startDate').val() + "T00:00:00" : null,
+                    endDate: $('#endDate').val() ? $('#endDate').val() + "T23:59:59" : null
+                };
+                $.ajax({
+                    url: `/settings/api/projects/${projectNo}`,
+                    type: 'PATCH',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: () => { alert('저장되었습니다.'); location.reload(); }
+                });
+            });
+
+            // 제외 기능
+            $(document).on('click', '.btn-remove-group', function() {
+                const groupNo = $(this).data('group-no');
+                if(confirm('이 그룹을 제외하시겠습니까?')) {
+                    $.ajax({
+                        url: `/settings/api/projects/${projectNo}/groups/${groupNo}`,
+                        type: 'DELETE',
+                        success: () => location.reload()
+                    });
+                }
+            });
+
+            // 검색 기능
+            $('#groupSearchInput').on('input', function() {
+                const val = $(this).val().toLowerCase();
+                renderModalGroupList(allAvailableGroups.filter(g => g.groupName.toLowerCase().includes(val)));
+            });
+
+            renderJoinedList(); // 초기 실행
+        });
+    </script>
+</div>
+</html>

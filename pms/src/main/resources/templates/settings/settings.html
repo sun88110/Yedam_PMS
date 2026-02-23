@@ -454,28 +454,33 @@ $(document).ready(function () {
 
         projects.forEach(p => {
             const isLocked = (p.statusValue == 350);
+            // 날짜 포맷 (yyyy/MM/dd)
             const date = p.createAt ? new Date(p.createAt).toLocaleDateString('ko-KR').replace(/\. /g, '/').replace('.', '') : "-";
             
-            // 📍 2. 핵심 수정 로직
-            // 현재 잠금 상태가 아니라면(진행/중단 등), 그 값을 Map에 '진짜 원래 상태'로 저장합니다.
             if (!isLocked) {
                 projectOriginMap[p.projectNo] = p.statusValue;
             }
-
-            // 만약 현재 잠금 상태라면, Map에서 예전 상태를 꺼내옵니다. (없으면 기본값 330)
             const originStatus = isLocked ? (projectOriginMap[p.projectNo] || 330) : p.statusValue;
 
+            // 📍 <td> 개수를 HTML 헤더(6개)와 정확히 일치시켰습니다.
             $tbody.append(`
                 <tr>
                     <td><span class="badge ${p.statusValue == 330 ? 'bg-success' : isLocked ? 'bg-warning' : 'bg-info'}">${p.statusLabel}</span></td>
-                    <td class="text-start">${p.projectName}</td>
+                    
+                    <td class="text-start project-name-cell" data-id="${p.projectNo}" style="cursor:pointer">
+                        <span class="name-text text-primary fw-bold">${p.projectName}</span>
+                    </td>
+                    
                     <td><span class="badge rounded-pill ${p.publicYn === 1 ? 'text-bg-light border' : 'text-bg-dark'}">${p.publicYnLabel}</span></td>
+                    
                     <td>${date}</td>
+                    
                     <td>
                         <button class="btn btn-sm btn-lock ${isLocked ? 'btn-outline-success' : 'btn-outline-warning'}" 
                                 data-id="${p.projectNo}" 
                                 data-status="${p.statusValue}"
-                                data-origin="${originStatus}"> <i class="${isLocked ? 'cil-lock-locked' : 'cil-lock-unlocked'}"></i> 
+                                data-origin="${originStatus}"> 
+                            <i class="${isLocked ? 'cil-lock-locked' : 'cil-lock-unlocked'}"></i> 
                             ${isLocked ? '잠금해제' : '잠금'}
                         </button> 
                         <button class="btn btn-sm btn-outline-danger btn-delete" data-id="${p.projectNo}">삭제</button>
@@ -799,6 +804,12 @@ $(document).ready(function () {
  	
     $('#btnProjectAdd').on('click', function() {
         location.href = '/project/new';
+    });
+    $(document).on('click', '.project-name-cell', function () {
+        const projectNo = $(this).data('id');
+        if (projectNo) {
+            location.href = `/settings/projects-info?projectNo=${projectNo}`;
+        }
     });
     init();
 });

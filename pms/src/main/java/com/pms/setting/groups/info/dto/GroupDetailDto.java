@@ -9,6 +9,7 @@ import lombok.Data;
 public class GroupDetailDto {
     private Long groupNo;
     private String groupName;
+    private String roleName;
     private Integer status;
 
     // 멤버 전용 VO 리스트로 변경
