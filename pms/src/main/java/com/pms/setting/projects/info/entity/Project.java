@@ -49,9 +49,6 @@ public class Project {
 	@Column(name = "UPDATE_AT")
 	private LocalDateTime updateAt;
 
-	@Column(name = "PARENT_MEMBER_YN")
-	private Integer parentMemberYn;
-
 	@Column(name = "PUBLIC_YN")
 	private Integer publicYn;
 
