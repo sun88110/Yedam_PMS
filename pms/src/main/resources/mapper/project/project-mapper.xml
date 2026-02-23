@@ -20,8 +20,12 @@
 	        FROM (SELECT project_no, title, ROW_NUMBER() OVER (PARTITION BY project_no ORDER BY add_date DESC) as rn FROM job)
 	        WHERE rn = 1
 	    ) j ON j.project_no = p.project_no
-	    WHERE p.status BETWEEN 330 AND 370 
-	      AND (EXISTS (SELECT 1 FROM vw_member WHERE project_no = p.project_no AND user_id = #{userId}) OR p.public_yn = 1)
+	    <where>
+        	<if test="!isAdmin">
+        		AND	p.status BETWEEN 330 AND 370 
+        		AND (EXISTS (SELECT 1 FROM vw_member WHERE project_no = p.project_no AND user_id = #{userId}) OR p.public_yn = 1)
+        	</if>
+        </where>
 	</select>
 
 	<select id="selectJobsByProjectNos" resultType="JobDTO">

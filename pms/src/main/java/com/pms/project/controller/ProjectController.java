@@ -37,12 +37,6 @@ public class ProjectController {
         // 실제 운영 시에는 세션 또는 SecurityContext에서 userId를 가져옴
         String currentUserId = customUser.getUserEntity().getUserId();
         
-        
-		/*
-		 * if(customUser.getUserEntity().isAdmin() || 아니면 내가 pm) { // 내가 관리자 이거나 pm 이면
-		 * 해당프로젝트내부의 모든 정보 열람 가능 };
-		 */
-        
         // 검색 조건이 있는지 확인 (projectName, projectStatus, projectAssignee 중 하나라도 값이 있으면 검색 조건으로 간주)
         boolean hasSearchCriteria = searchDTO.getProjectName() != null && !searchDTO.getProjectName().isEmpty() ||
                                     searchDTO.getProjectStatus() != null ||
@@ -55,7 +49,7 @@ public class ProjectController {
             model.addAttribute("projects", projectService.findProjectByOptions(searchDTO));
         } else {
             // 검색 조건이 없으면 사용자 프로젝트 전체 목록 반환
-            model.addAttribute("projects", projectService.findUserProjects(currentUserId));
+            model.addAttribute("projects", projectService.findUserProjects(currentUserId, customUser.getUserEntity().isAdmin()));
         }
         
         model.addAttribute("commons" , projectCommonStatusMapper.selectProjectCommonStatusAll());
