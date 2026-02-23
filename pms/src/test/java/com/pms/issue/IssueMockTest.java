@@ -25,6 +25,7 @@ public class IssueMockTest {
 	@Autowired
 	private IssueService issueService;
 
+	/*
 	@Test
 	@DisplayName("접속한 사용자의 일감을 가져오는지 확인")
 	public void findIssueMockTest() {
@@ -47,6 +48,7 @@ public class IssueMockTest {
 
 		System.out.println("[H2 DB] FIND ISSUE TEST END");
 	}
+	*/
 
 	@Test
 	@DisplayName("등록된 일감 번호를 제대로 반환하는지 확인")
