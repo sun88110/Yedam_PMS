@@ -25,9 +25,9 @@
       <!--/* pm/admin Only */-->
       <!--/* ProjectAdmin buttons : add-project, modify-project */-->
       <div class="d-flex align-items-center gap-4">
-        <div class="d-flex align-items-center gap-2">
+        <div th:if="${pm or admin}"  class="d-flex align-items-center gap-2">
           <i class="cil-plus text-dark" style="font-size: 1.5rem; font-weight: bold"></i>
-			<button type="button" 
+			<button type="button"
 			        id="btnAddNewProject" 
 			        class="btn btn-dark fw-bold" 
 			        th:data-url="@{/project/new}">
@@ -35,9 +35,9 @@
 			</button>
         </div>
 
-        <div class="d-flex align-items-center gap-2">
+        <div th:if="${admin}" class="d-flex align-items-center gap-2">
           <i class="cil-settings text-secondary" style="font-size: 1.5rem"></i>
-          <button class="btn btn-primary fw-bold">관리</button>
+          <button class="btn btn-primary fw-bold" name="btnSettings" th:data-url="@{/settings/}">관리</button>
         </div>
       </div>
     </div>
@@ -167,15 +167,14 @@
         }
     });
 </script>
-	<script>
-	document.addEventListener('DOMContentLoaded', function() {
-	    const btn = document.getElementById('btnAddNewProject');
-	    if (btn) {
-	        btn.addEventListener('click', function() {
-	            const url = this.getAttribute('data-url');
-	            location.href = url;
-	        });
-	    }
-	});	
-	</script>
+<!--/* jQuery */-->
+<script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+
+<script>
+	$(document).ready(function() {
+	    $('[data-url]').on('click', function() {
+	        location.href = $(this).data('url');
+	    });
+	});
+</script>
 </html>

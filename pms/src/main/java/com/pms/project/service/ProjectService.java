@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.pms.project.dto.IssueTrackerDTO;
 import com.pms.project.dto.NoticeDTO;
+import com.pms.project.dto.PMGroupDTO;
 import com.pms.project.dto.ParentProjectDTO;
 import com.pms.project.dto.ProjectInsertDTO;
 import com.pms.project.dto.ProjectSearchDTO;
@@ -16,7 +17,9 @@ public interface ProjectService {
      * @param userId 현재 로그인한 사용자 ID
      * @return 프로젝트 목록
      */
-    List<ProjectSelectDTO> findUserProjects(String userId, boolean isAdmin);	    
+	// 새프로젝트 생성버튼 표시용도 - PM여부 반환해서
+	List<PMGroupDTO> findIsPM(String userId);
+	List<ProjectSelectDTO> findUserProjects(String userId, boolean isAdmin);	    
     
     List<ProjectSelectDTO> findProjectByOptions(ProjectSearchDTO searchDTO);
     

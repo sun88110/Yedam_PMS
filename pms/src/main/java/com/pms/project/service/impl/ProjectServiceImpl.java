@@ -20,6 +20,7 @@ import com.pms.project.dto.IssueTrackerDTO;
 import com.pms.project.dto.JobDTO;
 import com.pms.project.dto.MemberDTO;
 import com.pms.project.dto.NoticeDTO;
+import com.pms.project.dto.PMGroupDTO;
 import com.pms.project.dto.ParentProjectDTO;
 import com.pms.project.dto.ProjectGMemberDTO;
 import com.pms.project.dto.ProjectInsertDTO;
@@ -36,6 +37,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
+    
+    @Override
+	public List<PMGroupDTO> findIsPM(String userId) {
+		return projectMapper.selectIsPM(userId);
+	}
     
     @Override
     @Transactional(readOnly = true)

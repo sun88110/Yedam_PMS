@@ -10,6 +10,7 @@ import com.pms.project.dto.GanttDTO;
 import com.pms.project.dto.JobDTO;
 import com.pms.project.dto.MemberDTO;
 import com.pms.project.dto.NoticeDTO;
+import com.pms.project.dto.PMGroupDTO;
 import com.pms.project.dto.ParentProjectDTO;
 import com.pms.project.dto.ProjectGMemberDTO;
 import com.pms.project.dto.ProjectInsertDTO;
@@ -20,6 +21,8 @@ import com.pms.project.dto.ProjectSelectDTO;
 public interface ProjectMapper {
     // 사용자의 프로젝트 목록 조회 (통계 포함)
     List<ProjectSelectDTO> selectUserProjects(@Param("userId") String userId, @Param("isAdmin") boolean isAdmin);
+    // 사용자가 소속된 pm 권한지닌 그룹 조회
+    List<PMGroupDTO> selectIsPM(@Param("userId") String userId);
     
     // 사용자의 검색결과를 바탕으로하는 프로젝트 목록 조회 (통계 포함) 
     List<ProjectSelectDTO> selectProjectsByOptions(ProjectSearchDTO searchDTO);

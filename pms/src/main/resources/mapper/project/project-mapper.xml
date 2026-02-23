@@ -2,6 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.project.mapper.ProjectMapper">
 
+	<select id="selectIsPM" resultType="PMGroupDTO">
+	SELECT 
+	  project_no
+      , group_no
+      , pm
+	FROM g_project gp
+	WHERE gp.pm = 1
+	AND EXISTS (
+	    SELECT 1
+	    FROM members m
+	    WHERE m.group_no = gp.group_no
+	    AND m.user_id = #{userId}
+	)
+	</select>
 	<resultMap id="projectMap" type="ProjectSelectDTO" autoMapping="true">
     	<id property="projectNo" column="project_no"/>
     	<association property="projectTotalDTO" javaType="ProjectTotalDTO" />
