@@ -3,7 +3,7 @@
 <mapper namespace="com.pms.issue.mapper.IssueMapper">
 	<!-- 일감 전체 조회 + 조건 검색 기능 -->
 	<select id="selectIssue" resultType="IssueSelectDto">
-		SELECT job_no
+		SELECT job_no AS jobNo
 		           , j.title
                    , p.project_name
                    , p.project_code

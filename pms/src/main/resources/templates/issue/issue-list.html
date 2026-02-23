@@ -101,16 +101,16 @@
 						th:data-project-code="${issue.projectCode}"></td>
 					<td th:text="${issue.jobNo}"></td>
 					<td th:text="${issue.title}"></td>
-					<td th:text="${issue.jobStatusName}"
+					<td th:text="${issue.jobStatus}"
 						th:data-job-status-no="${issue.jobStatusNo}"></td>
-					<td th:text="${issue.jobTypeName}"
+					<td th:text="${issue.jobType}"
 						th:data-job-type-no="${issue.jobTypeNo}"></td>
-					<td th:text="${issue.priorityName}"
+					<td th:text="${issue.priority}"
 						th:data-priority="${issue.priority}"></td>
 					<td th:text="${issue.managerId}"></td>
 					<td>
 						<div class="btn-group" role="group">
-							<a th:href="@{/issue/info(jobNo=${issue.jobNo})}"
+							<a th:href="@{/project/user/{projectCode}issue/info(projectCode=${projectCode}, jobNo=${issue.jobNo})}"
 								class="btn btn-sm btn-outline-info">상세</a> <a
 								class="btn btn-sm btn-outline-info">수정</a>
 						</div>

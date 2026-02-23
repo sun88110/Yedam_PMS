@@ -80,6 +80,7 @@ public class IssueController {
 			@RequestParam("files") List<MultipartFile> files, RedirectAttributes redirectAttributes, @PathVariable String projectCode) {
 		try {
 			issueDto.setUserId(customUser.getUsername());
+			// issueDto.setProjectNo();
 			Integer jobNo = issueService.addIssue(issueDto, files);
 			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + jobNo;
 		} catch (Exception e) {
