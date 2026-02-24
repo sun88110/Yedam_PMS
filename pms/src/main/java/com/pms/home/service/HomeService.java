@@ -28,7 +28,7 @@ public class HomeService {
         // 실제로는 SecurityContextHolder나 매개변수로 권한 리스트를 받아 처리하는 것이 좋습니다.
         boolean isAdmin = checkUserAdminRole(userId); 
 
-     // 타입을 명시적으로 선언하여 타입 불일치를 방지
+        // 타입을 명시적으로 선언하여 타입 불일치를 방지
         List<HomeProjectDto> projects = projectMapper.findProjects(userId, isAdmin);
         List<HomeNoticeDto> notices = noticeMapper.findNotices();
         List<HomeMemoDto> memos = memoMapper.findMemos(userId);

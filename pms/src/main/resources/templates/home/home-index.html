@@ -51,10 +51,6 @@
 	flex: 0 0 auto;
 }
 
-.section-title:active {
-	cursor: grabbing;
-}
-
 /* 4. 콘텐츠 영역 */
 .section-content {
 	flex: 1 1 auto;
@@ -89,19 +85,23 @@
 	border-color: #333;
 }
 
-/* 6. 메모 카드 스타일 (포스트잇 느낌) */
+/* 6. 메모 카드 스타일 (이전 스타일 유지) */
 .memo-bg-1 {
 	background-color: #fff9db !important;
-} /* 노랑 */
+}
+
 .memo-bg-2 {
 	background-color: #e3faf2 !important;
-} /* 민트 */
+}
+
 .memo-bg-3 {
 	background-color: #f3f0ff !important;
-} /* 보라 */
+}
+
 .memo-bg-4 {
 	background-color: #fff0f6 !important;
-} /* 핑크 */
+}
+
 .memo-card {
 	position: relative;
 	cursor: pointer;
@@ -148,6 +148,24 @@
 .btn-delete-memo:hover {
 	background-color: #dc3545;
 	color: white;
+}
+
+/* 공지사항 행 스타일 */
+.notice-row {
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.notice-row:hover {
+	background-color: #f8f9fa !important;
+}
+
+.date-badge {
+	font-size: 0.75rem;
+	color: #888;
+	border: 1px solid #eee;
+	padding: 2px 6px;
+	border-radius: 4px;
 }
 
 .hidden-item {
@@ -198,6 +216,8 @@
 				<div class="section-box border-top border-warning border-4">
 					<div class="section-title text-warning">
 						<span><i class="cil-bullhorn"></i> 공지사항</span>
+						<button class="btn btn-sm btn-warning text-dark fw-bold"
+							onclick="showNoticeAddModal()">+ 등록</button>
 					</div>
 					<div class="section-content" id="content-notices">
 						<div th:if="${#lists.isEmpty(list.notices)}"
@@ -205,10 +225,13 @@
 						<ul class="list-group list-group-flush"
 							th:unless="${#lists.isEmpty(list.notices)}">
 							<li
-								class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent page-item-notices"
-								th:each="n : ${list.notices}"><span class="text-truncate"
-								th:text="${n.title}" style="max-width: 80%;">공지제목</span> <span
-								class="badge bg-warning text-dark">NEW</span></li>
+								class="list-group-item d-flex justify-content-between align-items-center px-2 bg-transparent page-item-notices notice-row"
+								th:each="n : ${list.notices}"
+								th:onclick="showNoticeEditModal([[${n.noticeNo}]])"><span
+								class="text-truncate" th:text="${n.title}"
+								style="max-width: 70%;">공지제목</span> <span class="date-badge"
+								th:text="${#temporals.format(n.addDate, 'yyyy-MM-dd')}">2026-02-24</span>
+							</li>
 						</ul>
 					</div>
 					<div class="widget-pagination" id="pager-notices"></div>
@@ -248,10 +271,8 @@
 									th:class="'card memo-card shadow-sm h-100 memo-bg-' + ${ (stat.index % 4) + 1 }"
 									th:data-content="${m.content}"
 									onclick="viewMemoDetail(this.getAttribute('data-content'))">
-
 									<button class="btn-delete-memo"
 										th:onclick="deleteMemo([[${m.memoNo}]], event)" title="삭제">&times;</button>
-
 									<div class="card-body py-3">
 										<p class="mb-0 memo-content-preview" th:text="${m.content}">메모
 											내용</p>
@@ -268,7 +289,6 @@
 				<div class="section-box border-top border-info border-4">
 					<div class="section-title text-info">
 						<span><i class="cil-chart"></i> 통계</span>
-
 					</div>
 					<div
 						class="section-content d-flex align-items-center justify-content-center">
@@ -276,7 +296,46 @@
 					</div>
 				</div>
 			</div>
+		</div>
+	</div>
 
+	<div class="modal fade" id="noticeModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-centered">
+			<div class="modal-content border-0 shadow-lg">
+				<form id="noticeForm">
+					<div class="modal-header bg-warning text-dark">
+						<h5 class="modal-title fw-bold" id="noticeModalLabel">공지사항 상세</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					</div>
+					<div class="modal-body p-4">
+						<input type="hidden" id="noticeId" name="noticeNo">
+						<div class="mb-3">
+							<label class="form-label fw-bold">제목</label> <input type="text"
+								id="noticeTitle" class="form-control" required>
+						</div>
+						<div class="mb-3">
+							<label class="form-label fw-bold">공개 설정</label> <select
+								id="noticePrivacy" class="form-select">
+								<option value="1">전체 공개</option>
+								<option value="0">비공개</option>
+							</select>
+						</div>
+						<div class="mb-3">
+							<label class="form-label fw-bold">내용</label>
+							<textarea id="noticeContent" class="form-control" rows="6"
+								style="resize: none;" required></textarea>
+						</div>
+					</div>
+					<div class="modal-footer bg-light">
+						<button type="button" class="btn btn-danger me-auto"
+							id="btnDeleteNotice" onclick="handleDeleteNotice()">삭제</button>
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">닫기</button>
+						<button type="submit" class="btn btn-warning text-dark fw-bold">저장</button>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
 
@@ -298,40 +357,25 @@
 	</div>
 
 	<script th:inline="javascript">
+/* --- 1. 초기화 로직 (페이지네이션, 정렬) --- */
 document.addEventListener("DOMContentLoaded", function () {
-    // 1. 페이지네이션 초기화 함수
     function initWidgetPagination(widgetId, itemsPerPage) {
         const items = document.querySelectorAll(`.page-item-${widgetId}`);
         const pager = document.getElementById(`pager-${widgetId}`);
         if (!pager) return;
-
         pager.innerHTML = "";
         const totalPages = Math.ceil(items.length / itemsPerPage);
-        
-        if (totalPages <= 1) {
-            pager.style.display = 'none';
-            items.forEach(item => item.classList.remove('hidden-item'));
-            return;
-        }
-        
+        if (totalPages <= 1) { pager.style.display = 'none'; items.forEach(item => item.classList.remove('hidden-item')); return; }
         pager.style.display = 'flex';
         function renderPage(page) {
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            items.forEach((item, index) => {
-                item.classList.toggle('hidden-item', !(index >= start && index < end));
-            });
-            pager.querySelectorAll('.page-link-sm').forEach((btn, idx) => {
-                btn.classList.toggle('active', idx === (page - 1));
-            });
+            items.forEach((item, index) => { item.classList.toggle('hidden-item', !(index >= start && index < end)); });
+            pager.querySelectorAll('.page-link-sm').forEach((btn, idx) => { btn.classList.toggle('active', idx === (page - 1)); });
         }
-
         for (let i = 1; i <= totalPages; i++) {
-            const btn = document.createElement('button');
-            btn.innerText = i;
-            btn.className = 'page-link-sm';
-            btn.onclick = () => renderPage(i);
-            pager.appendChild(btn);
+            const btn = document.createElement('button'); btn.innerText = i; btn.className = 'page-link-sm';
+            btn.onclick = () => renderPage(i); pager.appendChild(btn);
         }
         renderPage(1);
     }
@@ -342,102 +386,141 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const grid = document.getElementById("dashboardGrid");
     new Sortable(grid, {
-        animation: 250,
-        handle: ".section-title",
-        ghostClass: "drag-ghost",
+        animation: 250, handle: ".section-title", ghostClass: "drag-ghost",
         onEnd: () => {
             const order = Array.from(document.querySelectorAll(".dashboard-item")).map(el => el.dataset.id);
             localStorage.setItem("dashboardOrder", JSON.stringify(order));
         }
     });
-
     const saved = JSON.parse(localStorage.getItem("dashboardOrder"));
-    if (saved) saved.forEach(id => {
-        const el = document.querySelector(`[data-id="${id}"]`);
-        if (el) grid.appendChild(el);
-    });
-    
-    window.refreshMemoPaging = () => initWidgetPagination('memos', 4);
+    if (saved) saved.forEach(id => { const el = document.querySelector(`[data-id="${id}"]`); if (el) grid.appendChild(el); });
 });
 
-/* 메모 API 관련 함수 */
-
+/* --- 2. 공통 CSRF --- */
 const getCsrf = () => ({
     token: document.querySelector('meta[name="_csrf"]')?.content,
     header: document.querySelector('meta[name="_csrf_header"]')?.content
 });
 
-function showMemoForm() {
-    document.getElementById('memoInputForm').classList.remove('hidden-item');
-    document.getElementById('noMemoMsg')?.classList.add('hidden-item');
-    document.getElementById('memoTextarea').focus();
+/* --- 3. 공지사항 (Notice) API --- */
+function showNoticeAddModal() {
+    document.getElementById('noticeForm').reset();
+    document.getElementById('noticeId').value = '';
+    document.getElementById('noticeModalLabel').innerText = '공지사항 등록';
+    document.getElementById('btnDeleteNotice').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('noticeModal')).show();
 }
 
-function hideMemoForm() {
-    document.getElementById('memoInputForm').classList.add('hidden-item');
-    checkEmptyMemo();
-    document.getElementById('memoTextarea').value = '';
+async function showNoticeEditModal(noticeNo) {
+    try {
+        const res = await fetch(`/api/notices/${noticeNo}`);
+        const data = await res.json();
+        document.getElementById('noticeId').value = data.noticeNo;
+        document.getElementById('noticeTitle').value = data.title;
+        document.getElementById('noticeContent').value = data.content;
+        document.getElementById('noticePrivacy').value = data.privacySettings;
+        document.getElementById('noticeModalLabel').innerText = '공지사항 상세/수정';
+        document.getElementById('btnDeleteNotice').style.display = 'block';
+        new bootstrap.Modal(document.getElementById('noticeModal')).show();
+    } catch (e) { alert("상세 정보를 가져올 수 없습니다."); }
 }
 
-function saveMemo() {
-    const textarea = document.getElementById('memoTextarea');
-    const content = textarea.value.trim();
-    if (!content) return alert("내용을 입력하세요.");
-
+document.getElementById('noticeForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('noticeId').value;
     const csrf = getCsrf();
-    const headers = { 'Content-Type': 'application/json' };
     
-    // CSRF 토큰이 존재하는 경우에만 헤더에 추가 (매우 중요)
+    // 1. 기본 헤더 설정
+    const headers = { 
+        'Content-Type': 'application/json' 
+    };
+
+    // 2. CSRF 헤더가 유효할 때만 추가 (핵심 수정)
     if (csrf.header && csrf.token) {
         headers[csrf.header] = csrf.token;
+    } else {
+        console.warn("CSRF token or header is missing!");
     }
 
-    fetch('/api/memos', {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({ content: content })
-    }).then(res => {
-        if (res.ok) location.reload();
-        else alert("저장에 실패했습니다.");
-    }).catch(err => console.error("Fetch error:", err));
-}
+    const body = {
+        title: document.getElementById('noticeTitle').value,
+        content: document.getElementById('noticeContent').value,
+        privacySettings: document.getElementById('noticePrivacy').value
+    };
 
-function deleteMemo(memoNo, event) {
-    if (event) event.stopPropagation();
+    try {
+        const res = await fetch(id ? `/api/notices/${id}` : '/api/notices', {
+            method: id ? 'PUT' : 'POST',
+            headers: headers, // 안전하게 구성된 헤더 사용
+            body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+            location.reload();
+        } else {
+            const errorText = await res.text();
+            alert("저장에 실패했습니다: " + errorText);
+        }
+    } catch (error) {
+        console.error("Fetch error:", error);
+        alert("네트워크 오류가 발생했습니다.");
+    }
+};
+
+async function handleDeleteNotice() {
+    const id = document.getElementById('noticeId').value;
+    if (!id) return;
     if (!confirm("정말 삭제하시겠습니까?")) return;
 
     const csrf = getCsrf();
     const headers = {};
-    
+
+    // 핵심: 헤더 이름(csrf.header)이 유효할 때만 객체에 추가합니다.
     if (csrf.header && csrf.token) {
         headers[csrf.header] = csrf.token;
+    } else {
+        console.warn("CSRF 헤더 정보를 찾을 수 없습니다. 시큐리티 설정을 확인하세요.");
     }
 
-    fetch(`/api/memos/${memoNo}`, {
-        method: 'DELETE',
-        headers: headers
-    }).then(res => {
-        if (res.ok) location.reload();
-        else alert("삭제에 실패했습니다.");
-    });
+    try {
+        const res = await fetch(`/api/notices/${id}`, { 
+            method: 'DELETE', 
+            headers: headers // 안전하게 생성된 헤더 전달
+        });
+
+        if (res.ok) {
+            alert("삭제되었습니다.");
+            location.reload();
+        } else {
+            const errorMsg = await res.text();
+            alert("삭제 권한이 없거나 실패했습니다: " + errorMsg);
+        }
+    } catch (error) {
+        console.error("Delete fetch error:", error);
+        alert("삭제 처리 중 오류가 발생했습니다.");
+    }
 }
 
-function viewMemoDetail(content) {
-    document.getElementById('fullMemoContent').innerText = content;
-    const modal = new bootstrap.Modal(document.getElementById('memoDetailModal'));
-    modal.show();
+/* --- 4. 메모 (Memo) API --- */
+function showMemoForm() { document.getElementById('memoInputForm').classList.remove('hidden-item'); document.getElementById('noMemoMsg')?.classList.add('hidden-item'); document.getElementById('memoTextarea').focus(); }
+function hideMemoForm() { document.getElementById('memoInputForm').classList.add('hidden-item'); document.getElementById('memoTextarea').value = ''; }
+function saveMemo() {
+    const content = document.getElementById('memoTextarea').value.trim();
+    if (!content) return;
+    const csrf = getCsrf();
+    fetch('/api/memos', { method: 'POST', headers: { 'Content-Type': 'application/json', [csrf.header]: csrf.token }, body: JSON.stringify({ content }) })
+    .then(res => res.ok ? location.reload() : alert("저장 실패"));
 }
+function deleteMemo(memoNo, event) {
+    if (event) event.stopPropagation();
+    if (!confirm("삭제하시겠습니까?")) return;
+    const csrf = getCsrf();
+    fetch(`/api/memos/${memoNo}`, { method: 'DELETE', headers: { [csrf.header]: csrf.token } }).then(res => res.ok ? location.reload() : alert("실패"));
+}
+function viewMemoDetail(content) { document.getElementById('fullMemoContent').innerText = content; new bootstrap.Modal(document.getElementById('memoDetailModal')).show(); }
 
-function checkEmptyMemo() {
-    const memoCount = document.querySelectorAll('.page-item-memos').length;
-    const noMemoMsg = document.getElementById('noMemoMsg');
-    if (memoCount === 0 && noMemoMsg) noMemoMsg.classList.remove('hidden-item');
-}
-
-function goToProjectInfo(projectCode) {
-    if (!projectCode) return alert("프로젝트 코드가 유효하지 않습니다.");
-    location.href = `/project/user/${projectCode}/info`;
-}
+/* --- 5. 기타 --- */
+function goToProjectInfo(projectCode) { location.href = `/project/user/${projectCode}/info`; }
 </script>
 </body>
 </html>
