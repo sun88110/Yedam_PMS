@@ -2,11 +2,13 @@ package com.pms.project.mapper;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.pms.project.dto.GanttDTO;
+import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.JobDTO;
 import com.pms.project.dto.MemberDTO;
 import com.pms.project.dto.NoticeDTO;
@@ -57,5 +59,5 @@ public interface ProjectMapper {
     
     // GanttChart
     List<GanttDTO> selectGanttData(@Param("projectCode") String projectCode);
-
+    Set<HolidayDTO> selectHolidays();
 }

@@ -325,5 +325,9 @@
 	    )
 	    ORDER BY parent, id
 	</select>
+	<select id="selectHolidays" resultType="HolidayDTO">
+    SELECT holiday_dt, is_holiday, holiday_name
+    FROM holiday ORDER BY holiday_dt
+	</select>
 	
 </mapper>

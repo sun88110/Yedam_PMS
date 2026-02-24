@@ -28,7 +28,7 @@
     <script th:src="@{/dhtmlx/gantt/dhtmlxgantt.js}"></script> */-->
     <link href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css" rel="stylesheet">
     <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
-    <script src="https://cdn.dhtmlx.com/gantt/edge/locales/locale_kr.js"></script>
+    <!-- <script src="https://cdn.dhtmlx.com/gantt/edge/locales/locale_kr.js"></script> -->
 </head>
 <body>
     <div class="gantt-wrapper">
@@ -50,7 +50,7 @@
             { name: "text",       label: "작업명",  tree: true, width: "*" },
             { name: "start_date", label: "시작일",  align: "center" },
             { name: "duration",   label: "기간(일)", align: "center" },
-            { name: "add",        label: "",       width: 44 }
+            /* { name: "add",        label: "",       width: 44 } */
         ];
 
         gantt.config.scales = [
@@ -111,6 +111,15 @@
                 source: prevSibling.id,
                 target: task.id,
                 type: "0" // 0 = Finish-to-Start (앞 작업 끝나면 뒤 작업 시작)
+            });
+        }else if (parentId !== "0") {
+            // 2. [추가된 로직] prevSibling이 없고 부모가 "0"이 아니라면 -> 이 작업이 부모의 '첫 번째 자식'임
+            // 부모(Project)와 첫 번째 자식(Task)을 연결합니다.
+            backendData.links.push({
+                id: linkIdCounter++,
+                source: parentId, // 선의 시작점: 부모 프로젝트 ID
+                target: task.id,  // 선의 도착점: 첫 번째 자식 작업 ID
+                type: "1"         // 타입 "1" (Start-to-Start): 프로젝트 시작과 동시에 일감 시작
             });
         }
         
