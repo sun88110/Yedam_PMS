@@ -32,9 +32,13 @@ public class IssueService {
 
 	// 일감 리스트 전체 조회 + 조건 검색기능
 	public List<IssueSelectDto> findIssueList(IssueSelectDto issueSelectDto) {
-		List<IssueSelectDto> issueList = issueMapper.selectIssue(issueSelectDto);
-		System.out.println(issueList.toString());
+		List<IssueSelectDto> issueList = issueMapper.selectIssueList(issueSelectDto);
 		return issueList;
+	}
+	// 일감 단건 조회
+	public IssueSelectDto findIssue(Integer jobNo) {
+		IssueSelectDto issue = issueMapper.selectIssue(jobNo);
+		return issue;
 	}
 
 	// 일감 등록 화면에 필요한 데이터들을 각각 조회
@@ -54,7 +58,7 @@ public class IssueService {
 	public List<IssueDto> getManagerList(IssueDto issueDto) {
 		return issueMapper.selectIssueManager(issueDto);
 	}
-	// 상위 일감 조회
+	// 프로젝트에 등록된 일감 조회
 	public List<IssueDto> getParentIssueList(IssueDto issueDto) {
 		return issueMapper.selectParentIssue(issueDto);
 	}

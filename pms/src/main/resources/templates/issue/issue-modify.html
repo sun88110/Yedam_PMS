@@ -21,11 +21,27 @@
 </head>
 <body>
 	<div class="container">
-		<form id="issueUpdate" th:action="@{/issue/update}" enctype="multipart/form-data" method="post">
+		<div class="mb-4 mt-3">
+			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
+			<h3 class="fw-bold">
+				<span th:text="${project.projectName}" class="text-primary"></span>
+				<small class="text-muted">의 일감 수정</small>
+			</h3>
+		</div>
+		<form id="issueUpdate"
+			th:action="@{/project/user/{projectCode}/issue/update(projectCode=${projectCode})}"
+			enctype="multipart/form-data" method="post" th:object="${issue}">
 			<!-- 제목 -->
-			<div class="mb-3">
-				<label class="form-label">제목</label> <input type="text"
-					class="form-control mt-2" name="title" />
+			<div class="row mb-3">
+				<div class="col-md-6">
+					<label class="form-label">제목</label> <input type="text"
+						th:value="${issue.title}" class="form-control mt-2" name="title" />
+				</div>
+				<!-- 수정사유 작성 comment -->
+				<div class="col-md-6">
+					<label class="form-label">수정 사유 작성</label> <input type="text"
+						class="form-control mt-2" />
+				</div>
 			</div>
 
 			<!-- 상태 -->
@@ -33,20 +49,20 @@
 			<div class="row mb-3">
 				<div class="col-md-6">
 					<label class="form-label">일감 상태</label> <select class="form-select"
-						name="status">
+						name="status" th:field="*{jobStatusNo}">
 						<option value="">선택</option>
-						<option th:each="status : ${statusList}" th:value="${status}"
-							th:text="${status}"></option>
+						<option th:each="status : ${statusList}"
+							th:value="${status.jobStatusNo}" th:text="${status.jobStatus}"></option>
 					</select>
 				</div>
 
 				<!-- 유형 -->
 				<div class="col-md-6">
 					<label class="form-label">일감 유형</label> <select class="form-select"
-						name="type">
+						name="type" th:field="*{jobTypeNo}">
 						<option value="">선택</option>
-						<option th:each="type : ${typeList}" th:value="${type}"
-							th:text="${type}"></option>
+						<option th:each="type : ${typeList}" th:value="${type.jobTypeNo}"
+							th:text="${type.jobType}"></option>
 					</select>
 				</div>
 			</div>
@@ -56,7 +72,7 @@
 				<label class="form-label">상세 설명</label>
 				<div class="form-floating">
 					<textarea class="form-control" id="floatingTextarea2"
-						style="height: 100px" name="content"></textarea>
+						style="height: 100px" name="content" th:text="${issue.content}"></textarea>
 					<label for="floatingTextarea2"></label>
 				</div>
 			</div>
@@ -65,10 +81,10 @@
 				<!-- 우선순위 -->
 				<div class="col-md-6">
 					<label class="form-label">우선순위</label> <select class="form-select"
-						name="priority">
+						name="priority" th:field="*{priority}">
 						<option value="">선택</option>
 						<option th:each="priority : ${priorityList}"
-							th:value="${priority}" th:text="${priority}"></option>
+							th:value="${priority.commonNo}" th:text="${priority.commonName}"></option>
 					</select>
 				</div>
 
@@ -79,7 +95,7 @@
 						data-bs-toggle="modal" data-bs-target="#userSelectModal">
 						담당자 선택</button>
 					<input type="text" class="form-control" id="managerId"
-						name="managerId" readonly />
+						name="managerId" th:value="${issue.managerId}" readonly />
 				</div>
 			</div>
 
@@ -88,14 +104,15 @@
 				<div class="col-md-6">
 					<label class="form-label">시작일</label><input type="text"
 						class="form-control datepicker" id="startDate" name="startDate"
-						placeholder="시작 날짜 선택" readonly />
+						th:value="${#dates.format(issue.startDate, 'yyyy-MM-dd')}"
+						readonly />
 				</div>
 
 				<!-- 마감일 -->
 				<div class="col-md-6">
 					<label class="form-label">마감일</label><input type="text"
 						class="form-control datepicker" id="endDate" name="endDate"
-						placeholder="마감 날짜 선택" readonly />
+						th:value="${#dates.format(issue.endDate, 'yyyy-MM-dd')}" readonly />
 				</div>
 			</div>
 
@@ -105,17 +122,16 @@
 					<button type="button" class="btn btn-outline-primary"
 						data-bs-toggle="modal" data-bs-target="#issueSelectModal">
 						상위일감 선택</button>
-					<input type="text" class="form-control" id="jobId" name="jobId"
-						readonly />
+					<input type="text" class="form-control" id="parentJob"
+						name="parentJob" th:value="${issue.parentJobNo}" readonly />
 				</div>
-
 				<!-- 진척도 -->
 				<div class="col-md-6">
 					<label class="form-label">진척도</label> <select class="form-select"
-						name="progress">
+						name="progress" th:field="*{progress}">
 						<option value="">선택</option>
-						<option th:each="p : ${#numbers.sequence(1, 10)}" th:value="${p}"
-							th:text="${(p * 10) + '%'}"></option>
+						<option th:each="p : ${#numbers.sequence(0, 10)}"
+							th:value="${(p * 10)}" th:text="${(p * 10) + '%'}"></option>
 					</select>
 				</div>
 			</div>
@@ -126,7 +142,13 @@
 					<label for="formFile" class="form-label">첨부파일</label> <input
 						class="form-control" type="file" id="files" name="files" multiple />
 					<!-- 여러개 선택시 첨부파일 이름이 표시 -->
-					<ul id="fileList" class="mt-2 list-group"></ul>
+					<div class="col-md-6">
+						<label>첨부파일 다운로드</label>
+						<ul id="fileList" class="mt-2 list-group">
+							<li th:each="file : ${fileList}" th:text="${file.filesName}"
+								th:data-no="${file.detailsNo}"></li>
+						</ul>
+					</div>
 				</div>
 
 				<!-- 공개범위 -->
@@ -136,18 +158,20 @@
 					<div class="d-flex gap-5">
 						<div class="form-check">
 							<input class="form-check-input" type="radio" name="publicRole"
-								id="public" value="public" /> <label class="form-check-label"
-								for="public">전체공개</label>
+								id="public" th:value="${issue.publicRole}" /> <label
+								class="form-check-label" for="public">전체공개</label>
 						</div>
 						<div class="form-check">
 							<input class="form-check-input" type="radio" name="publicRole"
-								id="private" value="private" /> <label class="form-check-label"
-								for="private">일부공개</label>
+								id="private" th:value="${issue.publicRole}" /> <label
+								class="form-check-label" for="private">일부공개</label>
 						</div>
 					</div>
 				</div>
 			</div>
 
+			<!--  반려를 누르면 일감 담당자에게 "일감 반려되었으니 확인하라는" 알림 전송 
+			 		일감의 유형이 반려로 변경 -->
 			<!-- 수정버튼 -->
 			<div class="row md-3">
 				<div class="d-flex gap-2">
@@ -164,12 +188,12 @@
 		<div class="card">
 			<div class="card-body">
 				<div class="d-flex gap-2 mb-3">
-					<button type="button" class="btn btn-secondary" id="historyButton">
-						수정이력</button>
-					<button type="button" class="btn btn-secondary" id="commentButton">
-						댓글</button>
-					<a href="/workinsert" class="btn btn-secondary">소요시간 등록</a>
-					<button type="button" class="btn btn-primary">보고하기</button>
+					<a
+						th:href="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}"
+						class="text-white btn btn-primary"> 일감조회</a> <a
+						th:href="@{/project/user/{projectCode}/work/insert(projectCode=${projectCode})}"
+						class="text-white btn btn-success">소요시간 등록</a>
+					<button type="button" class="text-white btn btn-success">보고하기</button>
 				</div>
 				<!-- grid 영역 -->
 				<div id="subContentArea"></div>
@@ -186,9 +210,7 @@
 		th:replace="~{common/fragments/issue/issue-update-modal :: IssueUpdateModal}"></th:block>
 	<th:block
 		th:replace="~{common/fragments/issue/issue-reject-modal :: IssueRejectModal}"></th:block>
-
-	<script th:src="@{/js/issue/issue-insert.js}"></script>
+		
 	<script th:src="@{/js/issue/issue-update.js}"></script>
-	<script th:src="@{/js/issue/issue-comment.js}"></script>
 </body>
 </html>

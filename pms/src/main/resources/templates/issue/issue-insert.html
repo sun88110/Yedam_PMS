@@ -20,36 +20,53 @@
 <title>일감 등록</title>
 </head>
 <body>
+
 	<div class="container">
+		<div class="mb-4 mt-3">
+			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
+			<h3 class="fw-bold">
+				<span
+					th:text="${project.projectName}"
+					class="text-primary"></span> <small class="text-muted">의 전체
+					일감 목록</small>
+			</h3>
+		</div>
 		<form id="issueInsert"
 			th:action="@{/project/user/{projectCode}/issue/new(projectCode=${projectCode})}"
-			enctype="multipart/form-data" method="post">
+			enctype="multipart/form-data" method="post" th:object="${issue}">
+
 			<!-- 제목 -->
 			<div class="mb-3">
-				<label class="form-label">제목</label> <input type="text"
-					class="form-control mt-2" name="title" placeholder="제목을 입력하세요" />
+				<label class="form-label">제목 *</label> <input type="text"
+					class="form-control mt-2" name="title" placeholder="제목을 입력하세요"
+					th:field=*{title} />
+				<div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
 			</div>
 
 			<!-- 상태 -->
 			<!-- th:value는 서버로 보내는 값 th:text는 사용자에게 보여주는 값 -->
 			<div class="row mb-3">
 				<div class="col-md-6">
-					<label class="form-label">일감 상태</label> <select class="form-select"
-						name="status">
+					<label class="form-label">일감 상태 *</label> <select
+						class="form-select" th:field="*{jobStatusNo}" name="jobStatusNo">
 						<option value="">선택</option>
 						<option th:each="status : ${statusList}"
-							th:text="${status.jobStatus}"></option>
+							th:text="${status.jobStatus}" th:value="${status.jobStatusNo}"></option>
 					</select>
+					<div th:if="${#fields.hasErrors('jobStatusNo')}"
+						th:errors="*{jobStatusNo}"></div>
 				</div>
 
 				<!-- 유형 -->
 				<div class="col-md-6">
-					<label class="form-label">일감 유형</label> <select class="form-select"
-						name="type">
+					<label class="form-label">일감 유형 *</label> <select
+						class="form-select" th:field="*{jobTypeNo}" name="jobTypeNo">
 						<option value="">선택</option>
-						<option th:each="type : ${typeList}"
-							 th:text="${type.jobType}"></option>
+						<option th:each="type : ${typeList}" th:text="${type.jobType}"
+							th:value="${type.jobTypeNo}"></option>
 					</select>
+					<div th:if="${#fields.hasErrors('jobTypeNo')}"
+						th:errors="*{jobTypeNo}"></div>
 				</div>
 			</div>
 
@@ -66,13 +83,14 @@
 			<div class="row mb-3">
 				<!-- 우선순위 -->
 				<div class="col-md-6">
-					<label class="form-label">우선순위</label> <select class="form-select"
-						name="priority">
+					<label class="form-label">우선순위 *</label> <select
+						class="form-select" th:field="*{priority}" name="priority">
 						<option value="">선택</option>
 						<option th:each="priority : ${priorityList}"
-							th:value="${priority.commonNo}"
-							th:text="${priority.commonName}"></option>
+							th:value="${priority.commonNo}" th:text="${priority.commonName}"></option>
 					</select>
+					<div th:if="${#fields.hasErrors('priority')}"
+						th:errors="*{priority}"></div>
 				</div>
 
 				<!-- 담당자 -->
@@ -80,9 +98,11 @@
 				<div class="col-md-6">
 					<button type="button" class="btn btn-outline-primary"
 						data-bs-toggle="modal" data-bs-target="#userSelectModal">담당자
-						선택</button>
-					<input type="text" class="form-control" id="managerId"
-						name="managerId" readonly />
+						선택 *</button>
+					<input type="text" class="form-control" id="managerName"
+						th:field="*{userId}" readonly /> <input type="hidden"
+						name="managerId" id="managerId" />
+					<div th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
 				</div>
 			</div>
 
@@ -108,9 +128,8 @@
 					<button type="button" class="btn btn-outline-primary"
 						data-bs-toggle="modal" data-bs-target="#issueSelectModal">상위일감
 						선택</button>
-					<input type="text" class="form-control" id="jobTitle"
-						readonly />
-					<input type="hidden" name="jobNo" id="jobNo" value="">
+					<input type="text" class="form-control" id="jobTitle" readonly />
+					<input type="hidden" name="parentJobNo" id="parentJobNo" value="">
 				</div>
 
 				<!-- 진척도 -->
@@ -118,8 +137,8 @@
 					<label class="form-label">진척도</label> <select class="form-select"
 						name="progress">
 						<option value="">선택</option>
-						<option th:each="p : ${#numbers.sequence(0, 10)}" th:value="${p}"
-							th:text="${(p * 10) + '%'}"></option>
+						<option th:each="p : ${#numbers.sequence(0, 10)}"
+							th:value="${p * 10}" th:text="${(p * 10) + '%'}"></option>
 					</select>
 					<div class="form-text text-muted">처음 등록하는 일감인 경우 진척도를 0으로 설정해
 						주세요</div>
@@ -135,29 +154,36 @@
 					<ul id="fileList" class="mt-2 list-group"></ul>
 				</div>
 
-				<!-- 공개범위 -->
+				<!-- 공개범위  1이면 전체   0이면 일부공개-->
 				<div class="col-md-5 d-flex flex-column justify-content-center">
-					<label class="form-label mb-2">공개범위</label>
+					<label class="form-label mb-2">공개범위 *</label>
 
 					<div class="d-flex gap-5">
 						<div class="form-check">
-							<input class="form-check-input" type="radio" name="publicRole"
-								id="public" value="320" /> <label class="form-check-label"
-								for="public">전체공개</label>
+							<input class="form-check-input" type="radio" id="public"
+								value="1" th:field="*{publicRole}" /> <label
+								class="form-check-label" for="public">전체공개</label>
 						</div>
 						<div class="form-check">
-							<input class="form-check-input" type="radio" name="publicRole"
-								id="private" value="310" /> <label class="form-check-label"
-								for="private">일부공개</label>
+							<input class="form-check-input" type="radio"
+								th:field="*{publicRole}" id="private" value="0" /> <label
+								class="form-check-label" for="private">일부공개</label>
 						</div>
 					</div>
+					<div th:if="${#fields.hasErrors('publicRole')}"
+						th:errors="*{publicRole}"></div>
 				</div>
 			</div>
 
 			<!-- 전송 -->
 			<div class="row md-3">
-				<button type="button" class="btn btn-primary" data-bs-toggle="modal"
-					data-bs-target="#issueSubmitModal">등록</button>
+				<div class="d-flex gap-2">
+					<a
+						th:href="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}"
+						class="btn btn-primary flex-fill"> 일감 조회</a>
+					<button type="button" class="btn btn-success flex-fill text-white"
+						data-bs-toggle="modal" data-bs-target="#issueSubmitModal">등록</button>
+				</div>
 			</div>
 		</form>
 	</div>

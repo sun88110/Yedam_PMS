@@ -5,16 +5,22 @@ import java.util.Date;
 import org.apache.ibatis.type.Alias;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 @Alias("IssueDto")
 public class IssueDto {
 	private Integer jobNo;
+   @NotBlank
 	private String managerId;
+   @NotNull
 	private Integer publicRole;
+   @NotBlank
 	private String title;
 	private String content;
+	@NotNull
 	private Integer priority;
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date addDate;
@@ -23,14 +29,18 @@ public class IssueDto {
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date endDate;
 	private Integer progress;
+	@NotBlank
 	private String userId;
 	private String username;
-	private Integer jobTypeNo;
+	@NotBlank
+	private String jobTypeNo;
 	private String jobType;
-	private Integer jobStatusNo;
+	@NotBlank
+	private String jobStatusNo;
 	private String jobStatus;
-	private Integer projectNo;
+	private String projectNo;
 	private String projectCode;
+	private String projectName;
 	private Integer parentJobNo;
 	private Integer filesNo;
     private Integer commonNo;

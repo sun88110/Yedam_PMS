@@ -7,7 +7,7 @@ function bindCommentEvents() {
     const content = document.getElementById("commentInput").value;
     console.log("댓글 전송 예정", content);
     // 요청만 날림 백엔드 미구현
-    fetch("/issuedetails/comments", {
+    fetch("/issue/comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

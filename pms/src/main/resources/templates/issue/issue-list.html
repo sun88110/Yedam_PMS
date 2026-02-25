@@ -26,9 +26,8 @@
 		<div class="mb-4 mt-3">
 			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
-				<label th:if="${not #lists.isEmpty(issueList)}"
-					th:text="${projectCode}" class="text-primary"></label>
-				<small class="text-muted">의 일감 조회</small>
+				<span th:text="${!#lists.isEmpty(issueList) ? issueList[0].projectName : '프로젝트 없음'}" class="text-primary"></span>
+				<small class="text-muted">의 전체 일감 목록</small>
 			</h3>
 		</div>
 
@@ -101,18 +100,21 @@
 						th:data-project-code="${issue.projectCode}"></td>
 					<td th:text="${issue.jobNo}"></td>
 					<td th:text="${issue.title}"></td>
-					<td th:text="${issue.jobStatusName}"
+					<td th:text="${issue.jobStatus}"
 						th:data-job-status-no="${issue.jobStatusNo}"></td>
-					<td th:text="${issue.jobTypeName}"
+					<td th:text="${issue.jobType}"
 						th:data-job-type-no="${issue.jobTypeNo}"></td>
 					<td th:text="${issue.priorityName}"
 						th:data-priority="${issue.priority}"></td>
 					<td th:text="${issue.managerId}"></td>
 					<td>
 						<div class="btn-group" role="group">
-							<a th:href="@{/issue/info(jobNo=${issue.jobNo})}"
-								class="btn btn-sm btn-outline-info">상세</a> <a
-								class="btn btn-sm btn-outline-info">수정</a>
+							<a
+								th:href="@{/project/user/{projectCode}/issue/update(projectCode=${projectCode}, jobNo=${issue.jobNo})}"
+								class="btn btn-sm btn-outline-info">수정</a> 
+							<a
+								th:href="@{/project/user/{projectCode}/issue/info(projectCode=${projectCode}, jobNo=${issue.jobNo})}"
+								class="btn btn-sm btn-outline-info"> 상세</a>
 						</div>
 					</td>
 				</tr>

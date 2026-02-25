@@ -20,7 +20,8 @@
 </head>
 <body>
 	<div class="container">
-		<form id="workInsert" method="post"
+		<form id="workInsert"
+		    method="post"
 			th:action="@{/project/user/{projectCode}/work/insert(projectCode=${projectCode})}">
 			<!-- 해당 프로젝트의 일감번호에 대한 값을 가져옴 -->
 			<div class="row mb-3">
@@ -67,8 +68,8 @@
 			<div class="row mb-3">
 				<!-- 작업분류 -->
 				<div class="col-md-6">
-					<label class="form-label">작업분류</label> <select class="form-select"
-						name="workDetailsNo">
+					<label class="form-label">작업분류</label> 
+					<select class="form-select" name="workDetailsNo">
 						<option value="">선택</option>
 						<option th:each="status : ${workType}"
 							th:value="${status.workDetailsNo}" th:text="${status.workType}"></option>

@@ -10,7 +10,10 @@ import com.pms.issue.web.IssueSelectDto;
 @Mapper
 public interface IssueMapper {
 
-	List<IssueSelectDto> selectIssue(IssueSelectDto issueSelectDto);
+	List<IssueSelectDto> selectIssueList(IssueSelectDto issueSelectDto);
+	// 일감 단건 조회
+	IssueSelectDto selectIssue(Integer jobNo);
+	
 	// 일감 상태 목록 조회
 	List<IssueDto> selectIssueStatus(IssueDto issueDto);
 	// 일감 유형 목록 조회
@@ -19,7 +22,7 @@ public interface IssueMapper {
 	List<IssueDto> selectIssuePriority(IssueDto issueDto);
 	// 일감 담당자 선택
 	List<IssueDto> selectIssueManager(IssueDto issueDto);
-	// 상위 일감 조회
+	// 프로젝트의 일감 조회
 	List<IssueDto> selectParentIssue(IssueDto issueDto);
 	
 	// 일감 수정
@@ -28,6 +31,8 @@ public interface IssueMapper {
 	// 히스토리 저장
 	Integer insertIssueHistory(IssueDto issueDto);
 	
+	// 일감 등록 기능
 	Integer insertIssue(IssueDto issueDto);
+	// 
 
 }

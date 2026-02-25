@@ -1,5 +1,7 @@
 package com.pms.files.entity;
 
+import com.pms.files.dto.FileListDto;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -35,4 +37,15 @@ public class FilesDetailsEntity {
 	private Long filesSize;
 	private String filesType;
 	private String filesPath;
+	
+	public static FileListDto toDto(FilesDetailsEntity entity) {
+		return FileListDto.builder()
+						.filesName(entity.getFilesName())
+						.detailsNo(entity.getDetailsNo())
+						.filesPath(entity.getFilesPath())
+						.filesSize(entity.getFilesSize())
+						.filesType(entity.getFilesType())
+						.filesUuid(entity.getFilesUuid())
+						.build();
+	}
 }
