@@ -441,6 +441,11 @@ function showNoticeAddModal() {
     document.getElementById('existingFileList').innerHTML = ''; 
     new bootstrap.Modal(document.getElementById('noticeModal')).show();
     
+    const deleteBtn = document.getElementById('btnDeleteNotice');
+    if (deleteBtn) {
+        deleteBtn.style.display = 'none';
+    }
+    
     const formFields = ['noticeTitle', 'noticeContent', 'noticePrivacy', 'noticeFiles'];
     formFields.forEach(id => {
         const el = document.getElementById(id);
@@ -461,8 +466,12 @@ async function showNoticeEditModal(noticeNo) {
         document.getElementById('noticeContent').value = data.content;
         document.getElementById('noticePrivacy').value = data.privacySettings;
         document.getElementById('noticeModalLabel').innerText = '공지사항 상세/수정';
-        document.getElementById('btnDeleteNotice').style.display = 'block';
 
+        const deleteBtn = document.getElementById('btnDeleteNotice');
+        if (deleteBtn) {
+            deleteBtn.style.display = 'block';
+        }
+        
         const fileListDiv = document.getElementById('existingFileList');
         fileListDiv.innerHTML = ''; 
         if (data.files && data.files.length > 0) {
