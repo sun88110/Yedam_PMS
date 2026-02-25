@@ -97,7 +97,9 @@ public class ProjectServiceImpl implements ProjectService {
         
         // 4. 실제 진척도 계산
         double avgProgress = subJobs.stream()
-                .mapToDouble(JobDTO::getProgress).average().orElse(0.0);
+                .mapToDouble(p -> p.getProgress() == null ? 0.0 : p.getProgress())
+                .average()
+                .orElse(0.0);
         stats.setCurrentProgress(Math.round(avgProgress * 100.0) / 100.0);
 
         // 5. 예상 진척도 계산
