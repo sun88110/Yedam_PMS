@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.pms.project.dto.GanttDTO;
+import com.pms.project.dto.HistoryDTO;
 import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.IssueTrackerDTO;
 import com.pms.project.dto.JobDTO;
@@ -357,6 +358,12 @@ public class ProjectServiceImpl implements ProjectService {
 	@Override
 	public Set<HolidayDTO> findHolidays() {
 		return projectMapper.selectHolidays();
+	}
+
+	// 이력 조회
+	@Override
+	public List<HistoryDTO> findHistoryByCode(String projectCode) {
+		return projectMapper.selectHistoryByCode(projectCode);
 	}
 
 }

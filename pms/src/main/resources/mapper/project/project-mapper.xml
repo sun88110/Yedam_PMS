@@ -337,4 +337,27 @@
     FROM holiday ORDER BY holiday_dt
 	</select>
 	
+	<!-- 변경 이력조회 -->
+	<select id="selectHistoryByCode" resultType="HistoryDTO">
+		SELECT h.history_no
+		  , h."COMMENT" AS "desc"
+		  , h.history_date
+		  , h.delete_date
+		  , h.job_no
+		  , h.user_id
+		  , u.username
+		  , j.title
+		  , jt.job_type
+		  , j.job_type_no
+		  , js.job_status
+		  , j.job_status_no
+		FROM history h
+		JOIN job j ON h.job_no = j.job_no
+		JOIN project p ON j.project_no = p.project_no
+		JOIN users u ON u.user_id = h.user_id
+		JOIN job_type jt ON jt.job_type_no = j.job_type_no
+		JOIN job_status js ON js.job_status_no = j.job_status_no
+		WHERE p.project_code = #{projectCode}
+		ORDER BY h.history_date DESC
+	</select>
 </mapper>

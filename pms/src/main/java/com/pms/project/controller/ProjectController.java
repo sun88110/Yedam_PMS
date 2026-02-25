@@ -1,7 +1,10 @@
 package com.pms.project.controller;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +28,7 @@ import com.pms.issue.mapper.IssueMapper;
 import com.pms.issue.service.IssueService;
 import com.pms.issue.web.IssueDto;
 import com.pms.project.common.mapper.ProjectCommonStatusMapper;
+import com.pms.project.dto.HistoryDTO;
 import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.ProjectInsertDTO;
 import com.pms.project.dto.ProjectSearchDTO; // 추가
@@ -214,5 +218,28 @@ public class ProjectController {
 
         // 3. ★ 새 ID(jobNo)가 담긴 DTO 객체를 그대로 반환! (이게 프론트엔드의 savedTask로 들어갑니다)
         return issueDto;
+    }
+    
+    
+    @GetMapping("/user/{projectCode}/history")
+    public String getHistory(@PathVariable String projectCode, Model model) {
+    	
+    	List<HistoryDTO> historyList = projectService.findHistoryByCode(projectCode);
+    	// 오늘 날짜 구하기
+        String todayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+
+        // 날짜(yyyy/MM/dd)를 Key로, 해당 날짜의 작업내역 List를 Value로 묶기 - 순서를 보장하기 위해 반드시 LinkedHashMap을 사용
+        Map<String, List<HistoryDTO>> groupedHistory = historyList.stream()
+            .collect(Collectors.groupingBy(
+                dto -> {
+                    String dateStr = new SimpleDateFormat("yyyy/MM/dd").format(dto.getHistoryDate());
+                    return dateStr.equals(todayStr) ? "오늘" : dateStr; // 오늘이면 "오늘"로 변환
+                },
+                LinkedHashMap::new, // 내림차순 정렬 순서 유지
+                Collectors.toList()
+            ));
+
+        model.addAttribute("groupedHistory", groupedHistory);
+        return "project/history";
     }
 }

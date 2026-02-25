@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.pms.project.dto.GanttDTO;
+import com.pms.project.dto.HistoryDTO;
 import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.JobDTO;
 import com.pms.project.dto.MemberDTO;
@@ -60,4 +61,7 @@ public interface ProjectMapper {
     // GanttChart
     List<GanttDTO> selectGanttData(@Param("projectCode") String projectCode);
     Set<HolidayDTO> selectHolidays(); // 일감, 간트차트에서 활용할 주말테이블 조회
+    
+    // History
+    List<HistoryDTO> selectHistoryByCode(@Param("projectCode") String projectCode);
 }

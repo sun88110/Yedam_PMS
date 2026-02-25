@@ -42,16 +42,16 @@
 			</a>
 			<ul class="nav-group-items compact" th:if="${projectCode != null}">
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/info(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 개요</a> </li>
-			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/work/list(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 작업내역</a> </li>
+			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/history(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 작업내역</a> </li>
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/list(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 일감</a> </li>
-			  <li class="nav-item"> <a class="nav-link" href="#"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 소요시간</a> </li>
+			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/work/list(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 소요시간</a> </li>
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/gantt(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 간트차트</a> </li>
 			</ul>
-			<ul class="nav-group-items compact" th:unless="${projectCode != null}">
+			<!--/* <ul class="nav-group-items compact" th:unless="${projectCode != null}">
 			  <li class="nav-item"> <a class="nav-link" href="#"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 작업내역</a> </li>
 			  <li class="nav-item"> <a class="nav-link" href="#"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 일감</a> </li>
 			  <li class="nav-item"> <a class="nav-link" href="#"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 간트차트</a> </li>
-			</ul>
+			</ul> */-->
 		</li>
         <li class="nav-item"><a class="nav-link" th:href="@{/settings/}">
             <i class="nav-icon cil-sitemap"></i>관리</a>

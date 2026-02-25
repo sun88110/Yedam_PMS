@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      layout:decorate="~{common/layouts/full-default-layout}"
+      layout:fragment="Content">
+<head>
+    <style>
+        /* 깔끔한 텍스트 기반 인덴트(들여쓰기)를 위한 최소한의 CSS */
+        .date-header { background-color: #f1f1f1; padding: 5px 10px; font-weight: bold; border-radius: 4px; }
+        .history-item { border-left: 3px solid #d8dbe0; padding-left: 15px; margin-bottom: 1.5rem; }
+        .history-content { font-style: italic; color: #6c757d; font-size: 0.9rem; }
+        .history-author { font-size: 0.85rem; color: #8a93a2; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h4 class="mb-3 fw-bold">작업내역</h4>
+        <p class="text-muted small mb-4">작업 내역 목록</p> <th:block th:each="entry : ${groupedHistory}">
+            
+            <div class="date-header mb-3 fs-5" th:text="${entry.key}">오늘</div>
+
+            <div class="mb-4 ps-2">
+                <div class="history-item" th:each="history : ${entry.value}">
+                    
+                    <div>
+                        <span th:text="|${history.jobStatus}(${#dates.format(history.historyDate, 'HH:mm')}) |"></span>
+                        
+                        <a th:href="@{/issue/detail(jobNo=${history.jobNo})}" class="text-decoration-none fw-bold"
+                           th:text="|${history.jobType}#${history.jobNo}: |"></a>
+                        <span class="fw-bold" th:text="${history.title}"></span>
+                    </div>
+                    
+                    <div class="history-content mt-1" th:if="${history.desc != null and history.desc != ''}" th:text="${history.desc}">
+                    </div>
+                    
+                    <div class="history-author mt-1" th:text="${history.username}">
+                    </div>
+                    
+                </div>
+            </div>
+        </th:block>
+
+        <nav aria-label="History pagination" class="mt-4 border-top pt-3">
+            <ul class="pagination pagination-sm">
+                <li class="page-item"><a class="page-link" href="#">&laquo; 이전</a></li>
+                <li class="page-item"><a class="page-link" href="#">다음 &raquo;</a></li>
+            </ul>
+        </nav>
+    </div>
+</body>
+</html>

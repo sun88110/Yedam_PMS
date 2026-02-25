@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.pms.project.dto.HistoryDTO;
 import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.IssueTrackerDTO;
 import com.pms.project.dto.NoticeDTO;
@@ -42,4 +43,7 @@ public interface ProjectService {
     // 간트차트
     Map<String, Object> findGanttDataByCode(String projectCode);
     Set<HolidayDTO> findHolidays();
+    
+    // 이력조회
+    List<HistoryDTO> findHistoryByCode(String projectCode);
 }
