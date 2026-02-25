@@ -1,8 +1,11 @@
 package com.pms.project.controller;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -22,6 +25,7 @@ import com.pms.issue.mapper.IssueMapper;
 import com.pms.issue.service.IssueService;
 import com.pms.issue.web.IssueDto;
 import com.pms.project.common.mapper.ProjectCommonStatusMapper;
+import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.ProjectInsertDTO;
 import com.pms.project.dto.ProjectSearchDTO; // 추가
 import com.pms.project.service.ProjectService;
@@ -170,18 +174,21 @@ public class ProjectController {
         List<IssueDto> typeList = issueMapper.selectIssueType(paramDto);
         List<IssueDto> priorityList = issueMapper.selectIssuePriority(paramDto);
         List<IssueDto> managerList = issueMapper.selectIssueManager(paramDto);
+        
+        Set<HolidayDTO> rawHolidays = projectService.findHolidays(); 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        List<String> holidayStrList = rawHolidays.stream()
+                .filter(h -> "Y".equals(h.getIsHoliday()))      // 1. 쉬는 날('Y')만 필터링
+                .map(h -> sdf.format(h.getHolidayDt()))         // 2. Date 객체를 "2026-02-28" 형태의 문자열로 변환
+                .collect(Collectors.toList());                  // 3. 리스트로 수집
 
         // 4. 조회한 리스트들을 모두 Map에 포장합니다.
         responseData.put("statusList", statusList);
         responseData.put("typeList", typeList);
         responseData.put("priorityList", priorityList);
         responseData.put("managerList", managerList);
-
-        // 4. 조회한 리스트들을 모두 Map에 포장
-        responseData.put("statusList", statusList);
-        responseData.put("typeList", typeList);
-        responseData.put("priorityList", priorityList);
-        responseData.put("managerList", managerList);
+        responseData.put("holidayList", holidayStrList); // 휴일정보 추가
         
         return responseData;
     }

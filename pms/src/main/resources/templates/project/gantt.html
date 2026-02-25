@@ -41,11 +41,9 @@
     font-size: 1rem !important;
 }
 </style>
-<!--/* <link th:href="@{/dhtmlx/gantt/dhtmlxgantt.css}" rel="stylesheet">
-    <script th:src="@{/dhtmlx/gantt/dhtmlxgantt.js}"></script> */-->
-<link href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css"
-	rel="stylesheet">
-<script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+<link th:href="@{/dhtmlx/gantt/dhtmlxgantt.css}" rel="stylesheet">
+<script th:src="@{/dhtmlx/gantt/dhtmlxgantt.js}"></script> 
+<!-- <script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script> -->
 <!-- <script src="https://cdn.dhtmlx.com/gantt/edge/locales/locale_kr.js"></script> -->
 </head>
 <body>
@@ -79,13 +77,17 @@
 	// 입력폼 관리하는 전역데이터
     let ganttIssueModal;
     let currentTaskInfo = null;
-	
+    let holidaySet = new Set(); // 휴일 목록을 담아둘 Set 자료구조 추가
+    
     const projectCode = /*[[${projectCode}]]*/ null;
     const url = /*[[@{/project/user/{code}/gantt/data(code=${projectCode})}]]*/ '/';
     const add_url = /*[[@{/project/user/{code}/gantt/insert(code=${projectCode})}]]*/ '/';
     const setting_url = /*[[@{/project/user/{code}/gantt/setting(code=${projectCode})}]]*/ '/';
     
-    gantt.plugins({ marker: true });
+    gantt.plugins({ 
+    	    marker: true,
+            worktime: true 
+        });
 
     // ==========================================
     // 1. 차트 외형(UI) 및 이벤트 설정 함수
@@ -99,12 +101,17 @@
         gantt.config.grid_header_height = 60; 
         gantt.config.scale_height = 60;       
 
-        // ★ [리사이즈 해결 핵심] 
+        // 리사이즈 기능 용도, 적용안됨. TODO: 안되는원인 파악해서 적용되게 수정해야함
         gantt.config.grid_resize = true;       // 왼쪽 테이블과 오른쪽 차트 사이의 경계선 드래그 허용
         gantt.config.keep_grid_width = false;  // 내부 컬럼 크기 조절 시 테이블 전체 넓이도 같이 변하도록 허용
         
         // 진척도 드래그불가능
         gantt.config.drag_progress = false;
+        
+        // 업무일 기준으로만 일감의 기간(Duration)이 늘어나도록 보정
+        gantt.config.work_time = true; 
+        gantt.config.correct_work_time = true;
+        gantt.config.skip_off_time = true;
         
         gantt.config.columns = [
             { name: "text",       label: "작업명",  tree: true, width: "*", min_width: 150, resize: true },
@@ -127,8 +134,21 @@
             { unit: "day",   step: 1, format: "%d일(%D)" } 
         ];
         
+        gantt.ignore_time = function(date) {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, '0');
+            const dd = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`; 
+            
+            // 전역 Set에 해당 날짜가 존재하면 true 반환 -> 화면에서 아예 안 그림!
+            if (holidaySet.has(dateStr)) {
+                return true; 
+            }
+            return false; 
+        };
+
         // --- 이벤트 설정들 ---
-     // 1. 헤더 '추가' 클릭 시 더미 데이터 생성 방지
+        // 헤더 '추가' 클릭 시 더미 데이터 생성 방지
         gantt.attachEvent("onGridHeaderClick", function(name, e) {
             if (name === "add") return false; 
             return true; 
@@ -290,8 +310,6 @@
 	                        type: "1"                      // Finish-to-Start (끝남과 동시에 시작) 타입
 	                    });
 	                }
-                // 조립된 데이터로 차트에 추가
-                gantt.addTask(newGanttTask, newGanttTask.parent);
                 gantt.message({text: "일감이 등록되었습니다.", type: "success"});
             })
             .catch(error => {
@@ -384,7 +402,7 @@
     // 폼 Select Box 기초 데이터 로딩
     // ==========================================
     function loadSettingData() {
-        fetch(setting_url)
+    	return fetch(setting_url)
         .then(res => res.json())
         .then(data => {
             // 셀렉트 박스 옵션 채우는 도우미 함수
@@ -409,6 +427,13 @@
                     workerSelect.add(option);
                 });
             }
+            
+            //휴일 목록을 전역 Set에 세팅하고 차트 새로고침
+            if (data.holidayList) {
+                holidaySet = new Set(data.holidayList);
+                // gantt.render(); // 이제 데이터 로드 후 알아서 그리므로 필요 없음
+                console.log("★★ 서버에서 받아온 휴일 목록:", Array.from(holidaySet)); // 디버깅용 로그
+            }
         })
         .catch(err => console.error("세팅 로드 에러:", err));
     }
@@ -416,8 +441,9 @@
     // 3. 페이지가 로드되면 실행되는 메인 로직
     // ==========================================
     initGanttUI();   // 1. 차트 껍데기를 먼저 그리고
-    loadGanttData(); // 2. 데이터를 채워 넣습니다.
-    loadSettingData();
+    loadSettingData().then(() => {
+        loadGanttData(); 
+    });
 </script>
 
 </body>

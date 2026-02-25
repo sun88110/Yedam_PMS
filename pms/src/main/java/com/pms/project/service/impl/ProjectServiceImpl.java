@@ -354,4 +354,9 @@ public class ProjectServiceImpl implements ProjectService {
 		return result;
 	}
 
+	@Override
+	public Set<HolidayDTO> findHolidays() {
+		return projectMapper.selectHolidays();
+	}
+
 }
