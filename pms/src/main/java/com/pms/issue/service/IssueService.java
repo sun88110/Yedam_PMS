@@ -59,19 +59,14 @@ public class IssueService {
 
 	// 일감 등록
 	@Transactional
-	public Integer addIssue(IssueDto issueDto, List<MultipartFile> files) {
+	public Integer addIssue(IssueDto issueDto, List<MultipartFile> files) throws Exception {
 		if (!StringUtils.hasText(issueDto.getTitle())) {
 			throw new RuntimeException("제목은 필수 입력 사항입니다.");
 		}
 
-		try {
-			String userId = issueDto.getUserId();
-			Integer filesNo = filesUploadService.uploadFiles(files, userId);
-			issueDto.setFilesNo(filesNo);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException("파일 저장 중 에러가 발생하였습니다.");
-		}
+		String userId = issueDto.getUserId();
+		Integer filesNo = filesUploadService.uploadFiles(files, userId);
+		issueDto.setFilesNo(filesNo);
 
 		issueMapper.insertIssue(issueDto);
 		Integer jobNo = issueDto.getJobNo();

@@ -14,6 +14,7 @@
                    , FN_GET_JOB_TYPE(j.job_type_no) AS job_type_name
                    , FN_GET_CODE_NAME(j.priority) AS priority_name
 		           , j.manager_id
+		           , j.files_no
 		FROM job j
                  JOIN project p 
                  ON j.project_no = p.project_no
@@ -93,7 +94,8 @@
 		job_type_no,
 		job_status_no,
 		project_no,
-		parent_job_no
+		parent_job_no,
+		files_no
 		) VALUES (
 		#{jobNo},
 		#{title},
@@ -109,7 +111,8 @@
 		#{jobTypeNo},
 		#{jobStatusNo},
 		#{projectNo},
-		#{parentJobNo}
+		#{parentJobNo},
+		#{filesNo}
 		)
 	</insert>
 

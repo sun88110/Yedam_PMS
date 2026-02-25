@@ -2,6 +2,8 @@ package com.pms.files;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,11 +32,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pms.config.CustomUserDetails;
 import com.pms.files.entity.FilesDetailsEntity;
 import com.pms.files.entity.FilesEntity;
 import com.pms.files.repository.FilesDetailsRepository;
 import com.pms.files.repository.FilesRepository;
 import com.pms.files.util.FileCryptoUtil;
+import com.pms.user.entity.UserEntity;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -55,6 +59,15 @@ public class FileDownloadZipMockTest {
 
 	@Value("${file.upload.path}")
 	private String uploadPath;
+	
+	private CustomUserDetails createCustomUser(String userId, boolean isAdmin) {
+		UserEntity user = UserEntity.builder()
+									.userId(userId)
+									.passwd("1234")
+									.admin(isAdmin)
+									.build();
+        return new CustomUserDetails(user);
+    }
 
 	@Test
 	@WithMockUser
@@ -70,6 +83,8 @@ public class FileDownloadZipMockTest {
 		
 		// 컨트롤러
 		MvcResult result = mockMvc.perform(get("/download/zip")
+											.with(user(createCustomUser("song", false)))
+											.with(csrf())
 											.param("detailsNos", ids))
 											.andExpect(status().isOk())
 											.andExpect(header().string(HttpHeaders.CONTENT_TYPE, "application/zip"))

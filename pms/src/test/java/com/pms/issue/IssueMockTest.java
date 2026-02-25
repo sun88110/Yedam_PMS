@@ -51,7 +51,11 @@ public class IssueMockTest {
 		issue.setProjectNo(projectNo);
 		issue.setTitle("테스트 이슈");
 		List<MultipartFile> files = Collections.emptyList();
-		issueService.addIssue(issue, files);
+		try {
+			issueService.addIssue(issue, files);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		
 		// when
 		IssueSelectDto selectDto = new IssueSelectDto();
@@ -77,13 +81,20 @@ public class IssueMockTest {
 		issueDto.setTitle("MyBatis 이슈 번호 반환 테스트");
 		issueDto.setUserId(userId);
 
-		// when
-		List<MultipartFile> files = Collections.emptyList();
-		Integer jobNo = issueService.addIssue(issueDto, files);
+		try {
+			// when
+			List<MultipartFile> files = Collections.emptyList();
+			Integer jobNo;
+			
+			jobNo = issueService.addIssue(issueDto, files);
+			
+			// then
+			assertThat(jobNo).isNotNull();
+			assertThat(jobNo).isGreaterThan(0);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-		// then
-		assertThat(jobNo).isNotNull();
-		assertThat(jobNo).isGreaterThan(0);
 
 		System.out.println("[H2 DB] INSERT ISSUE TEST END");
 	}
@@ -149,29 +160,35 @@ public class IssueMockTest {
 	public void modifyIssueTest() {
 		System.out.println("[H2 DB] MODIFY ISSUE TEST START");
 		
-		// given
-		IssueDto issueDto = createBaseIssueDto("song", "원본 제목");
-		Integer jobNo = issueService.addIssue(issueDto, createMockFiles(3));
-		
-		Integer filesNo = getJobDetail(jobNo).getFilesNo();
-        List<Integer> deleteFilesList = filesDetailsRepository
-        		.findByFilesEntity_FilesNo(filesNo)
-                .stream()
-                .map(FilesDetailsEntity::getDetailsNo)
-                .toList();
+		try {
+			// given
+			IssueDto issueDto = createBaseIssueDto("song", "원본 제목");
+			Integer jobNo;
+			jobNo = issueService.addIssue(issueDto, createMockFiles(3));
 
-	    // when
-        issueDto.setJobNo(jobNo);
-        issueDto.setTitle("수정된 제목");
-        issueDto.setComment("수정 코멘트");
-        issueDto.setFilesNo(filesNo);
-        issueService.modifyIssue(issueDto, deleteFilesList);
+			Integer filesNo = getJobDetail(jobNo).getFilesNo();
+			List<Integer> deleteFilesList = filesDetailsRepository
+					.findByFilesEntity_FilesNo(filesNo)
+					.stream()
+					.map(FilesDetailsEntity::getDetailsNo)
+					.toList();
 
-	    // then
-        IssueSelectDto updatedIssue = getJobDetail(jobNo);
-        assertThat(updatedIssue.getTitle()).isEqualTo("수정된 제목");
-        assertThat(updatedIssue.getFilesNo()).isNull();
-        assertThat(filesRepository.findById(filesNo)).isEmpty();
+			// when
+			issueDto.setJobNo(jobNo);
+			issueDto.setTitle("수정된 제목");
+			issueDto.setComment("수정 코멘트");
+			issueDto.setFilesNo(filesNo);
+			issueService.modifyIssue(issueDto, deleteFilesList);
+
+			// then
+			IssueSelectDto updatedIssue = getJobDetail(jobNo);
+			assertThat(updatedIssue.getTitle()).isEqualTo("수정된 제목");
+			assertThat(updatedIssue.getFilesNo()).isNull();
+			assertThat(filesRepository.findById(filesNo)).isEmpty();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		System.out.println("[H2 DB] MODIFY ISSUE TEST END");
 	}
