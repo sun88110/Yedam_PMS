@@ -167,26 +167,31 @@ public class IssueMockTest {
 			jobNo = issueService.addIssue(issueDto, createMockFiles(3));
 
 			Integer filesNo = getJobDetail(jobNo).getFilesNo();
-			List<Integer> deleteFilesList = filesDetailsRepository
-					.findByFilesEntity_FilesNo(filesNo)
-					.stream()
-					.map(FilesDetailsEntity::getDetailsNo)
-					.toList();
+			List<FilesDetailsEntity> beforeDetails = filesDetailsRepository.findByFilesEntity_FilesNo(filesNo);
+		    Integer deleteNo = beforeDetails.get(0).getDetailsNo();
 
-			// when
+			// when: 한 개 파일 삭제 -> 추가
 			issueDto.setJobNo(jobNo);
 			issueDto.setTitle("수정된 제목");
 			issueDto.setComment("수정 코멘트");
 			issueDto.setFilesNo(filesNo);
-			issueService.modifyIssue(issueDto, deleteFilesList);
+			List<Integer> deleteFilesList = List.of(deleteNo);
+		    List<MultipartFile> newFiles = List.of(
+		    		new MockMultipartFile("files", 
+		    							"new_upload.txt",
+		    							"text/plain",
+		    							"new content".getBytes()));
+			issueService.modifyIssue(issueDto, deleteFilesList, newFiles);
 
 			// then
 			IssueSelectDto updatedIssue = getJobDetail(jobNo);
+			List<FilesDetailsEntity> afterDetails = filesDetailsRepository.findByFilesEntity_FilesNo(updatedIssue.getFilesNo());
+			
 			assertThat(updatedIssue.getTitle()).isEqualTo("수정된 제목");
-			assertThat(updatedIssue.getFilesNo()).isNull();
-			assertThat(filesRepository.findById(filesNo)).isEmpty();
+			assertThat(afterDetails.size()).isEqualTo(3);
+			boolean hasNewFile = afterDetails.stream().anyMatch(d -> d.getFilesName().equals("new_upload.txt"));
+		    assertThat(hasNewFile).isTrue();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
