@@ -152,13 +152,6 @@
 		, #{jobNo}
 		)
 	</insert>
-	
-		(SELECT project_no FROM project WHERE project_code = #{projectCode}),
-		#{parentJobNo},
-		#{filesNo}
-		)
-	</insert>
-	
 	<!-- 일감 수정 / 단건조회 화면-->
 	<select id="selectIssue" resultType="IssueSelectDto">
       SELECT 

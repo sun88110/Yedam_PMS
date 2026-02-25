@@ -38,7 +38,7 @@ public class IssueDto {
 	@NotBlank
 	private String jobStatusNo;
 	private String jobStatus;
-	private String projectNo;
+	private Integer projectNo;
 	private String projectCode;
 	private String projectName;
 	private Integer parentJobNo;

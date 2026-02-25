@@ -136,27 +136,6 @@ public class IssueController {
 			return "redirect:/project/user/" + projectCode + "/issue/new";
 		}
 	}
-	
-	// 일감 수정
-	@PutMapping("/update")
-	public String modifyIssue(
-					@AuthenticationPrincipal CustomUserDetails customUser,
-					@PathVariable String projectCode,
-					IssueDto issueDto,
-					@RequestParam(value = "deleteFiles", required = false) List<Integer> deleteFiles,
-					@RequestParam(value = "files", required = false) List<MultipartFile> newFiles,
-					RedirectAttributes redirectAttributes) {
-		try {
-			issueDto.setUserId(customUser.getUsername());
-			issueService.modifyIssue(issueDto, deleteFiles, newFiles);
-			redirectAttributes.addFlashAttribute("message", "일감이 수정되었습니다.");
-			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();
-		} catch (Exception e) {
-			e.printStackTrace();
-			redirectAttributes.addFlashAttribute("error", "일감이 수정 중 오류가 발생하였습니다.");
-			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();
-		}		
-	}
 		
 	// 일감 수정 form
 	@GetMapping("/update")
@@ -176,12 +155,32 @@ public class IssueController {
 		model.addAttribute("projectCode", projectCode);
 		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		if (issue.getFilesNo() != null)
-			model.addAttribute("fileList", fileListService.findFileList(Integer.parseInt(issue.getFilesNo())));
+			model.addAttribute("fileList", fileListService.findFileList(issue.getFilesNo()));
 		else 
 			model.addAttribute("fileList", new ArrayList<FileListDto>());
 		return "issue/issue-modify";
 	}
-	// 일감 수정 기능
+	
+	// 일감 수정
+	@PutMapping("/update")
+	public String modifyIssue(
+					@AuthenticationPrincipal CustomUserDetails customUser,
+					@PathVariable String projectCode,
+					IssueDto issueDto,
+					@RequestParam(value = "deleteFiles", required = false) List<Integer> deleteFiles,
+					@RequestParam(value = "files", required = false) List<MultipartFile> newFiles,
+					RedirectAttributes redirectAttributes) {
+		try {
+			issueDto.setUserId(customUser.getUsername());
+			issueService.modifyIssue(issueDto, deleteFiles, newFiles);
+			redirectAttributes.addFlashAttribute("message", "일감이 수정되었습니다.");
+			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();
+		} catch (Exception e) {
+			e.printStackTrace();
+			redirectAttributes.addFlashAttribute("error", "일감이 수정 중 오류가 발생하였습니다.");
+			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();
+		}
+	}
 	
 	// 일감 상세조회 form
 	@GetMapping("/info")
@@ -201,23 +200,10 @@ public class IssueController {
 		model.addAttribute("projectCode", projectCode);
 		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		if (issue.getFilesNo() != null)
-			model.addAttribute("fileList", fileListService.findFileList(Integer.parseInt(issue.getFilesNo())));
+			model.addAttribute("fileList", fileListService.findFileList(issue.getFilesNo()));
 		else 
 			model.addAttribute("fileList", new ArrayList<FileListDto>() );
 		
 		return "issue/issue-info";
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 }

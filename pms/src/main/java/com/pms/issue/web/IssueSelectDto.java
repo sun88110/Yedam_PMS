@@ -33,7 +33,6 @@ public class IssueSelectDto {
 	private String jobTypeNo;
 	private String jobType;
 	private String jobNo;
-	private String filesNo;
 	private String jobStatusNo;
 	private String jobStatus;
 	private Integer filesNo;
