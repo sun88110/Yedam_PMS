@@ -1,18 +1,4 @@
 <!-- 조건을 추가하여 검색 -->
-<!-- 프로젝트 명 -->
-<div th:fragment="ProjectNameField" class="col-md-3 condition-field d-none"
-	id="field-projectName">
-	<div class="card card-body bg-light shadow-sm">
-		<div class="d-flex justify-content-between align-items-center mb-2">
-			<label class="fw-bold small">프로젝트 명</label>
-			<button type="button" class="btn-close btn-remove"
-				data-target="field-projectName"></button>
-		</div>
-		<input type="text" name="projectName" class="form-control form-control-sm"
-			placeholder="프로젝트 명을 입력하세요">
-	</div>
-</div>
-
 <!-- 일감번호 -->
 <div th:fragment="JobNoField" class="col-md-3 condition-field d-none"
 	id="field-jobNo">
@@ -69,14 +55,14 @@
 
 <!-- 일감 담당자 -->
 <div th:fragment="WorkersField" class="col-md-3 condition-field d-none"
-	id="field-manager">
+	id="field-managerId">
 	<div class="card card-body bg-light shadow-sm">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<label class="fw-bold small">담당자</label>
 			<button type="button" class="btn-close btn-remove"
 				data-target="field-manager"></button>
 		</div>
-		<input type="text" name="manager" class="form-control form-control-sm"
+		<input type="text" name="managerId" class="form-control form-control-sm"
 			placeholder="담당자를 선택하세요">
 	</div>
 </div>

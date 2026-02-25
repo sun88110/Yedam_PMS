@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,15 +52,13 @@ public class GroupsController {
 	public void toggleStatus(@PathVariable Long groupNo) {
 		groupsService.toggleGroupStatus(groupNo);
 	}
-
-	@PatchMapping("/{id}/name")
-	public ResponseEntity<String> updateName(@PathVariable("id") Long id, @RequestBody GroupsVO groupsVO) {
-	    // URL의 {id}를 VO의 groupNo에 수동으로 매핑해줍니다.
-	    groupsVO.setGroupNo(id);
-	    
-	    if (groupsService.modifyGroupName(groupsVO)) {
-	        return ResponseEntity.ok("SUCCESS");
-	    }
-	    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("FAIL");
-	}
+	
+	@PutMapping("/{id}")
+    public ResponseEntity<String> updateGroup(@PathVariable("id") Long id, @RequestBody GroupsVO groupsVO) {
+        groupsVO.setGroupNo(id);
+        if (groupsService.modifyGroupDetail(groupsVO)) {
+            return ResponseEntity.ok("SUCCESS");
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("FAIL");
+    }
 }

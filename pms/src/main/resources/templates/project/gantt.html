@@ -1,219 +1,378 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="https://www.thymeleaf.org/"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{common/layouts/default-layout}"
-      layout:fragment="Content">
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{common/layouts/full-default-layout}"
+	layout:fragment="Content">
 <head>
-    <meta charset="UTF-8">
-    <title>Gantt Chart</title>
-    <style>
-        /*
-         The gantt chart container needs a defined height.
-         The default layout (CoreUI) uses flexbox, but the intermediate containers don't have a height set.
-         We will use viewport height (vh) units and CSS calc() to set the height of our chart's wrapper,
-         subtracting the approximate height of the header and padding to make it fit nicely.
-        */
-        .gantt-wrapper {
-            /* 100vh = 100% of the viewport height. 120px is an estimate for header/padding. Adjust if needed. */
-            height: calc(100vh - 120px);
-            width: 100%;
-        }
-        /* The gantt container itself should fill its wrapper */
-        #gantt_here {
-            height: 100%;
-            width: 100%;
-        }
-    </style>
-    <link th:href="@{/dhtmlx/gantt/dhtmlxgantt.css}" rel="stylesheet">
-    <script th:src="@{/dhtmlx/gantt/dhtmlxgantt.js}"></script>
-    <script src="https://cdn.dhtmlx.com/gantt/edge/locales/locale_kr.js"></script>
+<meta charset="UTF-8">
+<title>PMS Project</title>
+<style>
+.gantt-wrapper {
+	/* 100vh = 100% of the viewport height. 120px is an estimate for header/padding. Adjust if needed. */
+	height: calc(100vh - 120px);
+	width: 100%;
+}
+/* The gantt container itself should fill its wrapper */
+#gantt_here {
+	height: 100%;
+	width: 100%;
+}
+
+/* 입력 버튼 헤더 css 수정 */
+.gantt_grid_head_add::before {
+	display: none !important;
+	content: "" !important;
+}
+
+.gantt_grid_head_add {
+	cursor: default !important; /* 손가락 모양(pointer)을 기본 화살표로 변경 */
+	opacity: 1 !important; /* 흐릿한 효과 제거 */
+}
+/* 그리드 헤더 셀 디자인 수정 */
+.gantt_grid_head_cell {
+	line-height: center; /* 헤더 높이에 맞춘 세로 중앙 정렬 */
+}
+
+.gantt_grid_head_cell, .gantt_cell, .gantt_scale_cell, .gantt_task_cell {
+    border-right: 1px solid #d9d9d9 !important; 
+}
+
+.gantt_grid_head_cell, .gantt_scale_cell {
+    font-size: 1rem !important;
+}
+</style>
+<!--/* <link th:href="@{/dhtmlx/gantt/dhtmlxgantt.css}" rel="stylesheet">
+    <script th:src="@{/dhtmlx/gantt/dhtmlxgantt.js}"></script> */-->
+<link href="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.css"
+	rel="stylesheet">
+<script src="https://cdn.dhtmlx.com/gantt/edge/dhtmlxgantt.js"></script>
+<!-- <script src="https://cdn.dhtmlx.com/gantt/edge/locales/locale_kr.js"></script> -->
 </head>
 <body>
-    <div class="gantt-wrapper">
-        <div id="gantt_here"></div>
+	<div class="gantt-wrapper">
+		<div id="gantt_here"></div>
+	</div>
+	
+	
+	<div class="modal fade" id="ganttCustomModal" tabindex="-1" aria-labelledby="ganttModalLabel" aria-hidden="true" style="z-index: 1055;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ganttModalLabel">새 일감 등록</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <th:block th:replace="~{common/fragments/project/issue-form-fragment :: IssueForm}"></th:block>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Activate the Marker plugin
-        gantt.plugins({
-            marker: true
+    <th:block th:replace="~{common/fragments/issue/user-select-modal :: UserSelectModal}"></th:block>
+    <th:block th:replace="~{common/fragments/issue/issue-select-modal :: IssueSelectModal}"></th:block>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/locales/bootstrap-datepicker.ko.min.js"></script>
+	
+	<script th:inline="javascript">
+	// 입력폼 관리하는 전역데이터
+    let ganttIssueModal;
+    let currentTaskInfo = null;
+	
+    const projectCode = /*[[${projectCode}]]*/ null;
+    const url = /*[[@{/project/user/{code}/gantt/data(code=${projectCode})}]]*/ '/';
+    const add_url = /*[[@{/project/user/{code}/gantt/insert(code=${projectCode})}]]*/ '/';
+    const setting_url = /*[[@{/project/user/{code}/gantt/setting(code=${projectCode})}]]*/ '/';
+    
+    gantt.plugins({ marker: true });
+
+    // ==========================================
+    // 1. 차트 외형(UI) 및 이벤트 설정 함수
+    // ==========================================
+    function initGanttUI() {
+        gantt.i18n.setLocale("kr");
+        gantt.setSkin("meadow");
+        gantt.config.date_format = "%d-%m-%Y";
+
+        // 헤더 높이 60px 조절
+        gantt.config.grid_header_height = 60; 
+        gantt.config.scale_height = 60;       
+
+        // ★ [리사이즈 해결 핵심] 
+        gantt.config.grid_resize = true;       // 왼쪽 테이블과 오른쪽 차트 사이의 경계선 드래그 허용
+        gantt.config.keep_grid_width = false;  // 내부 컬럼 크기 조절 시 테이블 전체 넓이도 같이 변하도록 허용
+        
+        // 진척도 드래그불가능
+        gantt.config.drag_progress = false;
+        
+        gantt.config.columns = [
+            { name: "text",       label: "작업명",  tree: true, width: "*", min_width: 150, resize: true },
+            /* { name: "duration",   label: "기간(일)", align: "center" }, */
+            { name: "start_date", label: "시작일", width: "*", min_width: 90, align: "center", resize: true },
+            { name: "displayEnd", label: "종료일", width: "*", min_width: 90, align: "center", resize: true
+            	, template: function(task) {
+                        if(!task.displayEnd) return "";
+                        var parts = task.displayEnd.split("-");
+                        return parts[2] + "-" + parts[1] + "-" + parts[0]; 
+                    }
+            	},
+            { name: "workerName", label: "담당자",   align: "center", width: 80, resize: true },
+            { name: "jobPriority",label: "우선순위", align: "center", width: 70, resize: true },
+            { name: "add",        label: "추가",     width: 44 }
+        ];
+
+        gantt.config.scales = [
+            { unit: "month", step: 1, format: "%Y년 %n월" },
+            { unit: "day",   step: 1, format: "%d일(%D)" } 
+        ];
+        
+        // --- 이벤트 설정들 ---
+     // 1. 헤더 '추가' 클릭 시 더미 데이터 생성 방지
+        gantt.attachEvent("onGridHeaderClick", function(name, e) {
+            if (name === "add") return false; 
+            return true; 
         });
 
-        // This function initializes the gantt chart with given data.
-        // This makes it easy to load data from either a hardcoded variable or a server response.
-        function initGantt(tasks) {
-            gantt.i18n.setLocale("kr"); // Explicitly set the locale to Korean
-            gantt.setSkin("meadow");
+        // 2. 기본 모달 대신 커스텀 부트스트랩 모달 띄우기
+        gantt.attachEvent("onBeforeLightbox", function(id) {
+            currentTaskInfo = gantt.getTask(id);
 
-            // --- Korean Localization Configuration ---
-            // 1. Grid Column Headers
-            gantt.config.columns = [
-                { name: "text",       label: "작업명",  tree: true, width: "*" },
-                { name: "start_date", label: "시작일",  align: "center" },
-                { name: "duration",   label: "기간(일)",    align: "center" },
-                { name: "add",        label: "",       width: 44 }
-            ];
-
-            // 2. Timeline Scale Format
-            gantt.config.scales = [
-                { unit: "month", step: 1, format: "%Y년 %n월" },
-                { unit: "day",   step: 1, format: "%d일 (%D)" } 
-            ];
-            // --- End of Localization ---
-            gantt.templates.rightside_text = function (start, end, task) {
-                return "ID: #" + task.id;
-            };
-            gantt.templates.leftside_text = function (start, end, task) {
-                return task.duration + " days";
-            };
-
-            gantt.init("gantt_here");
-            gantt.parse(tasks);
-
-            // --- Today Marker ---
-            // Set date format for the marker tooltip
-            var dateToStr = gantt.date.date_to_str(gantt.config.task_date);
-
-            // Add Today Marker
-            var todayMarkerId = gantt.addMarker({
-                start_date: new Date(), // Marker date (Today)
-                css: "today",           // Custom CSS class for the marker line
-                text: "오늘",            // Text displayed above the marker
-                title: dateToStr(new Date()) // Tooltip on mouse over
-            });
-
-            // Update marker position every minute (optional)
-            setInterval(function() {
-                var todayMarker = gantt.getMarker(todayMarkerId);
-                todayMarker.start_date = new Date();
-                todayMarker.title = dateToStr(todayMarker.start_date);
-                gantt.updateMarker(todayMarkerId);
-            }, 1000 * 60); // Update every minute
-        }
-
-        // --- Data Loading ---
-
-        // Option 1: Load hardcoded dummy data (current implementation)
-        
-        // Function to format date for Gantt
-        function formatDate(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            return `${day}-${month}-${year}`;
-        }
-
-        const fixedData = [
-            {id: 1, text: "Project #1 (Fixed)", start_date: "20-02-2026", duration: 20, progress: 0.4, open: true},
-            {id: 2, text: "Task #1-1", start_date: "21-02-2026", duration: 8, progress: 0.6, parent: 1},
-            {id: 3, text: "Task #1-2", start_date: "01-03-2026", duration: 8, progress: 0.6, parent: 1},
-            {id: 4, text: "Project #2 (Fixed)", start_date: "21-02-2026", duration: 12, progress: 0.8, open: true},
-            {id: 5, text: "Task #2-1", start_date: "22-02-2026", duration: 7, progress: 0.7, parent: 4},
-
-            {id: 6, text: "Legacy System Audit", start_date: "20-11-2025", duration: 40, progress: 1, open: false},
-            {id: 7, text: "Audit: Phase 1", start_date: "20-11-2025", duration: 10, progress: 1, parent: 6},
-            {id: 8, text: "Audit: Phase 2", start_date: "30-11-2025", duration: 15, progress: 1, parent: 6},
-            {id: 9, text: "Audit: Phase 3", start_date: "15-12-2025", duration: 10, progress: 1, parent: 6},
-            {id: 10, text: "2025 Website SEO", start_date: "01-12-2025", duration: 50, progress: 1, open: false},
-            {id: 11, text: "SEO: Keyword Research", start_date: "01-12-2025", duration: 15, progress: 1, parent: 10},
-            {id: 12, text: "SEO: On-page Optimization", start_date: "16-12-2025", duration: 20, progress: 1, parent: 10},
-            {id: 13, text: "SEO: Final Report", start_date: "05-01-2026", duration: 10, progress: 1, parent: 10},
-
-            {id: 14, text: "Q1 Marketing Campaign", start_date: "20-01-2026", duration: 60, progress: 0.65, open: true},
-            {id: 15, text: "Campaign: Planning", start_date: "20-01-2026", duration: 10, progress: 0.9, parent: 14},
-            {id: 16, text: "Campaign: Creatives", start_date: "30-01-2026", duration: 20, progress: 0.7, parent: 14},
-            {id: 17, text: "Campaign: Execution", start_date: "19-02-2026", duration: 25, progress: 0.3, parent: 14},
-            {id: 18, text: "Mobile App Refactor", start_date: "01-02-2026", duration: 75, progress: 0.4, open: true},
-            {id: 19, text: "Refactor: UI Kit", start_date: "01-02-2026", duration: 20, progress: 0.8, parent: 18},
-            {id: 20, text: "Refactor: State Management", start_date: "21-02-2026", duration: 25, progress: 0.2, parent: 18},
-            {id: 21, text: "Refactor: API Integration", start_date: "18-03-2026", duration: 20, progress: 0.1, parent: 18},
-            
-            {id: 22, text: "New BI Platform", start_date: "01-04-2026", duration: 90, progress: 0, open: true},
-            {id: 23, text: "BI: Requirements", start_date: "01-04-2026", duration: 15, progress: 0, parent: 22},
-            {id: 24, text: "BI: Vendor Selection", start_date: "16-04-2026", duration: 20, progress: 0, parent: 22},
-            {id: 25, text: "BI: Implementation", start_date: "06-05-2026", duration: 40, progress: 0, parent: 22},
-            {id: 26, text: "BI: Rollout", start_date: "25-06-2026", duration: 15, progress: 0, parent: 22},
-            {id: 27, text: "2026 Rebranding Initiative", start_date: "15-04-2026", duration: 120, progress: 0, open: true},
-            {id: 28, text: "Rebrand: Discovery", start_date: "15-04-2026", duration: 30, progress: 0, parent: 27},
-            {id: 29, text: "Rebrand: Design Concepts", start_date: "15-05-2026", duration: 40, progress: 0, parent: 27},
-            {id: 30, text: "Rebrand: Style Guide", start_date: "24-06-2026", duration: 30, progress: 0, parent: 27},
-            {id: 31, text: "Rebrand: Website Update", start_date: "24-07-2026", duration: 20, progress: 0, parent: 27}
-        ];
-        const fixedLinks = [
-            {id: 1, source: 1, target: 2, type: "1"}, {id: 2, source: 2, target: 3, type: "0"},
-            {id: 3, source: 4, target: 5, type: "1"},
-            {id: 4, source: 6, target: 7, type: "1"}, {id: 5, source: 7, target: 8, type: "0"}, {id: 6, source: 8, target: 9, type: "0"},
-            {id: 7, source: 10, target: 11, type: "1"}, {id: 8, source: 11, target: 12, type: "0"}, {id: 9, source: 12, target: 13, type: "0"},
-            {id: 10, source: 14, target: 15, type: "1"}, {id: 11, source: 15, target: 16, type: "0"}, {id: 12, source: 16, target: 17, type: "0"},
-            {id: 13, source: 18, target: 19, type: "1"}, {id: 14, source: 19, target: 20, type: "0"}, {id: 15, source: 20, target: 21, type: "0"},
-            {id: 16, source: 22, target: 23, type: "1"}, {id: 17, source: 23, target: 24, type: "0"}, {id: 18, source: 24, target: 25, type: "0"}, {id: 19, source: 25, target: 26, type: "0"},
-            {id: 20, source: 27, target: 28, type: "1"}, {id: 21, source: 28, target: 29, type: "0"}, {id: 22, source: 29, target: 30, type: "0"}, {id: 23, source: 30, target: 31, type: "0"}
-        ];
-
-        let currentId = 32;
-        let linkId = 24;
-
-        const generatedData = [];
-        const generatedLinks = [];
-
-        let lastProjectId = 0;
-        for (let i = 0; currentId <= 100; i++) {
-            if (i % 8 === 0) { // Make every ~8th task a project
-                lastProjectId = currentId;
-                const startMonth = Math.floor(Math.random() * 5) + 3; // March to July
-                const startDate = new Date(2026, startMonth - 1, Math.floor(Math.random() * 28) + 1);
-                generatedData.push({
-                    id: currentId,
-                    text: `Proc. Project ${Math.floor(currentId / 8)}`,
-                    start_date: formatDate(startDate),
-                    duration: 50 + Math.floor(Math.random() * 20),
-                    progress: Math.random().toFixed(2),
-                    open: true
-                });
-            } else {
-                const parentProject = (fixedData.concat(generatedData)).find(task => task.id === lastProjectId);
-                const parentStartDate = parentProject ? new Date(parentProject.start_date.split('-').reverse().join('-')) : new Date();
-                const startDate = new Date(parentStartDate.getTime());
-                startDate.setDate(startDate.getDate() + Math.floor(Math.random() * 15));
-
-                generatedData.push({
-                    id: currentId,
-                    text: `Proc. Sub-task ${currentId}`,
-                    start_date: formatDate(startDate),
-                    duration: 5 + Math.floor(Math.random() * 10),
-                    progress: Math.random().toFixed(2),
-                    parent: lastProjectId
-                });
-                if (currentId > lastProjectId + 1) {
-                    generatedLinks.push({ id: linkId++, source: currentId - 1, target: currentId, type: '0' });
-                } else {
-                    generatedLinks.push({ id: linkId++, source: lastProjectId, target: currentId, type: '1' });
-                }
+            if (!ganttIssueModal) {
+                ganttIssueModal = new bootstrap.Modal(document.getElementById('ganttCustomModal'));
             }
-            currentId++;
-        }
+            
+            document.getElementById('issueInsert').reset(); 
 
-        const dummyTasks = {
-            data: fixedData.concat(generatedData),
-            links: fixedLinks.concat(generatedLinks)
-        };
-        initGantt(dummyTasks);
+            const modalTitle = document.getElementById('ganttModalLabel');
+            const progressSelect = document.getElementById('progressSelect');
+            const hiddenProjectNo = document.getElementById('hiddenProjectNo');
+            const hiddenParentJobNo = document.getElementById('hiddenParentJobNo');
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
 
+            // [추가] 숨김 필드(Hidden) 자동 세팅
+            let rawParentId = String(currentTaskInfo.parent);
+            if (rawParentId.startsWith("p")) {
+                hiddenProjectNo.value = rawParentId.replace("p", "");
+                hiddenParentJobNo.value = ""; 
+            } else if (rawParentId.startsWith("j")) {
+                hiddenParentJobNo.value = rawParentId.replace("j", "");
+            } else {
+                hiddenProjectNo.value = projectCode;
+            }
 
-        /*
-        // Option 2: Load data from the server (for future use)
-        // When you have a backend API endpoint (e.g., /api/gantt-data), you can use this code.
-        
-        fetch("/api/gantt-data")
-            .then(response => response.json())
-            .then(data => {
-                initGantt(data);
+            // [추가] 날짜 기본값 세팅
+            startDateInput.value = gantt.date.date_to_str("%Y-%m-%d")(currentTaskInfo.start_date);
+            endDateInput.value = gantt.date.date_to_str("%Y-%m-%d")(currentTaskInfo.end_date);
+
+            // [추가] 신규/수정 상태에 따른 진척도 제어
+            if (currentTaskInfo.$new) {
+                modalTitle.innerText = "새 일감 등록";
+                progressSelect.value = "0";
+                progressSelect.setAttribute("disabled", "true");
+            } else {
+                modalTitle.innerText = "일감 수정";
+                progressSelect.removeAttribute("disabled");
+                progressSelect.value = (currentTaskInfo.progress * 100).toString() || "0";
+                // 기존 제목 불러오기
+                document.getElementById('issueTitle').value = currentTaskInfo.text;
+            }
+
+            ganttIssueModal.show();
+            return false; 
+        });
+
+        // UI 껍데기 렌더링
+        gantt.init("gantt_here");
+    }
+    
+     // ==========================================
+    // 부트스트랩 모달 이벤트 및 Fetch 전송 (initGanttUI 밖으로 빼냄)
+    // ==========================================
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. 모달이 닫힐 때 작동하는 안전 클린업 로직 (취소, X버튼 등)
+        document.getElementById('ganttCustomModal').addEventListener('hidden.bs.modal', function () {
+            if (currentTaskInfo && currentTaskInfo.$new) {
+                gantt.deleteTask(currentTaskInfo.id); // 신규 작성 중 취소 시 임시 바(Bar) 삭제
+            }
+            currentTaskInfo = null;
+        });
+
+        // 2. [등록] 버튼 클릭 시 Fetch 전송
+        document.getElementById('btnIssueSubmit').addEventListener('click', function(e) {
+        	e.preventDefault();
+        	
+            const form = document.getElementById('issueInsert');
+            const formData = new FormData(form);
+
+            if (currentTaskInfo && currentTaskInfo.$new) {
+                formData.append("progress", 0);
+            }
+            // 프로젝트 코드 필수 주입
+            formData.append("projectCode", projectCode);
+            
+            // 간트 차트 렌더링을 위한 필수 데이터 강제 추가
+            formData.append("parent", currentTaskInfo.parent || "0");
+            formData.append("duration", 1); 
+            
+            fetch(add_url, {
+                method: 'POST',
+                body: formData 
+            })
+            .then(response => {
+                if(!response.ok) throw new Error("서버 응답 오류");
+                return response.json(); // 성공 시 서버가 발급한 ID가 담긴 JSON 반환을 기대함
+            })
+            .then(savedTask => {
+                // 저장 성공: $new 플래그 지워서 모달 닫힐 때 삭제되지 않게 방어
+                if (currentTaskInfo) delete currentTaskInfo.$new; 
+                ganttIssueModal.hide(); 
+
+                // 임시 바 지우기
+                gantt.deleteTask(currentTaskInfo.id);
+
+                // ★ 핵심: 서버에서 온 DTO(IssueDto)를 간트 차트 규격으로 변환!
+                let newGanttTask = {
+                    id: "j" + savedTask.jobNo,        // 간트 차트의 일감 고유 ID
+                    text: savedTask.title,            // 화면에 보일 작업명 (title -> text)
+                    start_date: savedTask.startDate,  // 서버 포맷에 따라 Date 객체나 스트링으로 가공 필요할 수 있음
+                    duration: 1,                      // 기본 기간
+                    parent: currentTaskInfo.parent,   // 기존에 가지고 있던 부모 ID 유지
+                    workerName: savedTask.username,   // 담당자 이름 매핑
+                    jobPriority: savedTask.commonName // 우선순위 매핑
+                };
+
+                // 변환된 데이터로 차트에 추가
+                gantt.addTask(newGanttTask, newGanttTask.parent);
+
+                gantt.message({text: "일감이 등록되었습니다.", type: "success"});
             })
             .catch(error => {
-                console.error("Error loading Gantt data from server:", error);
+                console.error('Error:', error);
+                gantt.message({text: "등록 중 오류가 발생했습니다.", type: "error"});
             });
-        */
-    </script>
+        });
+    });
+    
+    // 전역 변수로 마커 ID 관리
+    let todayMarkerId = null;
+
+    // 마커 생성 전용 함수
+    function renderTodayMarker() {
+        if (!gantt.getMarker) return; // 플러그인 로드 확인
+        
+        var dateToStr = gantt.date.date_to_str(gantt.config.task_date);
+        
+        // 기존 마커가 있다면 지우고 다시 생성
+        if (todayMarkerId) gantt.deleteMarker(todayMarkerId);
+        
+        todayMarkerId = gantt.addMarker({
+            start_date: new Date(),
+            css: "today",
+            text: "오늘",
+            title: dateToStr(new Date())
+        });
+    }
+
+    // 1분마다 마커 위치 업데이트 (전역에 한 번만 선언)
+    setInterval(function() {
+        if (todayMarkerId && gantt.getMarker(todayMarkerId)) {
+            var todayMarker = gantt.getMarker(todayMarkerId);
+            todayMarker.start_date = new Date();
+            var dateToStr = gantt.date.date_to_str(gantt.config.task_date);
+            todayMarker.title = dateToStr(todayMarker.start_date);
+            gantt.updateMarker(todayMarkerId);
+        }
+    }, 1000 * 60);
+    // ==========================================
+    // 2. 서버에서 데이터를 가져와서 차트에 채우는 함수
+    // ==========================================
+    function loadGanttData() {
+        fetch(url)
+        .then(response => {
+            if(!response.ok) throw new Error("상태코드 "+response.status);
+            return response.json(); 
+        })
+        .then(ganttData => {
+            let linkIdCounter = 1;
+            let previousTaskByParent = {}; 
+            
+            ganttData.data.forEach( task => {
+                if (task.parent === "0" || String(task.id).startsWith("p")) {
+                    task.open = true;        
+                    task.type = "project";   
+                    task.color = "#10c16f";          
+                    task.progressColor = "#65c16f"; 
+                } else {
+                    task.color = "#3db9d3";          
+                    task.progressColor = "#2a8e9d"; 
+                }
+
+                let parentId = task.parent || "0";
+                if (parentId !== "0") {
+                    ganttData.links.push({
+                        id: linkIdCounter++,
+                        source: parentId, 
+                        target: task.id,  
+                        type: "1"         
+                    });
+                }
+                previousTaskByParent[parentId] = task; 
+            });
+
+            // ★ 중요: 이전 화면에 있던 데이터를 지우고 새 데이터로 파싱 ★
+            gantt.clearAll();
+            gantt.parse(ganttData);
+
+            // 마커 다시그리기
+            renderTodayMarker();
+        })
+        .catch(err => {
+            console.error(err);
+            gantt.message({ text: "데이터 호출 중 문제가 발생했습니다.", type: "error" });
+        });
+    }
+    
+    // ==========================================
+    // 폼 Select Box 기초 데이터 로딩
+    // ==========================================
+    function loadSettingData() {
+        fetch(setting_url)
+        .then(res => res.json())
+        .then(data => {
+            // 셀렉트 박스 옵션 채우는 도우미 함수
+            const bindOptions = (selectName, list, valueKey, textKey) => {
+                const selectEl = document.querySelector(`select[name="${selectName}"]`);
+                if(!selectEl || !list) return;
+                list.forEach(item => selectEl.add(new Option(item[textKey], item[valueKey])));
+            };
+
+            // 상태, 유형, 우선순위 바인딩
+            bindOptions('jobStatusNo', data.statusList, 'jobStatusNo', 'jobStatus');
+            bindOptions('jobTypeNo', data.typeList, 'jobTypeNo', 'jobType');
+            bindOptions('priority', data.priorityList, 'commonNo', 'commonName');
+            
+            // 담당자 & 작업자 바인딩 (동일한 리스트 사용)
+            const managerSelect = document.querySelector('select[name="managerId"]');
+            const workerSelect = document.querySelector('select[name="userId"]');
+            if(data.managerList) {
+                data.managerList.forEach(user => {
+                    let option = new Option(user.username, user.userId);
+                    managerSelect.add(option.cloneNode(true));
+                    workerSelect.add(option);
+                });
+            }
+        })
+        .catch(err => console.error("세팅 로드 에러:", err));
+    }
+    // ==========================================
+    // 3. 페이지가 로드되면 실행되는 메인 로직
+    // ==========================================
+    initGanttUI();   // 1. 차트 껍데기를 먼저 그리고
+    loadGanttData(); // 2. 데이터를 채워 넣습니다.
+    loadSettingData();
+</script>
 
 </body>
 </html>

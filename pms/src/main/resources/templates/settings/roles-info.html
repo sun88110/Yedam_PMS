@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="https://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{common/layouts/default-layout}">
+
+<head>
+<title>권한 상세 설정</title>
+<style>
+.table th { background-color: #f8f9fa; }
+.permission-checkbox { transform: scale(1.2); cursor: pointer; }
+.menu-name { font-weight: 600; color: #333; }
+.url-text { font-size: 0.85rem; color: #666; }
+#roleNameInput { font-size: 1.25rem; font-weight: bold; border-color: #4f5d73; }
+.role-header-area { padding: 1.5rem 1rem; }
+/* 행 체크박스 강조 */
+.row-select-all { transform: scale(1.1); cursor: pointer; border-color: #adb5bd; }
+</style>
+</head>
+
+<body>
+	<div layout:fragment="Content">
+		<div class="container-fluid">
+            <div class="card mb-4 shadow-sm">
+				<div class="card-body d-flex justify-content-between align-items-center role-header-area">
+					<div id="roleNameContainer" class="d-flex align-items-center gap-3">
+						<h3 class="mb-0 d-flex align-items-center gap-2">
+							<i class="cil-shield-check text-primary"></i> 
+                            <span id="roleNameDisplay">역할 권한 설정</span> 
+                            <input type="text" id="roleNameInput" class="form-control d-none" style="width: 300px;">
+						</h3>
+						<div class="action-buttons">
+							<button type="button" id="btnEditRoleName" class="btn btn-outline-secondary btn-sm"><i class="cil-pencil"></i> 이름 수정</button>
+							<button type="button" id="btnSaveRoleName" class="btn btn-success btn-sm text-white d-none">확인</button>
+							<button type="button" id="btnCancelRoleName" class="btn btn-link btn-sm text-danger d-none">취소</button>
+						</div>
+						<span class="badge bg-light text-dark p-2" id="roleIdDisplay"></span>
+					</div>
+					<div class="d-flex gap-2">
+						<button type="button" class="btn btn-outline-dark" onclick="history.back()"><i class="cil-arrow-left"></i> 뒤로가기</button>
+						<button type="button" id="btnSaveAll" class="btn btn-primary px-4"><i class="cil-save"></i> 전체 권한 저장</button>
+					</div>
+				</div>
+			</div>
+
+            <div class="card mb-4 border-0">
+				<div class="card-body p-0">
+					<div class="input-group input-group-lg shadow-sm">
+						<span class="input-group-text bg-white border-end-0"><i class="cil-search"></i></span> 
+                        <input type="text" id="menuSearchInput" class="form-control border-start-0 ps-0" placeholder="찾으시는 메뉴명 또는 경로를 입력하세요">
+						<button class="btn btn-light border" type="button" id="btnSearchClear">초기화</button>
+					</div>
+				</div>
+			</div>
+
+            <div class="card shadow-sm">
+				<div class="card-header bg-white py-3">
+					<h5 class="card-title mb-0">메뉴 접근 제어 행렬 (CRUD Matrix)</h5>
+				</div>
+				<div class="card-body p-0">
+					<table class="table table-bordered table-hover mb-0 text-center align-middle" id="permissionTable">
+						<thead class="table-light">
+							<tr>
+                                <th style="width: 30%;" class="py-3">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <input type="checkbox" class="form-check-input mt-0" id="selectAllMaster">
+                                        <span>메뉴명 / 경로 (행 선택)</span>
+                                    </div>
+                                </th>
+								<th style="width: 15%;">조회(READ) <br> <input type="checkbox" class="form-check-input select-all mt-2" data-type="read"></th>
+								<th style="width: 15%;">생성(CREATE) <br> <input type="checkbox" class="form-check-input select-all mt-2" data-type="create"></th>
+								<th style="width: 15%;">수정(UPDATE) <br> <input type="checkbox" class="form-check-input select-all mt-2" data-type="update"></th>
+								<th style="width: 15%;">삭제(DELETE) <br> <input type="checkbox" class="form-check-input select-all mt-2" data-type="delete"></th>
+							</tr>
+						</thead>
+						<tbody id="permissionTableBody">
+							<tr><td colspan="5" class="py-5 text-muted">데이터를 불러오는 중입니다...</td></tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+<script th:inline="javascript">
+$(document).ready(function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleNo = urlParams.get('menu_id');
+
+    if (!roleNo) {
+        alert("권한 번호가 누락되었습니다.");
+        location.href = "/settings";
+        return;
+    }
+
+    // [데이터 로드]
+    const loadData = () => {
+        $.get(`/settings/api/roles/${roleNo}/permissions`, function (data) {
+            renderTable(data);
+            if(data && data.length > 0) {
+                const realRoleName = data[0].roleName || "이름 정보 없음";
+                $('#roleNameDisplay').text(realRoleName);
+                $('#roleIdDisplay').text(`(ID: ${roleNo})`);
+                updateSelectAllStatus();
+            }
+        });
+    };
+
+    // [테이블 렌더링]
+    const renderTable = (list) => {
+        const $tbody = $('#permissionTableBody').empty();
+        if(!list || list.length === 0) {
+            $tbody.append('<tr><td colspan="5" class="py-5 text-muted">연결된 메뉴 데이터가 없습니다.</td></tr>');
+            return;
+        }
+        list.forEach(item => {
+            $tbody.append(`
+                <tr data-menu-id="${item.menuId}">
+                    <td class="text-start ps-4 search-target">
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="checkbox" class="form-check-input row-select-all">
+                            <div>
+                                <div class="menu-name">${item.menuName}</div>
+                                <div class="url-text text-secondary small">${item.urlData || '-'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><input type="checkbox" class="form-check-input permission-checkbox" data-type="read" ${item.crudRead == 1 ? 'checked' : ''}></td>
+                    <td><input type="checkbox" class="form-check-input permission-checkbox" data-type="create" ${item.crudCreate == 1 ? 'checked' : ''}></td>
+                    <td><input type="checkbox" class="form-check-input permission-checkbox" data-type="update" ${item.crudUpdate == 1 ? 'checked' : ''}></td>
+                    <td><input type="checkbox" class="form-check-input permission-checkbox" data-type="delete" ${item.crudDelete == 1 ? 'checked' : ''}></td>
+                </tr>
+            `);
+        });
+    };
+
+    // [상태 동기화 함수] - 하나로 통합
+    const updateSelectAllStatus = () => {
+        const types = ['read', 'create', 'update', 'delete'];
+        
+        // 1. 열(세로) 동기화
+        types.forEach(type => {
+            const totalVisible = $(`.permission-checkbox[data-type="${type}"]:visible`).length;
+            const checkedVisible = $(`.permission-checkbox[data-type="${type}"]:visible:checked`).length;
+            $(`.select-all[data-type="${type}"]`).prop('checked', totalVisible > 0 && totalVisible === checkedVisible);
+        });
+
+        // 2. 행(가로) 동기화
+        $('#permissionTableBody tr:visible').each(function() {
+            const totalInRow = $(this).find('.permission-checkbox').length;
+            const checkedInRow = $(this).find('.permission-checkbox:checked').length;
+            $(this).find('.row-select-all').prop('checked', totalInRow > 0 && totalInRow === checkedInRow);
+        });
+
+        // 3. 마스터(전체) 동기화
+        const totalAll = $('#permissionTableBody tr:visible .permission-checkbox').length;
+        const checkedAll = $('#permissionTableBody tr:visible .permission-checkbox:checked').length;
+        $('#selectAllMaster').prop('checked', totalAll > 0 && totalAll === checkedAll);
+    };
+
+    // [이벤트: 개별 체크박스 변경]
+    $(document).on('change', '.permission-checkbox', function() {
+        updateSelectAllStatus();
+    });
+
+    // [이벤트: 가로줄 전체 선택]
+    $(document).on('change', '.row-select-all', function() {
+        const isChecked = $(this).is(':checked');
+        $(this).closest('tr').find('.permission-checkbox').prop('checked', isChecked);
+        updateSelectAllStatus();
+    });
+
+    // [이벤트: 세로줄 전체 선택]
+    $(document).on('change', '.select-all', function() {
+        const type = $(this).data('type');
+        const isChecked = $(this).is(':checked');
+        $('#permissionTableBody tr:visible').find(`.permission-checkbox[data-type="${type}"]`).prop('checked', isChecked);
+        updateSelectAllStatus();
+    });
+
+    // [이벤트: 마스터 전체 선택]
+    $('#selectAllMaster').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('#permissionTableBody tr:visible input[type="checkbox"]').prop('checked', isChecked);
+        updateSelectAllStatus();
+    });
+
+    // [검색/저장 등 기타 로직]
+    $('#menuSearchInput').on('keyup', function() {
+        const value = $(this).val().toLowerCase().trim();
+        $('#permissionTableBody tr').each(function() {
+            const content = $(this).find('.search-target').text().toLowerCase();
+            $(this).toggle(content.indexOf(value) > -1);
+        });
+        updateSelectAllStatus();
+    });
+
+    $('#btnSearchClear').on('click', function() {
+        $('#menuSearchInput').val('').trigger('keyup').focus();
+    });
+
+    $('#btnSaveAll').on('click', function () {
+        if(!confirm("이 설정으로 권한을 변경하시겠습니까?")) return;
+        const permissions = [];
+        $('#permissionTableBody tr').each(function () {
+            const $row = $(this);
+            if($row.data('menu-id')) {
+                permissions.push({
+                    menuId: $row.data('menu-id'),
+                    roleNo: roleNo,
+                    crudRead: $row.find('[data-type="read"]').is(':checked') ? 1 : 0,
+                    crudCreate: $row.find('[data-type="create"]').is(':checked') ? 1 : 0,
+                    crudUpdate: $row.find('[data-type="update"]').is(':checked') ? 1 : 0,
+                    crudDelete: $row.find('[data-type="delete"]').is(':checked') ? 1 : 0
+                });
+            }
+        });
+
+        $.ajax({
+            url: `/settings/api/roles/${roleNo}/permissions`,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(permissions),
+            success: function () {
+                alert("권한 설정이 저장되었습니다.");
+                loadData();
+            },
+            error: function () { alert("권한 저장 중 오류가 발생했습니다."); }
+        });
+    });
+
+    // 이름 수정 관련 이벤트 (생략 없이 유지)
+    $('#btnEditRoleName').on('click', function() {
+        const currentName = $('#roleNameDisplay').text();
+        $('#roleNameDisplay, #btnEditRoleName').addClass('d-none');
+        $('#roleNameInput').val(currentName).removeClass('d-none').focus();
+        $('#btnSaveRoleName, #btnCancelRoleName').removeClass('d-none');
+    });
+
+    $('#btnCancelRoleName').on('click', function() {
+        $('#roleNameInput, #btnSaveRoleName, #btnCancelRoleName').addClass('d-none');
+        $('#roleNameDisplay, #btnEditRoleName').removeClass('d-none');
+    });
+
+    $('#btnSaveRoleName').on('click', function() {
+        const newName = $('#roleNameInput').val().trim();
+        if(!newName) return alert("이름을 입력하세요.");
+        $.ajax({
+            url: `/settings/api/roles/${roleNo}`,
+            type: 'PATCH',
+            contentType: 'application/json',
+            data: JSON.stringify({ roleName: newName }),
+            success: function() {
+                $('#roleNameDisplay').text(newName);
+                $('#btnCancelRoleName').click();
+                alert("역할 이름이 변경되었습니다.");
+            }
+        });
+    });
+
+    loadData();
+});
+</script>
+	</div>
+</body>
+</html>

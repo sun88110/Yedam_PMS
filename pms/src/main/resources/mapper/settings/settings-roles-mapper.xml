@@ -28,7 +28,12 @@
     )
 </insert>
 
+<delete id="deleteRolePermissions">
+    DELETE FROM CRUD WHERE ROLE_NO = #{roleNo}
+</delete>
+
 <delete id="deleteRole">
     DELETE FROM ROLES WHERE ROLE_NO = #{roleNo}
 </delete>
+
 </mapper>

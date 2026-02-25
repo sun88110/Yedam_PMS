@@ -1,11 +1,11 @@
 <!doctype html>
-<!--
+<!--/*
 * CoreUI - Free Bootstrap Admin Template
 * @version v5.3.0
 * @link https://coreui.io/product/free-bootstrap-admin-template/
 * Copyright (c) 2025 creativeLabs Łukasz Holeczek
 * Licensed under MIT (https://github.com/coreui/coreui-free-bootstrap-admin-template/blob/main/LICENSE)
--->
+*/-->
 <html
   lang="ko"
   xmlns:th="https://www.thymeleaf.org/"
@@ -25,9 +25,9 @@
       <!--/* pm/admin Only */-->
       <!--/* ProjectAdmin buttons : add-project, modify-project */-->
       <div class="d-flex align-items-center gap-4">
-        <div class="d-flex align-items-center gap-2">
+        <div th:if="${pm or admin}"  class="d-flex align-items-center gap-2">
           <i class="cil-plus text-dark" style="font-size: 1.5rem; font-weight: bold"></i>
-			<button type="button" 
+			<button type="button"
 			        id="btnAddNewProject" 
 			        class="btn btn-dark fw-bold" 
 			        th:data-url="@{/project/new}">
@@ -35,9 +35,9 @@
 			</button>
         </div>
 
-        <div class="d-flex align-items-center gap-2">
+        <div th:if="${admin}" class="d-flex align-items-center gap-2">
           <i class="cil-settings text-secondary" style="font-size: 1.5rem"></i>
-          <button class="btn btn-primary fw-bold">관리</button>
+          <button class="btn btn-primary fw-bold" name="btnSettings" th:data-url="@{/settings/}">관리</button>
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <h5 class="fw-bold text-primary mb-0">
                         <a th:text="${project.projectName}" 
-                           th:href="@{/project/{code}/info(code=${project.projectCode})}" 
+                           th:href="@{/project/user/{code}/info(code=${project.projectCode})}" 
                            class="text-decoration-none"></a>
                     </h5>
                     <span th:if="${project.publicYn == 1}" class="badge bg-info-light text-info small" style="font-size: 0.7rem;">Public</span>
@@ -130,7 +130,7 @@
     <div th:each="sub : ${allProjects}" th:if="${sub.parentProjectNo == parentNo}" 
          class="border-start border-secondary border-4 ms-3 ps-3 mb-0"> <div class="d-flex align-items-center gap-2">
             <h6 class="fw-bold text-primary mb-0">
-                <a th:href="@{/project/{code}/info(code=${sub.projectCode})}" 
+                <a th:href="@{/project/user/{code}/info(code=${sub.projectCode})}" 
                    th:text="${sub.projectName}" class="text-decoration-none"></a>
             </h6>
             <span th:if="${sub.publicYn == 1}" class="badge bg-info-light text-info small" style="font-size: 0.65rem;">Public</span>
@@ -140,15 +140,41 @@
         <th:block th:replace="~{::recursiveTree(parentNo=${sub.projectNo}, allProjects=${allProjects})}"></th:block>
     </div>
 </th:block>
-	<script>
-	document.addEventListener('DOMContentLoaded', function() {
-	    const btn = document.getElementById('btnAddNewProject');
-	    if (btn) {
-	        btn.addEventListener('click', function() {
-	            const url = this.getAttribute('data-url');
-	            location.href = url;
-	        });
-	    }
-	});	
-	</script>
+<!--/* Toast Tag */-->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div th:if="${successMessage != null or errorMessage != null}" 
+         id="liveToast" 
+         class="toast hide" 
+         role="alert" aria-live="assertive" aria-atomic="true">
+        
+        <div class="toast-header text-white" 
+             th:classappend="${successMessage != null} ? 'bg-success' : 'bg-danger'">
+            <strong class="me-auto" th:text="${successMessage != null} ? '성공' : '오류'">알림</strong>
+            <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="toast" aria-label="Close"></button>
+        </div>
+        
+        <div class="toast-body" th:text="${successMessage ?: errorMessage}">
+            </div>
+    </div>
+</div>
+<!--/* Toast Script */-->
+<script th:if="${successMessage != null or errorMessage != null}">
+    document.addEventListener('DOMContentLoaded', function () {
+        const toastElement = document.getElementById('liveToast');
+        if (toastElement) {
+            const toast = new coreui.Toast(toastElement);
+            toast.show();
+        }
+    });
+</script>
+<!--/* jQuery */-->
+<script src="https://code.jquery.com/jquery-4.0.0.js" integrity="sha256-9fsHeVnKBvqh3FB2HYu7g2xseAZ5MlN6Kz/qnkASV8U=" crossorigin="anonymous"></script>
+
+<script>
+	$(document).ready(function() {
+	    $('[data-url]').on('click', function() {
+	        location.href = $(this).data('url');
+	    });
+	});
+</script>
 </html>

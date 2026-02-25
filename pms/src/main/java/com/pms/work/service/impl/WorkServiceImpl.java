@@ -35,8 +35,8 @@ public class WorkServiceImpl implements WorkService {
 		return workMapper.selectIssueInProject(workInsertDto);
 	}
 	@Override
-	public List<WorkInsertDto> findWorkType(String workType) {
-		return workMapper.selectWorkDetails(workType);
+	public List<WorkInsertDto> findWorkType(WorkInsertDto workInsertDto) {
+		return workMapper.selectWorkDetails(workInsertDto);
 	};
 
 	// 소요시간 등록 기능

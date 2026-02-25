@@ -15,5 +15,5 @@ public interface GroupsService {
     
     void toggleGroupStatus(Long groupNo);
     
-    boolean modifyGroupName(GroupsVO groupsVO);
+    boolean modifyGroupDetail(GroupsVO groupsVO);
 }

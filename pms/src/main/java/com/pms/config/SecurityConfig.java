@@ -38,8 +38,8 @@ public class SecurityConfig {
 					.requestMatchers("/coreui/**").permitAll()
 					.requestMatchers("/home/**", "/user/**").permitAll()
 					.requestMatchers("/settings/**").hasRole("ADMIN")
-					.requestMatchers("/project/user/{projectCode}/**").access(projectAuthorizationManager)
-					.anyRequest().authenticated()
+					.anyRequest().access(projectAuthorizationManager)
+					//.anyRequest().authenticated()
 					)
 			.formLogin(form -> form
 					.loginPage("/user/login")

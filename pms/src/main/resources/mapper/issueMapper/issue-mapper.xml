@@ -1,18 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.issue.mapper.IssueMapper">
-
-	<select id="selectIssue" parameterType="IssueDto">
-		SELECT job_no
-		, title
-		, job_status_no
-		, priority
-		, manager_id
-		FROM job
-		WHERE user_id = #{userId}
-		ORDER BY job_no
+	<!-- 일감 전체 조회 + 조건 검색 기능 -->
+	<select id="selectIssueList" resultType="IssueSelectDto">
+		SELECT job_no AS jobNo
+		           , j.title
+                   , p.project_name AS projectName
+                   , p.project_code
+                   , j.job_status_no
+                   , j.job_type_no
+                   , j.priority
+		           , FN_GET_JOB_STATUS(j.job_status_no) AS job_status
+                   , FN_GET_JOB_TYPE(j.job_type_no) AS job_type
+                   , FN_GET_CODE_NAME(j.priority) AS priority_name
+		           , j.manager_id
+		           , j.files_no
+		FROM job j
+                 JOIN project p 
+                 ON j.project_no = p.project_no
+        WHERE p.project_code = #{projectCode}
 	</select>
-
+	
+	<!-- 일감 상태 목록-->
+	<select id="selectIssueStatus" resultType="IssueDto">
+	  SELECT job_status_no
+	            , job_status
+	  FROM job_status
+	  ORDER BY job_status_no 
+	</select>
+	
+	<!-- 일감 유형 목록-->
+	<select id="selectIssueType" resultType="IssueDto">
+      SELECT job_type_no
+	            , job_type
+	  FROM job_type
+	  ORDER BY job_type_no	
+	</select>
+	
+	<!-- 일감 우선순위 목록 -->
+	<select id="selectIssuePriority" resultType="IssueDto">
+      SELECT common_no
+	            , common_name
+	  FROM common
+	  WHERE
+	    parent_common_no = (
+	                                         SELECT common_no 
+	                                         FROM common
+	                                         WHERE common_name = '우선순위 코드'
+	   									   )	
+	   ORDER BY common_no
+	</select>
+	<!-- 일감 담당자 누구를 선택할지 조회 -->
+	<select id="selectIssueManager" resultType="IssueDto">
+	  SELECT m.user_id
+	             , m.username
+	  FROM vw_member m
+	  JOIN vw_project p
+	  ON m.project_no = p.project_no
+	  JOIN users u
+	  ON m.user_id = u.user_id
+	  WHERE p.project_code = #{projectCode}
+	  ORDER BY u.username
+	</select>
+	
+	<!-- 프로젝트의  조회 project와 join-->
+	<select id="selectParentIssue" resultType="IssueDto">
+	  SELECT j.job_no
+                , j.title
+                , p.project_name AS projectName
+	  FROM job j
+      JOIN project p
+      ON j.project_no = p.project_no
+	  WHERE project_code = #{projectCode} 
+	</select>
+	
+    <!-- 일감 등록 기능 -->
 	<insert id="insertIssue" parameterType="IssueDto">
 		<selectKey keyProperty="jobNo" resultType="Integer" order="BEFORE">
 			SELECT JOB_SEQ.NEXTVAL FROM DUAL
@@ -33,7 +95,8 @@
 		job_type_no,
 		job_status_no,
 		project_no,
-		parent_job_no
+		parent_job_no,
+		files_no
 		) VALUES (
 		#{jobNo},
 		#{title},
@@ -49,7 +112,73 @@
 		#{jobTypeNo},
 		#{jobStatusNo},
 		#{projectNo},
-		#{parentJobNo}
+		#{parentJobNo},
+		#{filesNo}
 		)
 	</insert>
+
+	<!-- 일감 수정 -->
+	<update id="updateIssue" parameterType="IssueDto">
+		UPDATE JOB
+		SET PUBLIC_ROLE = #{publicRole},
+		TITLE = #{title},
+		CONTENT = #{content},
+		PRIORITY = #{priority},
+		START_DATE = #{startDate},
+		END_DATE = #{endDate},
+		PROGRESS = #{progress},
+		JOB_TYPE_NO = #{jobTypeNo},
+		JOB_STATUS_NO = #{jobStatusNo},
+		PARENT_JOB_NO = #{parentJobNo, jdbcType=INTEGER},
+		FILES_NO = #{filesNo, jdbcType=INTEGER}
+		WHERE JOB_NO = #{jobNo}
+	</update>
+
+	<!-- 히스토리 저장 -->
+	<insert id="insertIssueHistory" parameterType="IssueDto">
+		INSERT INTO HISTORY (
+		history_no
+		, comment
+		, user_id
+		, history_date
+		, delete_date
+		, job_no
+		) VALUES (
+		HISTORY_SEQ.NEXTVAL
+		, #{comment}
+		, #{userId}
+		, CURRENT_TIMESTAMP
+		, #{deleteDate}
+		, #{jobNo}
+		)
+	</insert>
+	<!-- 일감 수정 / 단건조회 화면-->
+	<select id="selectIssue" resultType="IssueSelectDto">
+      SELECT 
+			       j.job_no
+			    , j.manager_id 
+			    , j.public_role
+			    , j.project_no
+			    , j.title
+			    , j.content
+			    , j.priority
+			    , FN_GET_CODE_NAME(j.priority) AS priority_name
+			    , j.start_date
+			    , end_date
+			    , j.progress
+			    , j.parent_job_no
+			    , j.files_no
+			    , j.user_id
+			    , j.job_type_no
+			    , j.job_status_no
+			    , jt.job_type
+                , js.job_status
+    FROM job j
+    JOIN job_type jt
+    ON j.job_type_no = jt.job_type_no
+    JOIN job_status js
+    ON j.job_status_no = js.job_status_no
+    WHERE job_no = #{jobNo}
+	</select>
+	
 </mapper>

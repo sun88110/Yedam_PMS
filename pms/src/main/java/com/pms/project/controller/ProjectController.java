@@ -1,5 +1,9 @@
 package com.pms.project.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,9 +12,15 @@ import org.springframework.web.bind.annotation.ModelAttribute; // 추가
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.pms.config.CustomUserDetails;
+import com.pms.issue.mapper.IssueMapper;
+import com.pms.issue.service.IssueService;
+import com.pms.issue.web.IssueDto;
 import com.pms.project.common.mapper.ProjectCommonStatusMapper;
 import com.pms.project.dto.ProjectInsertDTO;
 import com.pms.project.dto.ProjectSearchDTO; // 추가
@@ -18,7 +28,8 @@ import com.pms.project.service.ProjectService;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/project")
@@ -28,19 +39,17 @@ public class ProjectController {
     private final ProjectService projectService;
     private final ProjectCommonStatusMapper projectCommonStatusMapper;
     
-    @GetMapping("/list")
+    private final IssueMapper issueMapper;
+    private final IssueService issueService;
+    
+    @GetMapping("/")
     public String listProjects(Model model 
     		, @ModelAttribute ProjectSearchDTO searchDTO
     		, @AuthenticationPrincipal CustomUserDetails customUser 
     		) {
         // 실제 운영 시에는 세션 또는 SecurityContext에서 userId를 가져옴
         String currentUserId = customUser.getUserEntity().getUserId();
-        
-        
-		/*
-		 * if(customUser.getUserEntity().isAdmin() || 아니면 내가 pm) { // 내가 관리자 이거나 pm 이면
-		 * 해당프로젝트내부의 모든 정보 열람 가능 };
-		 */
+        boolean isAdmin = customUser.getUserEntity().isAdmin();
         
         // 검색 조건이 있는지 확인 (projectName, projectStatus, projectAssignee 중 하나라도 값이 있으면 검색 조건으로 간주)
         boolean hasSearchCriteria = searchDTO.getProjectName() != null && !searchDTO.getProjectName().isEmpty() ||
@@ -54,11 +63,13 @@ public class ProjectController {
             model.addAttribute("projects", projectService.findProjectByOptions(searchDTO));
         } else {
             // 검색 조건이 없으면 사용자 프로젝트 전체 목록 반환
-            model.addAttribute("projects", projectService.findUserProjects(currentUserId));
+            model.addAttribute("projects", projectService.findUserProjects(currentUserId, isAdmin));
         }
         
         model.addAttribute("commons" , projectCommonStatusMapper.selectProjectCommonStatusAll());
         model.addAttribute("searchDTO", searchDTO); // 검색 폼의 값 유지를 위해 모델에 추가
+        model.addAttribute("admin", isAdmin);
+        model.addAttribute("pm", projectService.findIsPM(currentUserId).size() > 0);
         
         return "project/list";
     }
@@ -75,39 +86,42 @@ public class ProjectController {
     
     // 프로젝트 입력 처리
     @PostMapping("/new")
-	// TODO: dev 머지 이후 수정 - 매개변수에 추가
     public String addProject(
     		@ModelAttribute ProjectInsertDTO dto
     		, @AuthenticationPrincipal CustomUserDetails customUser 
-    		, RedirectAttributes redirectAttributes ) {
+    		, RedirectAttributes redirectAttributes
+    		, @RequestParam(name = "continue", required = false) String continueParam) {
     	// 로그인 사용자 정보에서 id 추출
-    	dto.setUserId(customUser.getUserEntity().getUserId());
+    	dto.setUserId(customUser.getUserEntity().getUserId()); 
     	
-    	// 중복코드 검사 -> 중복된값이 있다면 true 반환
-    	if (projectService.findByProjectCode(dto.getProjectCode())) {
-    		redirectAttributes.addFlashAttribute("errorMessage", "중복되는 식별자는 등록할 수 없습니다.");
-        } else {
-        	// 부모프로젝트 멤버 상속여부에따라 분기
-        	if (dto.getParentMemberYn() == 1) {
-				// 멤버상속 있으면 ..
-			}else {
-				
-				//projectService.addProject(dto); 부모프로젝트 멤버상속 없으면 단순 생성
-			}
-        	redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 정상적으로 등록 되었습니다.");
-        	
-        	return "redirect:/project/list"; // 성공 시 목록 페이지로 이동
-        }
+    	if(!projectService.findParentProjectDuration(dto)) {
+    		redirectAttributes.addFlashAttribute("errorMessage", "하위프로젝트의 작업기간은 상위프로젝트의 작업기간을 벗어날 수 없습니다.");
+			redirectAttributes.addFlashAttribute("project", dto);
+			return "redirect:/project/new";
+    	}
     	
-    	return "redirect:/project/new";
+    	boolean isSuccess = projectService.addProject(dto);
+    	if (isSuccess) {
+    		// 임시 flash 메모리에 Toast 표시값 저장 
+    		redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 정상적으로 등록 되었습니다.");
+    		// 만들기 : 만들고 계속하기
+    		return continueParam != null ? "redirect:/project/new" : "redirect:/project/";
+		}else {
+			redirectAttributes.addFlashAttribute("errorMessage", "중복되는 식별자는 등록할 수 없습니다.");
+			redirectAttributes.addFlashAttribute("project", dto);
+			return "redirect:/project/new";
+		}
     }
     
+    
     // @PathVariable: 단일값 처리 + 매개변수에 어노테이션선언으로 필수값 선언, 반드시 받을거라 default 사용하지않기로
-    @GetMapping("/{projectCode}/info")
+    @GetMapping("/user/{projectCode}/info")
     public String getProjectInfo(@PathVariable String projectCode, Model model, HttpSession session) {
     	// 세션을 활용하여 pathVal 사용하지않는 페이지에서 프로젝트 코드값 조회
     	session.setAttribute("projectCode", projectCode);
     	
+    	model.addAttribute("info", projectService.findInfoByCode(projectCode));
+    	model.addAttribute("trackerData", projectService.findJobTrackerPivot(projectCode));
     	model.addAttribute("groupMembers", projectService.findGroupMemberByCode(projectCode));
     	model.addAttribute("childProjects", projectService.findFirstChildsByCode(projectCode));
 		model.addAttribute("news", projectService.findNoties());
@@ -117,13 +131,76 @@ public class ProjectController {
     
     
     // 프로젝트 list -> settings.project 로 이동
-    @GetMapping("/{projectCode}/edit")
+    @GetMapping("/user/{projectCode}/edit")
     public String getEditProject(@PathVariable String projectCode) {
     	return "null";
     }
     
-    @GetMapping("/{projectCode}/gantt")
-    public String getGantProject(@PathVariable String projectCode) {
+    // 페이지 전달 
+    @GetMapping("/user/{projectCode}/gantt")
+    public String getGantProject(@PathVariable String projectCode, Model model) {
     	return "project/gantt";
+    }
+    
+    // 데이터 전달
+    @GetMapping("/user/{projectCode}/gantt/data")
+    @ResponseBody // 타임리프가 개입하여 웹페이지를 찾지않고 JSON을 반환
+    public Map<String, Object> getGanttDataApi(@PathVariable String projectCode) {
+    	return projectService.findGanttDataByCode(projectCode);
+    }
+    
+    @GetMapping("/user/{projectCode}/gantt/setting")
+    @ResponseBody
+    public Map<String, Object> getGanttInsertData(@PathVariable String projectCode
+    		, @AuthenticationPrincipal CustomUserDetails customUser) {
+    	
+    	// 1. 결과를 한 번에 담을 Map 컨테이너 생성
+        Map<String, Object> responseData = new HashMap<>();
+
+        // 2. 로그인한 내 정보 (Security 에서 추출)
+        String currentUserId = customUser.getUserEntity().getUserId();
+        responseData.put("currentUserId", currentUserId);
+
+        // 3. 매퍼를 호출하여 각각의 리스트 데이터를 가져옵니다.
+        // (매퍼 인터페이스 파라미터 구성에 따라 빈 DTO를 넘기거나 생략하세요)
+        IssueDto paramDto = new IssueDto();
+        paramDto.setProjectCode(projectCode);
+        
+        List<IssueDto> statusList = issueMapper.selectIssueStatus(paramDto);
+        List<IssueDto> typeList = issueMapper.selectIssueType(paramDto);
+        List<IssueDto> priorityList = issueMapper.selectIssuePriority(paramDto);
+        List<IssueDto> managerList = issueMapper.selectIssueManager(paramDto);
+
+        // 4. 조회한 리스트들을 모두 Map에 포장합니다.
+        responseData.put("statusList", statusList);
+        responseData.put("typeList", typeList);
+        responseData.put("priorityList", priorityList);
+        responseData.put("managerList", managerList);
+
+        // 4. 조회한 리스트들을 모두 Map에 포장
+        responseData.put("statusList", statusList);
+        responseData.put("typeList", typeList);
+        responseData.put("priorityList", priorityList);
+        responseData.put("managerList", managerList);
+        
+        return responseData;
+    }
+    
+    @PostMapping("/user/{projectCode}/gantt/insert")
+    @ResponseBody
+    public IssueDto addGanttData(
+            @PathVariable String projectCode,
+            @ModelAttribute IssueDto issueDto,
+            @RequestParam("files") List<MultipartFile> files, 
+            @AuthenticationPrincipal CustomUserDetails customUser) {
+        
+        // 1. 경로 변수로 들어온 프로젝트 코드 및 필수 데이터 세팅
+        issueDto.setProjectCode(projectCode);
+
+        // 2. 파일 처리 로직 (List<MultipartFile> files 등 DTO에 파일 필드가 있다면 여기서 처리)
+		Integer jobNo = issueService.addIssue(issueDto, files);
+
+        // 3. ★ 새 ID(jobNo)가 담긴 DTO 객체를 그대로 반환! (이게 프론트엔드의 savedTask로 들어갑니다)
+        return issueDto;
     }
 }

@@ -1,12 +1,104 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.home.notice.mapper.HomeNoticeMapper">
-	<select id="findNotices" resultType="HomeNoticeDto">
+
+	<resultMap id="NoticeDetailMap"
+		type="com.pms.home.notice.dto.HomeNoticeDto">
+		<constructor>
+			<idArg column="noticeNo" javaType="Integer" />
+			<arg column="title" javaType="String" />
+			<arg column="content" javaType="String" />
+			<arg column="privacySettings" javaType="Integer" />
+			<arg column="userId" javaType="String" />
+			<arg column="filesNo" javaType="Integer" />
+			<arg column="addDate" javaType="java.time.LocalDateTime" />
+			<arg column="filesNo" select="selectFilesDetailsByNo"
+				javaType="java.util.List" />
+		</constructor>
+	</resultMap>
+
+	<select id="findNotices" resultMap="NoticeDetailMap">
 		SELECT
-		notice_no,
+		notice_no AS noticeNo,
 		title,
-		add_date
+		content,
+		privacy_settings AS privacySettings,
+		user_id AS userId,
+		files_no AS filesNo,
+		add_date AS addDate
 		FROM notice
 		ORDER BY add_date DESC, notice_no DESC
 	</select>
+
+	<select id="getNotice" resultMap="NoticeDetailMap">
+		SELECT
+		notice_no AS noticeNo,
+		title,
+		content,
+		privacy_settings AS privacySettings,
+		user_id AS userId,
+		files_no AS filesNo,
+		add_date AS addDate
+		FROM notice
+		WHERE notice_no =
+		#{noticeNo}
+	</select>
+
+	<select id="selectFilesDetailsByNo"
+		resultType="com.pms.home.notice.dto.FileDto">
+		SELECT
+		details_no AS detailsNo,
+		files_name AS filesName,
+		files_size AS filesSize,
+		files_type AS filesType,
+		files_path AS
+		filesPath,
+		files_uuid AS filesUuid,
+		files_no AS filesNo
+		FROM
+		files_details
+		WHERE files_no = #{filesNo}
+	</select>
+
+	<insert id="insertNotice"
+		parameterType="com.pms.home.notice.dto.HomeNoticeDto">
+		INSERT INTO notice (
+		notice_no,
+		title,
+		content,
+		privacy_settings,
+		user_id,
+		files_no,
+		add_date
+		)
+		VALUES (
+		notice_seq.NEXTVAL,
+		#{title},
+		#{content},
+		#{privacySettings},
+		#{userId},
+		#{filesNo},
+		SYSDATE
+		)
+	</insert>
+
+	<update id="updateNotice"
+		parameterType="com.pms.home.notice.dto.HomeNoticeDto">
+		UPDATE notice
+		SET title = #{title},
+		content = #{content},
+		privacy_settings = #{privacySettings},
+		update_date = SYSDATE
+		WHERE
+		notice_no = #{noticeNo}
+		AND user_id = #{userId}
+	</update>
+
+	<delete id="deleteNotice">
+		DELETE FROM notice
+		WHERE notice_no = #{noticeNo}
+		AND
+		user_id = #{userId}
+	</delete>
+
 </mapper>

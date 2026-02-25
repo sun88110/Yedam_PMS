@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="https://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{common/layouts/default-layout}">
+
+<div layout:fragment="Content">
+	<div class="container-fluid">
+		<div class="card mb-4 border-top-primary border-top-4 shadow-sm">
+			<div
+				class="card-body d-flex justify-content-between align-items-center">
+				<div>
+					<nav aria-label="breadcrumb">
+						<ol class="breadcrumb mb-1">
+							<li class="breadcrumb-item"><a th:href="@{/settings}">설정</a></li>
+							<li class="breadcrumb-item active">그룹 상세 관리</li>
+						</ol>
+					</nav>
+					<div class="d-flex align-items-center">
+						<h3 class="mb-0">
+							<i class="cil-group me-2"></i> <span id="groupTitle"
+								class="fw-bold">그룹 정보 로딩 중...</span>
+						</h3>
+						<button type="button" id="btnEditGroupName"
+							class="btn btn-ghost-primary btn-sm ms-2 p-1" title="그룹명 수정">
+							<i class="cil-pencil"></i>
+						</button>
+						<span id="groupStatusBadge" class="badge ms-2"></span>
+					</div>
+				</div>
+				<div class="btn-group">
+					<button type="button" class="btn btn-outline-secondary"
+						onclick="history.back()">
+						<i class="cil-arrow-left"></i> 뒤로가기
+					</button>
+					<button type="button" id="btnToggleStatus" class="btn">
+						<i id="statusIcon"></i> <span id="statusText">로딩 중...</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-lg-7">
+				<div class="card mb-4 shadow-sm">
+					<div
+						class="card-header bg-light d-flex justify-content-between align-items-center py-3">
+						<strong class="fs-5"><i class="cil-user me-2"></i>소속 멤버
+							명단</strong>
+						<div class="d-flex align-items-center gap-2">
+							<button class="btn btn-outline-danger btn-sm d-none"
+								id="btnBatchRemove">
+								<i class="cil-user-unfollow me-1"></i> 선택 제외
+							</button>
+							<button class="btn btn-primary btn-sm px-3" id="btnOpenModal">
+								<i class="cil-user-follow me-1"></i> 멤버 추가
+							</button>
+							<span class="badge bg-info text-white ms-2" id="memberCount">0명</span>
+						</div>
+					</div>
+					<div class="card-body">
+						<div class="input-group mb-3">
+							<span class="input-group-text bg-white border-end-0"><i
+								class="cil-search"></i></span> <input type="text"
+								id="memberSearchInput" class="form-control border-start-0 ps-0"
+								placeholder="현재 그룹 멤버 내 검색 (이름, 아이디)...">
+						</div>
+						<div class="table-responsive"
+							style="max-height: 500px; overflow-y: auto;">
+							<table class="table table-hover align-middle border-bottom"
+								id="memberTable">
+								<thead class="table-light sticky-top">
+									<tr class="text-center">
+										<th style="width: 40px;"><input type="checkbox"
+											id="checkAllMembers" class="form-check-input"></th>
+										<th>아이디</th>
+										<th>이름</th>
+										<th>합류일</th>
+										<th>작업</th>
+									</tr>
+								</thead>
+								<tbody id="memberListTable"></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-lg-5">
+				<div class="card mb-4 shadow-sm border-top-info border-top-4">
+					<div
+						class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+						<strong class="fs-5"><i class="cil-shield-alt me-2"></i>그룹
+							권한 설정</strong> <span id="saveStatus" class="badge bg-secondary opacity-50">자동
+							저장됨</span>
+					</div>
+					<div class="card-body">
+						<p class="text-muted small mb-3">
+							이 그룹에 부여할 역할을 선택하세요. <strong>그룹당 하나의 역할만</strong> 부여할 수 있으며, 선택 시
+							즉시 반영됩니다.
+						</p>
+						<div id="roleListContainer" class="list-group shadow-sm">
+							<div class="text-center py-5">
+								<div class="spinner-border text-primary" role="status"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="userSearchModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-scrollable">
+			<div class="modal-content border-0 shadow-lg">
+				<div class="modal-header bg-primary text-white">
+					<h5 class="modal-title">
+						<i class="cil-user-plus me-2"></i>새 멤버 일괄 추가
+					</h5>
+					<button type="button" class="btn-close btn-close-white"
+						data-coreui-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body p-4">
+					<div class="input-group mb-4 shadow-sm">
+						<span class="input-group-text bg-white border-end-0"><i
+							class="cil-filter"></i></span> <input type="text" id="modalFilterInput"
+							class="form-control border-start-0 ps-0"
+							placeholder="이름 또는 아이디로 검색...">
+					</div>
+					<div class="table-responsive">
+						<table class="table table-hover align-middle">
+							<thead class="table-light sticky-top">
+								<tr>
+									<th style="width: 45px;"><input type="checkbox"
+										id="checkAll" class="form-check-input"></th>
+									<th>아이디</th>
+									<th>이름</th>
+									<th>이메일</th>
+								</tr>
+							</thead>
+							<tbody id="modalSearchResultTable"></tbody>
+						</table>
+					</div>
+				</div>
+				<div class="modal-footer bg-light border-0">
+					<button type="button" class="btn btn-secondary"
+						data-coreui-dismiss="modal">취소</button>
+					<button type="button" class="btn btn-primary px-4" id="btnBatchAdd">선택
+						멤버 추가</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script th:inline="javascript">
+    const GROUP_NO = [[${groupNo}]];
+    let searchModal;
+    let currentGroupName = ""; 
+
+    $(document).ready(function() {
+        searchModal = new coreui.Modal(document.getElementById('userSearchModal'));
+        loadAllData();
+
+        // --- 데이터 로드 로직 ---
+        function loadAllData() {
+            $.get(`/api/groups/${GROUP_NO}`, function(data) {
+                currentGroupName = data.groupName;
+                renderHeader(data);    
+                renderMembers(data.members);
+                loadAllRoles(data.roles); 
+            });
+        }
+
+        function renderHeader(data) {
+            $('#groupTitle').text(data.groupName || '그룹 상세');
+            const $badge = $('#groupStatusBadge');
+            const $btn = $('#btnToggleStatus');
+            const $icon = $('#statusIcon');
+            const $text = $('#statusText');
+
+            if(data.status === 510) {
+                $badge.text('활성화').attr('class', 'badge ms-2 bg-success');
+                $btn.attr('class', 'btn btn-outline-warning');
+                $icon.attr('class', 'cil-media-pause me-1');
+                $text.text('비활성화');
+            } else {
+                $badge.text('비활성화').attr('class', 'badge ms-2 bg-warning');
+                $btn.attr('class', 'btn btn-outline-success');
+                $icon.attr('class', 'cil-media-play me-1');
+                $text.text('활성화');
+            }
+        }
+
+        function renderMembers(members) {
+            const $tbody = $('#memberListTable').empty();
+            $('#memberCount').text(`${members ? members.length : 0}명`);
+            $('#checkAllMembers').prop('checked', false); 
+            $('#btnBatchRemove').addClass('d-none');     
+
+            if(!members || members.length === 0) {
+                $tbody.append('<tr><td colspan="5" class="text-center py-5 text-muted">소속된 멤버가 없습니다.</td></tr>');
+                return;
+            }
+
+            members.forEach(m => {
+                $tbody.append(`<tr class="text-center member-row">
+                    <td><input type="checkbox" class="form-check-input member-check" value="${m.userId}"></td>
+                    <td><code>${m.userId}</code></td>
+                    <td class="text-start ps-4"><strong>${m.userName}</strong></td>
+                    <td class="small text-muted">${m.accessDate || '-'}</td>
+                    <td><button class="btn btn-sm btn-outline-danger btn-remove-member" data-id="${m.userId}">제외</button></td>
+                </tr>`);
+            });
+        }
+
+        /**
+         * 📍 모달창 내 유저 전체 선택/해제
+         */
+        $('#checkAll').on('change', function() {
+            // 중요: ':visible' 필터를 사용하여 현재 검색 결과에 나타난 유저들만 체크합니다.
+            const isChecked = $(this).prop('checked');
+            $('#modalSearchResultTable .user-check:visible').prop('checked', isChecked);
+            
+            // 개별 체크박스 변경 시 상단 체크박스 상태 동기화 로직 (선택 사항)
+            updateModalCheckAllStatus();
+        });
+
+        /**
+         * 📍 개별 유저 체크 시 '전체 선택' 체크박스 상태 동기화
+         */
+        $(document).on('change', '.user-check', function() {
+            updateModalCheckAllStatus();
+        });
+
+        function updateModalCheckAllStatus() {
+            const $visibleChecks = $('#modalSearchResultTable .user-check:visible');
+            const checkedCount = $visibleChecks.filter(':checked').length;
+            const totalVisible = $visibleChecks.length;
+
+            // 보이는 유저가 있고, 모두 체크되었다면 전체 선택 체크박스도 체크!
+            $('#checkAll').prop('checked', totalVisible > 0 && checkedCount === totalVisible);
+        }
+
+        /**
+         * 📍 모달 검색 필터링 로직 수정 (필터링할 때 전체 선택 해제)
+         */
+        $('#modalFilterInput').on('input', function() {
+            const val = $(this).val().toLowerCase();
+            $('.user-row-item').each(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
+            });
+            
+            // 검색어가 바뀔 때마다 전체 선택 체크박스 상태를 다시 계산
+            updateModalCheckAllStatus();
+        });
+        
+        // --- 📍 [중요] 일괄 제외 관련 이벤트 (ready 블록 안으로 이동) ---
+
+        // 1. 멤버 리스트 내 실시간 검색
+        $('#memberSearchInput').on('input', function() {
+            const val = $(this).val().toLowerCase();
+            $('.member-row').each(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(val) > -1);
+            });
+            // 검색 시 화면에 안 보이는 체크박스는 해제 처리 (선택 제외 실수 방지)
+            $('.member-check:hidden').prop('checked', false);
+            updateMemberBatchButton();
+        });
+
+        // 2. 멤버 전체 선택/해제
+        $('#checkAllMembers').on('change', function() {
+            $('.member-check:visible').prop('checked', $(this).prop('checked'));
+            updateMemberBatchButton();
+        });
+
+        $(document).on('change', '.member-check', function() {
+            updateMemberBatchButton();
+        });
+
+        // 3. 버튼 상태 업데이트 함수
+        function updateMemberBatchButton() {
+            const checkedCount = $('.member-check:checked').length;
+            const totalVisible = $('.member-check:visible').length;
+            
+            // 마스터 체크박스 상태 동기화
+            $('#checkAllMembers').prop('checked', checkedCount > 0 && checkedCount === totalVisible);
+
+            if(checkedCount > 0) {
+                $('#btnBatchRemove').removeClass('d-none').html(`<i class="cil-user-unfollow me-1"></i> 선택 ${checkedCount}명 제외`);
+            } else {
+                $('#btnBatchRemove').addClass('d-none');
+            }
+        }
+
+        // 4. 일괄 제외 실행
+        $('#btnBatchRemove').on('click', function() {
+            const selectedIds = [];
+            $('.member-check:checked').each(function() { selectedIds.push($(this).val()); });
+
+            if(!confirm(`선택한 ${selectedIds.length}명의 멤버를 그룹에서 제외하시겠습니까?`)) return;
+
+            const removeRequests = selectedIds.map(id => $.ajax({
+                url: `/api/groups/${GROUP_NO}/members/${id}`,
+                type: 'DELETE'
+            }));
+
+            Promise.all(removeRequests).then(() => {
+                alert("성공적으로 제외되었습니다.");
+                loadAllData();
+            }).catch(err => {
+                alert("처리 중 오류가 발생했습니다.");
+                loadAllData();
+            });
+        });
+
+        // --- 기타 기존 이벤트 로직 ---
+
+        $('#btnEditGroupName').on('click', function() {
+            const newName = prompt("수정할 그룹명을 입력하세요:", currentGroupName);
+            if (!newName || newName.trim() === "" || newName === currentGroupName) return;
+
+            $.ajax({
+                url: `/settings/api/groups/${GROUP_NO}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ groupNo: GROUP_NO, groupName: newName }),
+                success: function(res) {
+                    if(res === "SUCCESS") { alert("그룹명이 변경되었습니다."); loadAllData(); }
+                }
+            });
+        });
+
+        $('#btnToggleStatus').on('click', function() {
+            if(!confirm("그룹 상태를 변경하시겠습니까?")) return;
+            $.ajax({
+                url: `/settings/api/groups/${GROUP_NO}/toggle-status`,
+                type: 'PATCH',
+                success: function() { loadAllData(); }
+            });
+        });
+
+        // 권한 변경 라디오 버튼
+        $(document).on('change', 'input[name="groupRole"]', function() {
+            const newRoleNo = $(this).val();
+            $('#saveStatus').text('저장 중...').removeClass('bg-secondary bg-success').addClass('bg-warning opacity-100');
+            $.ajax({
+                url: `/api/groups/${GROUP_NO}/roles`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ roleNo: parseInt(newRoleNo) }),
+                success: function() {
+                    setTimeout(() => {
+                        $('#saveStatus').text('변경 완료').removeClass('bg-warning').addClass('bg-success');
+                        loadAllData();
+                        setTimeout(() => $('#saveStatus').text('자동 저장됨').attr('class', 'badge bg-secondary opacity-50'), 2000);
+                    }, 500);
+                }
+            });
+        });
+		
+        // 개별 제외 버튼
+        $(document).on('click', '.btn-remove-member', function() {
+            const userId = $(this).data('id');
+            if(!confirm("해당 멤버를 제외하시겠습니까?")) return;
+            $.ajax({ url: `/api/groups/${GROUP_NO}/members/${userId}`, type: 'DELETE', success: () => loadAllData() });
+        });
+		
+     // 멤버 추가 모달 로직
+        $('#btnOpenModal').on('click', function() {
+            $('#modalFilterInput').val('');
+            $('#checkAll').prop('checked', false);
+            
+            $.get(`/api/groups/${GROUP_NO}/available-users`, { keyword: '' }, function(users) {
+                const $tbody = $('#modalSearchResultTable').empty();
+                
+                // 📍 데이터가 없을 경우 처리 로직 추가
+                if(!users || users.length === 0) {
+                    $tbody.append(`
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">
+                                <i class="cil-face-dead fs-1 mb-3 d-block"></i>
+                                이미 모든 사용자가 그룹에 소속되어 있거나,<br>추가 가능한 사용자가 없습니다.
+                            </td>
+                        </tr>
+                    `);
+                    // 데이터가 없으면 '전체 선택' 체크박스 비활성화
+                    $('#checkAll').prop('disabled', true);
+                    // '추가' 버튼도 비활성화 처리 (선택 사항)
+                    $('#btnBatchAdd').prop('disabled', true);
+                } else {
+                    // 데이터가 있을 경우 정상 렌더링
+                    $('#checkAll').prop('disabled', false);
+                    $('#btnBatchAdd').prop('disabled', false);
+                    
+                    users.forEach(u => {
+                        $tbody.append(`<tr class="user-row-item">
+                            <td><input type="checkbox" class="form-check-input user-check" value="${u.userId}"></td>
+                            <td><code>${u.userId}</code></td>
+                            <td class="user-name"><strong>${u.userName || u.username}</strong></td>
+                            <td class="small text-muted">${u.email || '-'}</td>
+                        </tr>`);
+                    });
+                }
+                searchModal.show();
+            });
+        });
+     
+        // 멤버 추가 모달 로직 (생략 없이 유지)
+        $('#btnOpenModal').on('click', function() {
+            $('#modalFilterInput').val('');
+            $('#checkAll').prop('checked', false);
+            $.get(`/api/groups/${GROUP_NO}/available-users`, { keyword: '' }, function(users) {
+                const $tbody = $('#modalSearchResultTable').empty();
+                users.forEach(u => {
+                    $tbody.append(`<tr class="user-row-item">
+                        <td><input type="checkbox" class="form-check-input user-check" value="${u.userId}"></td>
+                        <td><code>${u.userId}</code></td>
+                        <td class="user-name"><strong>${u.userName || u.username}</strong></td>
+                        <td class="small text-muted">${u.email || '-'}</td>
+                    </tr>`);
+                });
+                searchModal.show();
+            });
+        });
+		
+        $('#btnBatchAdd').on('click', function() {
+            const selectedIds = [];
+            $('.user-check:checked').each(function() { selectedIds.push($(this).val()); });
+            if(selectedIds.length === 0) return;
+            const addRequests = selectedIds.map(id => $.ajax({
+                url: `/api/groups/${GROUP_NO}/members`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ userId: id })
+            }));
+            Promise.all(addRequests).then(() => { searchModal.hide(); loadAllData(); });
+        });
+
+        function loadAllRoles(assignedRoles) {
+            const assignedRoleNo = (assignedRoles && assignedRoles.length > 0) ? assignedRoles[0].roleNo : null;
+            $.get('/api/groups/roles', function(allRoles) {
+                const $container = $('#roleListContainer').empty();
+                allRoles.forEach(role => {
+                    const isChecked = role.roleNo === assignedRoleNo;
+                    $container.append(`
+                        <label class="list-group-item d-flex justify-content-between align-items-center py-3 ${isChecked ? 'bg-light border-primary' : ''}" style="cursor: pointer;">
+                            <div>
+                                <input class="form-check-input me-3 role-radio" type="radio" name="groupRole" 
+                                       value="${role.roleNo}" ${isChecked ? 'checked' : ''}>
+                                <span class="${isChecked ? 'fw-bold text-primary' : ''}">${role.roleName}</span>
+                            </div>
+                            ${isChecked ? '<span class="badge bg-primary rounded-pill shadow-sm">현재 권한</span>' : ''}
+                        </label>
+                    `);
+                });
+            });
+        }
+    });
+</script>
+</div>
+</html>

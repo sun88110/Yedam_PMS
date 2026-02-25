@@ -1,29 +1,32 @@
 <!-- 담당자 선택 Modal -->
 <th:block th:fragment="UserSelectModal">
-	<link rel="stylesheet" th:href="@{/css/modal.css}" />
-	<div class="modal fade" id="userSelectModal" tabindex="-1"
-		aria-labelledby="userSelectModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-dialog-centered">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="userSelectModalLabel">담당자 선택</h5>
-				</div>
+<div class="modal fade" id="userSelectModal" tabindex="-1"
+        aria-labelledby="userSelectModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userSelectModalLabel">담당자 선택</h5>
+                </div>
+                
+                <div class="modal-body">
+                    <ul class="list-group">
+                        <li th:each="manager : ${managerList}" 
+                            class="list-group-item user-item" 
+                            style="cursor: pointer;"
+                            th:data-id="${manager.userId}" 
+                            th:data-name="${manager.username}"
+                            >
+                            <span th:text="${manager.username}">담당자 이름</span>
+                        </li>
+                    </ul>
+                </div>
 
-				<div class="modal-body">
-					<!-- 추후 담당자 목록을 DB에서 가져와야한다 -->
-					<ul class="list-group">
-						<li class="list-group-item user-item">A담당자</li>
-						<li class="list-group-item user-item">B담당자</li>
-						<li class="list-group-item user-item">C담당자</li>
-					</ul>
-				</div>
-
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary"
-						data-bs-dismiss="modal">닫기</button>
-				</div>
-			</div>
-		</div>
-	</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
 	<script th:src="@{/js/issue/user-select-modal.js}"></script>
 </th:block>

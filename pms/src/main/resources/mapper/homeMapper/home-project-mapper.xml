@@ -2,13 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.home.project.mapper.HomeProjectMapper">
 	<select id="findProjects" resultType="HomeProjectDto">
-		select p.project_no
-		, p.project_name
-		, p.project_desc
-		, p.project_code
-		from vw_project p
-		join vw_member m on p.project_no = m.project_no
-		where m.user_id = #{userId}
+		SELECT
+		p.project_no AS projectNo, p.project_name AS projectName,
+		p.project_desc AS projectDesc,
+		p.project_code AS projectCode
+		FROM
+		project p
+		WHERE p.status BETWEEN 330 AND 370
+		<if test="!isAdmin">
+			AND (
+			EXISTS (SELECT 1 FROM vw_member WHERE project_no = p.project_no AND user_id
+			= #{userId})
+			OR p.public_yn = 1
+			)
+		</if>
 	</select>
 
 </mapper>

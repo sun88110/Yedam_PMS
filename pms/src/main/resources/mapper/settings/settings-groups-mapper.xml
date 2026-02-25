@@ -64,11 +64,17 @@
 		END
 		WHERE GROUP_NO = #{groupNo}
 	</update>
-
-	<update id="updateGroupName"
-		parameterType="com.pms.setting.groups.vo.GroupsVO">
-		UPDATE groups
-		SET GROUPNAME = #{groupName} -- VO의 groupName 필드 사용
-		WHERE GROUP_NO = #{groupNO} -- VO의 groupNo 필드 사용
-	</update>
+	
+	<update id="updateGroupDetail" parameterType="com.pms.setting.groups.vo.GroupsVO">
+        UPDATE groups
+        <set>
+            <if test="groupName != null and groupName != ''">
+                GROUPNAME = #{groupName},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            </set>
+        WHERE group_no = #{groupNo}
+    </update>
 </mapper>

@@ -1,69 +1,130 @@
 <!DOCTYPE html>
-<!--
-* CoreUI - Free Bootstrap Admin Template
-* @version v5.3.0
-* @link https://coreui.io/product/free-bootstrap-admin-template/
-* Copyright (c) 2025 creativeLabs Łukasz Holeczek
-* Licensed under MIT (https://github.com/coreui/coreui-free-bootstrap-admin-template/blob/main/LICENSE)
--->
-<html lang="ko" xmlns:th="https://www.thymeleaf.org/" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{common/layouts/default-layout}" layout:fragment="Content">
+<html lang="ko" xmlns:th="https://www.thymeleaf.org/" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" 
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+      layout:decorate="~{common/layouts/default-layout}" 
+      layout:fragment="Content">
 
 <head>
-<meta charset="UTF-8">
-<title>PMS 메인 테스트</title>
-<style>
-.info-box {
-	border: 1px solid #ccc;
-	padding: 15px;
-	margin-top: 10px;
-	border-radius: 5px;
-}
-
-.auth-btn {
-	background-color: #f0f0f0;
-	padding: 5px 10px;
-	text-decoration: none;
-	color: black;
-	border: 1px solid #000;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>PMS Dashboard</title>
 </head>
+
 <body>
 
-	<h1>테스트 페이지</h1>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="h3 mb-0 text-gray-800 fw-bold">
+                <i class="cil-speedometer me-2"></i>마이페이지
+            </h2>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item small"><a href="#">Home</a></li>
+                    <li class="breadcrumb-item small active" aria-current="page">My Profile</li>
+                </ol>
+            </nav>
+        </div>
+        <form th:action="@{/user/logout}" method="post">
+            <button type="submit" class="btn btn-outline-danger btn-sm shadow-sm">
+                <i class="cil-account-logout me-1"></i>로그아웃
+            </button>
+        </form>
+    </div>
 
-	<div sec:authorize="isAuthenticated()">
-		<div class="info-box">
-			<h3>내 정보</h3>
-			<ul>
-				<li><strong>아이디:</strong> <span sec:authentication="name"></span></li>
+    <div class="row g-4" sec:authorize="isAuthenticated()">
+        <div class="col-lg-5">
+            <div class="card border-top-primary border-top-3 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 fw-bold text-primary">
+                        <i class="cil-user me-2"></i>회원 프로필
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="avatar avatar-xl bg-light mb-3">
+                            <i class="cil-user-follow text-primary fs-3"></i>
+                        </div>
+                        <h5 class="mb-1 fw-bold" sec:authentication="principal.userEntity.username">사용자명</h5>
+                        <p class="text-muted small mb-0" sec:authentication="name">userId</p>
+                    </div>
+                    
+                    <ul class="list-group list-group-flush border-top">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="cil-envelope-closed me-2"></i>이메일</span>
+                            <span class="fw-semibold" sec:authentication="principal.userEntity.email">email@test.com</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted"><i class="cil-shield-check me-2"></i>권한 등급</span>
+                            <span class="badge bg-info-lite text-info" sec:authentication="principal.authorities">ROLE_USER</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-				<li><strong>실명:</strong> <span sec:authentication="principal.userEntity.username"></span></li>
-				<li><strong>이메일:</strong> <span sec:authentication="principal.userEntity.email"></span></li>
-				<li><strong>권한:</strong> <span sec:authentication="principal.authorities"></span></li>
-			</ul>
-		</div>
-		<br>
-		<div>
-			<button th:onclick="|location.href='@{/home}'|">Home</button>
-		</div>
-		<br>
-		<div>
-			<button th:onclick="|location.href='@{/issue/list}'|">Issue</button>
-		</div>
-		<br>
-		<div>
-			<button th:onclick="|location.href='@{/settings/}'|">Settings</button>
-		</div>
-		<br>
-		<div sec:authorize="hasRole('ROLE_ADMIN')">
-			<button th:onclick="|location.href='@{/user/new}'|">회원 등록(Admin 전용)</button>
-		</div>
-		<br>
-		<form th:action="@{/user/logout}" method="post">
-			<button type="submit">로그아웃</button>
-		</form>
-	</div>
+        <div class="col-lg-7">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card text-center h-100 border-0 shadow-sm clickable-card" th:onclick="|location.href='@{/home}'|" style="cursor:pointer;">
+                        <div class="card-body p-4">
+                            <div class="p-3 bg-primary bg-opacity-10 rounded-3 mb-3 d-inline-block">
+                                <i class="cil-home text-primary fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">홈 화면</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100 border-0 shadow-sm" th:onclick="|location.href='@{/issue/list}'|" style="cursor:pointer;">
+                        <div class="card-body p-4">
+                            <div class="p-3 bg-warning bg-opacity-10 rounded-3 mb-3 d-inline-block">
+                                <i class="cil-bug text-warning fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">이슈 리스트</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100 border-0 shadow-sm" th:onclick="|location.href='@{/settings/}'|" style="cursor:pointer;">
+                        <div class="card-body p-4">
+                            <div class="p-3 bg-secondary bg-opacity-10 rounded-3 mb-3 d-inline-block">
+                                <i class="cil-settings text-secondary fs-3"></i>
+                            </div>
+                            <h6 class="fw-bold mb-0">시스템 설정</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div sec:authorize="hasRole('ROLE_ADMIN')" class="mt-4">
+                <div class="card border-start-danger border-start-4 shadow-sm bg-light bg-opacity-50">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold text-danger mb-1">관리자 제어판</h6>
+                            <p class="small text-muted mb-0">새로운 팀원을 PMS 시스템에 등록할 수 있습니다.</p>
+                        </div>
+                        <button class="btn btn-danger text-white fw-bold px-4" th:onclick="|location.href='@{/user/new}'|">
+                            <i class="cil-user-plus me-2"></i>팀원 등록
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CoreUI 테마 보완용 추가 스타일 */
+    .border-top-primary { border-top: 4px solid #321fdb !important; }
+    .border-start-danger { border-left: 4px solid #e55353 !important; }
+    .bg-info-lite { background-color: #e0f7fa; }
+    .clickable-card:hover { 
+        transform: translateY(-5px); 
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
 
 </body>
 </html>

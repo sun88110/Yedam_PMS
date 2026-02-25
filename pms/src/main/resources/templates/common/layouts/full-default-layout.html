@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="https://www.thymeleaf.org/"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="UTF-8">
+<title></title>
+<th:block th:replace="~{common/configs/default-configs :: BootStrap}"></th:block>
+<style>
+  .simplebar-scrollbar {
+    display: none !important;
+  }
+  .simplebar-track.simplebar-vertical {
+    width: 0 !important;
+  }
+  /* 브라우저 native 스크롤바 숨기기 (스크롤 유지) */
+  .sidebar-nav {  /* 또는 .simplebar-content-wrapper 만약 SimpleBar wrapper 타겟 */
+    -ms-overflow-style: none;  /* IE, Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  .sidebar-nav::-webkit-scrollbar {  /* Chrome, Safari, Opera */
+    display: none;
+  }
+</style>
+</head>
+<body> <!--/* 주석 */-->
+<div th:replace="~{common/fragments/default-sidebar :: DefaultSidebar}"></div>
+<div class="wrapper d-flex flex-column min-vh-100">
+	<div th:replace="~{common/fragments/default-header :: DefaultHeader}"></div>
+	<div class="body flex-grow-1">
+		<!--/* <div class="container-fluid px-4"> 로 하면 화면 가로 100%사용가능 */-->
+      	<div class="container-fluid px-4">
+	      	<div layout:fragment="Content"></div>
+      	</div>
+      </div>
+    </div>
+      
+      <!--/* 
+      <footer class="footer px-4">
+        <div><a href="https://coreui.io">CoreUI </a><a href="https://coreui.io/product/free-bootstrap-admin-template/">
+        Bootstrap Admin Template</a> &copy; 2025 creativeLabs.</div>
+        <div class="ms-auto">Powered by&nbsp;<a href="https://coreui.io/bootstrap/docs/">CoreUI UI Components</a></div>
+      </footer>
+      */-->
+      
+      <!-- CoreUI and necessary plugins-->
+    <script>
+      const header = document.querySelector('header.header');
+      
+      document.addEventListener('scroll', () => {
+        if (header) {
+          header.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0);
+        }
+      });
+      
+    </script>
+    <script src="/coreui/vendors/@coreui/utils/js/index.js"></script>
+    <script src="/coreui/vendors/@coreui/coreui/js/coreui.bundle.min.js"></script>
+</body>
+</html>

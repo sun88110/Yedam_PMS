@@ -21,4 +21,5 @@ public class CustomUserDetails extends User {
 			);
 		this.userEntity = user;
 	}
+	
 }

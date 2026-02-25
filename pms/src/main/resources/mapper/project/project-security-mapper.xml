@@ -1,15 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.project.mapper.ProjectSecurityMapper">
-	<select id="checkAuth" resultType="int">
-		SELECT COUNT(*) FROM VW_SECURITY_AUTH
-		WHERE USER_ID = #{userId}
-		AND PROJECT_NAME = #{projectCode}
+	<select id="checkAuth" resultType="boolean">
+		SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+		FROM VW_SECURITY_AUTH v
+		JOIN G_PROJECT gp ON v.GROUP_NO = gp.GROUP_NO
+    	JOIN PROJECT p ON gp.PROJECT_NO = p.PROJECT_NO
+		WHERE v.user_id = #{userId}
+		AND p.project_code = #{value}
+		AND v.menu_id = #{menuId}
 		AND (
-		(#{action} = 'READ' AND CRUD_READ = 1) OR
-		(#{action} = 'CREATE' AND CRUD_CREATE = 1) OR
-		(#{action} = 'UPDATE' AND CRUD_UPDATE = 1) OR
-		(#{action} = 'DELETE' AND CRUD_DELETE = 1)
+		(#{method} = 'READ' AND V.CRUD_READ = 1) OR
+		(#{method} = 'CREATE' AND V.CRUD_CREATE = 1) OR
+		(#{method} = 'UPDATE' AND V.CRUD_UPDATE = 1) OR
+		(#{method} = 'DELETE' AND V.CRUD_DELETE = 1)
 		)
 	</select>
+
+	<select id="checkPm" resultType="boolean">
+		SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+		FROM USERS u
+		JOIN MEMBERS m ON u.USER_ID = m.USER_ID
+		JOIN G_PROJECT g ON m.GROUP_NO = g.GROUP_NO
+		JOIN PROJECT p ON g.PROJECT_NO = p.PROJECT_NO
+		WHERE u.USER_ID = #{userId}
+		AND p.PROJECT_CODE = #{projectCode}
+		AND g.PM = 1
+	</select>
+	
+	<select id="selectAllMenus" resultType="ProjectSecurityMenuDto">
+        SELECT 
+            MENU_ID as menuId,
+            MENU_NAME as menuName,
+            URL_DATA as urlData,
+            TYPE as type
+        FROM MENU
+    </select>
 </mapper>

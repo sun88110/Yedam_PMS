@@ -1,0 +1,104 @@
+<html xmlns:th="http://www.thymeleaf.org/">
+<th:block th:fragment="IssueForm">
+    <form id="issueInsert" enctype="multipart/form-data">
+        
+        <input type="hidden" name="projectNo" id="hiddenProjectNo">
+        <input type="hidden" name="parentJobNo" id="hiddenParentJobNo">
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">제목 <span class="text-danger">*</span></label> 
+            <input type="text" class="form-control form-control-sm mt-1" name="title" id="issueTitle" placeholder="제목을 입력하세요" required />
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">일감 상태 <span class="text-danger">*</span></label> 
+                <select class="form-select form-select-sm mt-1" name="jobStatusNo" required>
+                    <option value="" disabled selected hidden >상태 선택</option>
+                    <option th:each="status : ${statusList}" th:value="${status.commonNo}" th:text="${status.jobStatus}"></option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">일감 유형 <span class="text-danger">*</span></label> 
+                <select class="form-select form-select-sm mt-1" name="jobTypeNo" required>
+                    <option value="" disabled selected hidden >유형 선택</option>
+                    <option th:each="type : ${typeList}" th:value="${type.commonNo}" th:text="${type.jobType}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">상세 설명</label>
+            <textarea class="form-control form-control-sm mt-1" placeholder="상세 설명을 입력하세요" id="floatingTextarea" style="height: 100px" name="content"></textarea>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label class="form-label fw-bold">우선순위 <span class="text-danger">*</span></label> 
+                <select class="form-select form-select-sm mt-1" name="priority" required>
+                    <option value="" disabled selected hidden >선택</option>
+                    <option th:each="priority : ${priorityList}" th:value="${priority.commonNo}" th:text="${priority.commonName}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">담당자(Manager) <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm mt-1" name="managerId" required>
+                    <option value="" disabled selected hidden >담당자 선택</option>
+                    <option th:each="user : ${userList}" th:value="${user.userId}" th:text="${user.userName}"></option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-bold">작업자(Worker) <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm mt-1" name="userId" required>
+                    <option value="" disabled selected hidden >작업자 선택</option>
+                    <option th:each="user : ${userList}" th:value="${user.userId}" th:text="${user.userName}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">시작일 <span class="text-danger">*</span></label>
+                <input type="date" class="form-control form-control-sm mt-1" id="startDate" name="startDate" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">종료일 <span class="text-danger">*</span></label>
+                <input type="date" class="form-control form-control-sm mt-1" id="endDate" name="endDate" required />
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">진척도</label> 
+                <select class="form-select form-select-sm mt-1" name="progress" id="progressSelect">
+                    <option th:each="p : ${#numbers.sequence(0, 10)}" th:value="${p * 10}" th:text="${(p * 10) + '%'}"></option>
+                </select>
+            </div>
+            <div class="col-md-6 d-flex flex-column justify-content-center">
+                <label class="form-label fw-bold mb-2">공개범위 <span class="text-danger">*</span></label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="publicRole" id="public" value="1" checked /> 
+                        <label class="form-check-label" for="public">전체공개</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="publicRole" id="private" value="0" /> 
+                        <label class="form-check-label" for="private">일부공개</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="files" class="form-label fw-bold">첨부파일</label> 
+            <input class="form-control form-control-sm mt-1" type="file" id="files" name="files" multiple />
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 border-top pt-3">
+            <button type="button" class="btn btn-primary btn-sm px-4" id="btnIssueSubmit">등록</button>
+            <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal" id="btnIssueCancel">취소</button>
+        </div>
+    </form>
+    
+    </th:block>
+</html>

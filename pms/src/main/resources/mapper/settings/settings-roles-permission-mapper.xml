@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="com.pms.setting.roles.info.mapper.RolePermissionMapper">
+
+<select id="selectRolePermissions" resultType="com.pms.setting.roles.info.dto.RolePermissionDTO">
+    SELECT 
+        (SELECT role_name FROM roles WHERE role_no = #{roleNo}) as role_name, -- 역할 이름 따로 추출
+        m.menu_id, 
+        m.menu_name, 
+        m.url_data,
+        NVL(c.crud_create, 0) as crud_create,
+        NVL(c.crud_read, 0)   as crud_read,
+        NVL(c.crud_update, 0) as crud_update,
+        NVL(c.crud_delete, 0) as crud_delete
+    FROM menu m
+    LEFT OUTER JOIN crud c 
+        ON m.menu_id = c.menu_id 
+        AND c.role_no = #{roleNo} -- 특정 역할의 권한만 조인
+    ORDER BY m.menu_id ASC
+</select>
+	
+	<delete id="deletePermissionsByRoleNo">
+		DELETE FROM crud
+		WHERE role_no = #{roleNo}
+	</delete>
+
+	<insert id="insertPermissionsBatch">
+		INSERT ALL
+		<foreach collection="permissions" item="p">
+			INTO crud (role_no, menu_id, crud_create, crud_read, crud_update,
+			crud_delete)
+			VALUES (#{p.roleNo}, #{p.menuId}, #{p.crudCreate}, #{p.crudRead},
+			#{p.crudUpdate}, #{p.crudDelete})
+		</foreach>
+		SELECT * FROM DUAL
+	</insert>
+	
+	<update id="updateRoleName">
+    UPDATE roles
+    SET role_name = #{roleName}
+    WHERE role_no = #{roleNo}
+</update>
+
+</mapper>

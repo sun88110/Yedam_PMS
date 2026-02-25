@@ -12,9 +12,10 @@
 				<div class="modal-body">
 					<!-- 추후 등록된 일감 목록을 DB에서 가져와야한다 -->
 					<ul class="list-group">
-						<li class="list-group-item job-item">A일감</li>
-						<li class="list-group-item job-item">B일감</li>
-						<li class="list-group-item job-item">C일감</li>
+						<li th:each="list : ${parentIssueList}" class="list-group-item job-item"
+						style="cursor: pointer;"
+						th:data-id="${list.jobNo}">
+						<span th:text="${list.title}"></span></li>
 					</ul>
 				</div>
 

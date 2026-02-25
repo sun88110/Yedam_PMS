@@ -18,7 +18,7 @@ public interface WorkMapper {
 	// 소요시간 등록 페이지 프로젝트의 일감 조회
 	List<WorkInsertDto> selectIssueInProject(WorkInsertDto workInsertDto);
 	// 소요시간 등록 페이지 작업분류 조회
-	List<WorkInsertDto> selectWorkDetails(String workType);
+	List<WorkInsertDto> selectWorkDetails(WorkInsertDto workInsertDto);
 	// 소요시간 등록 기능 매개변수 타입이 WorkInsertDto  insert된 row 행의 개수
 	int insertWorkEntries(WorkInsertDto workInsertDto);
 	

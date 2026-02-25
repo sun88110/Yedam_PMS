@@ -14,7 +14,7 @@ public interface WorkService {
 	//소요시간 등록 페이지 프로젝트의 일감 조회
 	List<WorkInsertDto> findMyIssue(WorkInsertDto workInsertDto);
 	// 소요시간 등록 페이지 작업분류 조회
-	List<WorkInsertDto> findWorkType(String workType);
+	List<WorkInsertDto> findWorkType(WorkInsertDto workInsertDto);
 	// 소요시간 등록 기능 매개변수 타입은 WorkInsertDto
 	void addWorkEntries(WorkInsertDto workInsertDto);
 	

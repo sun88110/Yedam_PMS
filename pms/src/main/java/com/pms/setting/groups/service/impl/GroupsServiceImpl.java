@@ -45,14 +45,14 @@ public class GroupsServiceImpl implements GroupsService {
     public void register(GroupsVO vo) {
         groupsMapper.insertGroup(vo);
     }
-
+    
     @Override
     @Transactional
-    public boolean modifyGroupName(GroupsVO groupsVO) {
-        // 이름이 비어있는지 마지막으로 한 번 더 체크하는 센스!
-        if (groupsVO.getGroupName() == null || groupsVO.getGroupName().trim().isEmpty()) {
+    public boolean modifyGroupDetail(GroupsVO groupsVO) {
+        // 상세페이지에서 그룹명, 상태 등을 한꺼번에 수정
+        if (groupsVO.getGroupName() == null || groupsVO.getGroupName().isBlank()) {
             return false;
         }
-        return groupsMapper.updateGroupName(groupsVO) > 0;
+        return groupsMapper.updateGroupDetail(groupsVO) > 0;
     }
 }

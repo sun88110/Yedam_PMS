@@ -1,179 +1,155 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
+<header class="header header-sticky p-0 mb-4" th:fragment="DefaultHeader">
+	<div class="container-fluid border-bottom px-4">
+		<button class="header-toggler" type="button" onclick="
+          coreui.Sidebar.getInstance(
+            document.querySelector('#sidebar'),
+          ).toggle()
+        " style="margin-inline-start: -14px">
+			<svg class="icon icon-lg">
+          <use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-menu}"></use>
+        </svg>
+		</button>
 
-	<header class="header header-sticky p-0 mb-4" th:fragment="DefaultHeader">
-		<div class="container-fluid border-bottom px-4">
-			<button class="header-toggler" type="button"
-				onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"
-				style="margin-inline-start: -14px;">
-				<svg class="icon icon-lg">
-					<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-menu}"></use>
-				</svg>
-			</button>
-			
-			<ul class="header-nav d-none d-lg-flex">
-				<li class="nav-item"><a class="nav-link" th:href="@{/}">Dashboard</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">Users</a></li>
-				<li class="nav-item"><a class="nav-link" href="#">Settings</a></li>
-			</ul>
-			
-			<ul class="header-nav ms-auto">
-				<li class="nav-item">
-					<a class="nav-link" href="#"> 
-						<svg class="icon icon-lg">
-							<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell}"></use>
-						</svg>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#"> 
-						<svg class="icon icon-lg">
-							<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-list-rich}"></use>
-						</svg>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link" href="#"> 
-						<svg class="icon icon-lg">
-							<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-envelope-open}"></use>
-						</svg>
-					</a>
-				</li>
-			</ul>
-			
-			<ul class="header-nav">
-				<li class="nav-item py-1">
-					<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
-				</li>
-				
-				<!-- Theme Switcher -->
-				<li class="nav-item dropdown">
-					<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center"
-						type="button" aria-expanded="false" data-coreui-toggle="dropdown">
-						<svg class="icon icon-lg theme-icon-active">
-							<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-contrast}"></use>
-						</svg>
-					</button>
-					<ul class="dropdown-menu dropdown-menu-end" style="--cui-dropdown-min-width: 8rem;">
-						<li>
-							<button class="dropdown-item d-flex align-items-center" type="button" data-coreui-theme-value="light">
-								<svg class="icon icon-lg me-3">
-									<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-sun}"></use>
-								</svg>
-								Light
-							</button>
-						</li>
-						<li>
-							<button class="dropdown-item d-flex align-items-center" type="button" data-coreui-theme-value="dark">
-								<svg class="icon icon-lg me-3">
-									<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-moon}"></use>
-								</svg>
-								Dark
-							</button>
-						</li>
-						<li>
-							<button class="dropdown-item d-flex align-items-center active" type="button" data-coreui-theme-value="auto">
-								<svg class="icon icon-lg me-3">
-									<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-contrast}"></use>
-								</svg>
-								Auto
-							</button>
-						</li>
-					</ul>
-				</li>
-				
-				<li class="nav-item py-1">
-					<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
-				</li>
-				
-				<!-- User Dropdown -->
-				<li class="nav-item dropdown">
-					<a class="nav-link py-0 pe-0" data-coreui-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-						<div class="avatar avatar-md">
-							<img class="avatar-img" th:src="@{/coreui/assets/img/avatars/8.jpg}" alt="user@email.com">
-						</div>
-					</a>
-					<div class="dropdown-menu dropdown-menu-end pt-0">
-						<div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">
-							Account
-						</div>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell}"></use>
-							</svg> 
-							Updates
-							<span class="badge badge-sm bg-info ms-2">42</span>
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-envelope-open}"></use>
-							</svg> 
-							Messages
-							<span class="badge badge-sm bg-success ms-2">42</span>
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-task}"></use>
-							</svg> 
-							Tasks
-							<span class="badge badge-sm bg-danger ms-2">42</span>
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-comment-square}"></use>
-							</svg> 
-							Comments
-							<span class="badge badge-sm bg-warning ms-2">42</span>
-						</a>
-						
-						<div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold my-2">
-							Settings
-						</div>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-user}"></use>
-							</svg> 
-							Profile
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-settings}"></use>
-							</svg> 
-							Settings
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-credit-card}"></use>
-							</svg> 
-							Payments
-							<span class="badge badge-sm bg-secondary ms-2">42</span>
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-file}"></use>
-							</svg> 
-							Projects
-							<span class="badge badge-sm bg-primary ms-2">42</span>
-						</a>
-						
-						<div class="dropdown-divider"></div>
-						
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-lock-locked}"></use>
-							</svg> 
-							Lock Account
-						</a>
-						<a class="dropdown-item" href="#"> 
-							<svg class="icon me-2">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-account-logout}"></use>
-							</svg> 
-							Logout
-						</a>
+		<ul class="header-nav d-none d-lg-flex">
+			<li class="nav-item">
+				<a class="nav-link" th:href="@{/home}">Dashboard</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">Users</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" th:href="@{/settings/}">Settings</a>
+			</li>
+		</ul>
+
+		<!-- 알림 -->
+		<ul class="header-nav ms-auto">
+			<li class="nav-item dropdown">
+				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
+					<svg class="icon icon-lg">
+						<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell}"></use>
+            		</svg>
+					<span id="notificationBadge" class="badge badge-sm badge-pill bg-danger position-absolute top-0 end-0 d-none">0</span>
+				</button>
+
+				<div class="dropdown-menu dropdown-menu-end pt-0" style="min-width: 320px;">
+				<div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">최근 알림</div>
+
+				<div id="notificationList" class="list-group list-group-flush">
+					<div id="emptyNotification" class="text-center py-4 text-body-secondary">
+						<svg class="icon icon-xl mb-2 opacity-50">
+							<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell-exclamation}"></use>
+                   		</svg>
+						<p class="small mb-0">새로운 알림이 없습니다.</p>
 					</div>
-				</li>
-			</ul>
-		</div>
-		</header>
+				</div>
+			</li>
+		</ul>
+
+
+		<!-- 테마 + 프로필 -->
+		<ul class="header-nav">
+			<li class="nav-item py-1">
+				<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
+			</li>
+
+			<!-- 테마 -->
+			<li class="nav-item dropdown">
+				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" aria-expanded="false" data-coreui-toggle="dropdown">
+					<svg class="icon icon-lg theme-icon-active">
+              			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-contrast}"></use>
+            		</svg>
+				</button>
+
+				<ul class="dropdown-menu dropdown-menu-end" style="--cui-dropdown-min-width: 8rem">
+					<li>
+						<button class="dropdown-item d-flex align-items-center" type="button" data-coreui-theme-value="light">
+							<svg class="icon icon-lg me-3">
+								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-sun}"></use>
+			                </svg>
+							Light
+						</button>
+					</li>
+
+					<li>
+						<button class="dropdown-item d-flex align-items-center" type="button" data-coreui-theme-value="dark">
+							<svg class="icon icon-lg me-3">
+								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-moon}"></use>
+                			</svg>
+							Dark
+						</button>
+					</li>
+				</ul>
+			</li>
+
+			<!-- 프로필 -->
+			<li class="nav-item py-1">
+				<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
+			</li>
+
+			<!-- User Dropdown -->
+			<li class="nav-item dropdown">
+				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" aria-expanded="false" data-coreui-toggle="dropdown">
+					<svg class="icon icon-lg theme-icon-active">
+						<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-user}"></use>
+              		</svg>
+				</button>
+
+				<!-- 드롭다운 -->
+				<div class="dropdown-menu dropdown-menu-end pt-0">
+					<!-- <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold my-2">Settings</div> -->
+
+					<a class="dropdown-item" th:href="@{/home}">
+						<svg class="icon me-2">
+                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-globe-alt}"></use>
+                		</svg>
+						대시보드
+					</a>
+
+					<a class="dropdown-item" th:href="@{/}">
+						<svg class="icon me-2">
+                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-file}"></use>
+              			</svg>
+						프로젝트
+						<span class="badge badge-sm bg-primary ms-2"></span>
+					</a>
+
+					<a class="dropdown-item" th:href="@{/}">
+						<svg class="icon me-2">
+                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-settings}"></use>
+              			</svg>
+						마이페이지
+					</a>
+
+					<div class="dropdown-divider"></div>
+
+					<!-- 로그아웃 -->
+					<form id="logoutForm" th:action="@{/user/logout}" method="post" style="display: none"></form>
+					<a class="dropdown-item" id="logoutBtn" style="cursor: pointer;">
+						<svg class="icon me-2">
+                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-account-logout}"></use>
+              			</svg>
+						로그아웃
+					</a>
+
+				</div>
+			</li>
+		</ul>
+	</div>
+
+	<script>
+    	const logoutBtn = document.getElementById('logoutBtn');
+    	const logoutForm = document.getElementById('logoutForm');
+    	logoutBtn.addEventListener('click', function (e) {
+      		e.preventDefault();
+      		if (confirm('로그아웃 하시겠습니까?')) {
+        		logoutForm.submit();
+      		}
+    	});
+	</script>
+
+</header>
 
 </html>

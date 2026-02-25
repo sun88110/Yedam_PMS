@@ -24,6 +24,6 @@ public class HomeController {
 		String userId = customUser.getUsername();
 		HomeDto dtoList = homeService.loadMainPage(userId);
 		model.addAttribute("list", dtoList);
-		return "/home/home-index.html";
+		return "home/home-index";
 	}
 }

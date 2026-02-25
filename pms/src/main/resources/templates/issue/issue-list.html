@@ -4,6 +4,20 @@
 	layout:decorate="~{common/layouts/default-layout}"
 	layout:fragment="Content">
 <head>
+<!-- Bootstrap5 icon사용 -->
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
+
+<!-- 1. jQuery = JavaScript 라이브러리-->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- 2. bootstrap-datepicker 본체 -->
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js"></script>
+<!-- 3. 한국어 캘린더-->
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/locales/bootstrap-datepicker.ko.min.js"></script>
 <meta charset="UTF-8" />
 <title>일감 전체 조회</title>
 </head>
@@ -12,35 +26,27 @@
 		<div class="mb-4 mt-3">
 			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
-				<label th:if="${not #lists.isEmpty(issueList)}"
-					th:text="${issueList[0].projectName}" class="text-primary"></label>
-				<small class="text-muted">의 일감 조회</small>
+				<span th:text="${!#lists.isEmpty(issueList) ? issueList[0].projectName : '프로젝트 없음'}" class="text-primary"></span>
+				<small class="text-muted">의 전체 일감 목록</small>
 			</h3>
 		</div>
 
 		<!-- 검색 조건-->
-		<form th:action="@{/issue/list}" method="get" id="searchForm">
+		<form
+			th:action="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}"
+			method="get" id="searchForm">
 			<div id="dynamicSearch" class="row g-3 mb-3">
 				<div
 					th:replace="~{common/fragments/issue/dynamic-issue-list-search}"></div>
 			</div>
-			<div>
-				<button
-					th:onclick="|location.href='@{/project/{code}/issue/new(code=${projectCode})}'|"
-					class="btn btn-primary text-white d-inline-flex">일감 추가</button>
-				<button th:onclick="|location.href='@{/work/list}'|"
-					class="btn btn-primary text-white d-inline-flex">소요시간 조회</button>
-			</div>
 
+			<!-- 검색조건 추가 버튼 + 조회 버튼 -->
 			<div
 				class="mb-3 d-flex align-items-stretch justify-content-end gap-2">
 				<div class="dropdown me-2">
 					<button class="btn btn-secondary dropdown-toggle" type="button"
 						data-bs-toggle="dropdown">검색조건 추가</button>
-
 					<ul class="dropdown-menu">
-						<li><a class="dropdown-item add-condition"
-							data-target="field-projectName" href="#">프로젝트 명</a></li>
 						<li><a class="dropdown-item add-condition"
 							data-target="field-jobNo" href="#">일감번호</a></li>
 						<li><a class="dropdown-item add-condition"
@@ -52,7 +58,7 @@
 						<li><a class="dropdown-item add-condition"
 							data-target="field-priority" href="#">우선순위</a></li>
 						<li><a class="dropdown-item add-condition"
-							data-target="field-manager" href="#">담당자</a></li>
+							data-target="field-managerId" href="#">담당자</a></li>
 						<li><a class="dropdown-item add-condition"
 							data-target="field-startDate" href="#">일감 시작날짜</a></li>
 						<li><a class="dropdown-item add-condition"
@@ -61,17 +67,18 @@
 							data-target="field-progress" href="#">진척도</a></li>
 					</ul>
 				</div>
-			</div>
-
-			<div>
-				<button
-					th:onclick="|location.href='@{/project/{code}/issue/new(code=${projectCode})}'|"
-					class="btn btn-primary text-white d-inline-flex">일감 추가</button>
-				<button th:onclick="|location.href='@{/work/list}'|"
-					class="btn btn-primary text-white d-inline-flex">소요시간 조회</button>
+				<!-- 조회버튼 -->
+				<button type="submit" class="btn btn-primary">일감 조회</button>
+				<!--  소요시간 조회로 이동 -->
+				<a
+					th:href="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
+					class="btn btn-primary text-white d-inline-flex">소요시간 조회</a>
+				<!-- 일감 등록으로 이동 -->
+				<a
+					th:href="@{/project/user/{projectCode}/issue/new(projectCode=${projectCode})}"
+					class="btn btn-success text-white d-inline-flex">일감 등록</a>
 			</div>
 		</form>
-
 		<!-- 일감 전체 조회되는 테이블-->
 		<table class="table table-hover text-center">
 			<thead class="table-light">
@@ -93,18 +100,21 @@
 						th:data-project-code="${issue.projectCode}"></td>
 					<td th:text="${issue.jobNo}"></td>
 					<td th:text="${issue.title}"></td>
-					<td th:text="${issue.jobStatusName}"
+					<td th:text="${issue.jobStatus}"
 						th:data-job-status-no="${issue.jobStatusNo}"></td>
-					<td th:text="${issue.jobTypeName}"
+					<td th:text="${issue.jobType}"
 						th:data-job-type-no="${issue.jobTypeNo}"></td>
 					<td th:text="${issue.priorityName}"
 						th:data-priority="${issue.priority}"></td>
 					<td th:text="${issue.managerId}"></td>
 					<td>
 						<div class="btn-group" role="group">
-							<a th:href="@{/issue/info(jobNo=${issue.jobNo})}"
-								class="btn btn-sm btn-outline-info">상세</a> <a
-								class="btn btn-sm btn-outline-info">수정</a>
+							<a
+								th:href="@{/project/user/{projectCode}/issue/update(projectCode=${projectCode}, jobNo=${issue.jobNo})}"
+								class="btn btn-sm btn-outline-info">수정</a> 
+							<a
+								th:href="@{/project/user/{projectCode}/issue/info(projectCode=${projectCode}, jobNo=${issue.jobNo})}"
+								class="btn btn-sm btn-outline-info"> 상세</a>
 						</div>
 					</td>
 				</tr>

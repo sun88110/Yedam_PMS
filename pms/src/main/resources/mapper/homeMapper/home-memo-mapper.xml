@@ -1,15 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.home.memo.mapper.HomeMemoMapper">
-	<select id="findMemos" resultType="HomeMemoDto">
-		SELECT
-		memo_no,
-		content,
-		add_date,
-		user_id
+	<select id="findMemos"
+		resultType="com.pms.home.memo.dto.HomeMemoDto">
+		SELECT memo_no, content, add_date, user_id
 		FROM memo
-		WHERE user_id = #{userId}
+		WHERE
+		user_id = #{userId}
 		ORDER BY add_date DESC, memo_no DESC
 	</select>
 
+	<insert id="insertMemo"
+		parameterType="com.pms.home.memo.dto.HomeMemoDto">
+		INSERT INTO memo (memo_no, content, user_id, add_date)
+		VALUES (memo_seq.NEXTVAL, #{content}, #{userId}, SYSDATE)
+	</insert>
+
+	<delete id="deleteMemo">
+		DELETE FROM memo
+		WHERE memo_no = #{memoNo} AND user_id
+		= #{userId}
+	</delete>
 </mapper>
