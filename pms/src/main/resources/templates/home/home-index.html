@@ -51,19 +51,20 @@
 
 /* 콘텐츠 영역: 내부 스크롤 활성화 */
 .section-content {
-    flex: 1 1 auto;
-    overflow-y: auto !important; /* 내부 세로 스크롤 허용 */
-    overflow-x: hidden;
-    padding-right: 5px;
+	flex: 1 1 auto;
+	overflow-y: auto !important; /* 내부 세로 스크롤 허용 */
+	overflow-x: hidden;
+	padding-right: 5px;
 }
 
 /* 스크롤바 커스텀 (위젯 안에서만 보이게) */
 .section-content::-webkit-scrollbar {
-    width: 5px;
+	width: 5px;
 }
+
 .section-content::-webkit-scrollbar-thumb {
-    background-color: #ccc;
-    border-radius: 10px;
+	background-color: #ccc;
+	border-radius: 10px;
 }
 
 /* 5. 페이지네이션 스타일 */
@@ -77,7 +78,7 @@
 
 /* 페이징 버튼은 이제 필요 없으므로 완전히 숨김 */
 .widget-pagination {
-    display: none !important;
+	display: none !important;
 }
 
 .page-link-sm {
@@ -189,8 +190,8 @@
 }
 </style>
 
-	<meta name="_csrf" th:content="${_csrf?.token}" />
-	<meta name="_csrf_header" th:content="${_csrf?.headerName}" />
+<meta name="_csrf" th:content="${_csrf?.token}" />
+<meta name="_csrf_header" th:content="${_csrf?.headerName}" />
 </head>
 
 <body>
@@ -232,7 +233,9 @@
 				<div class="section-box border-top border-warning border-4">
 					<div class="section-title text-warning">
 						<span><i class="cil-bullhorn"></i> 공지사항</span>
-						<button class="btn btn-sm btn-warning text-dark fw-bold"
+
+						<button sec:authorize="hasRole('ROLE_ADMIN')"
+							class="btn btn-sm btn-warning text-dark fw-bold"
 							onclick="showNoticeAddModal()">+ 등록</button>
 					</div>
 					<div class="section-content" id="content-notices">
@@ -351,11 +354,15 @@
 						</div>
 					</div>
 					<div class="modal-footer bg-light">
-						<button type="button" class="btn btn-danger me-auto"
-							id="btnDeleteNotice" onclick="handleDeleteNotice()">삭제</button>
+						<button sec:authorize="hasRole('ROLE_ADMIN')" type="button"
+							class="btn btn-danger me-auto" id="btnDeleteNotice"
+							onclick="handleDeleteNotice()">삭제</button>
+
 						<button type="button" class="btn btn-secondary"
 							data-bs-dismiss="modal">닫기</button>
-						<button type="submit" class="btn btn-warning text-dark fw-bold">저장</button>
+
+						<button sec:authorize="hasRole('ROLE_ADMIN')" type="submit"
+							class="btn btn-warning text-dark fw-bold">저장</button>
 					</div>
 				</form>
 			</div>
@@ -379,7 +386,9 @@
 		</div>
 	</div>
 
-<script th:inline="javascript">
+	<script th:inline="javascript">
+	// 📍 타임리프로 현재 사용자의 어드민 여부를 JS 변수에 할당
+    const isAdmin = /*[[${#authorization.expression('hasRole("ROLE_ADMIN")')}]]*/ false;
 /* --- 1. 초기화 로직 (스크롤 활성화 및 위젯 정렬) --- */
 document.addEventListener("DOMContentLoaded", function () {
     // [수정 핵심] 모든 hidden-item을 제거하되, 메모 입력 폼(#memoInputForm)은 제외합니다.
@@ -431,6 +440,15 @@ function showNoticeAddModal() {
     document.getElementById('btnDeleteNotice').style.display = 'none';
     document.getElementById('existingFileList').innerHTML = ''; 
     new bootstrap.Modal(document.getElementById('noticeModal')).show();
+    
+    const formFields = ['noticeTitle', 'noticeContent', 'noticePrivacy', 'noticeFiles'];
+    formFields.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.readOnly = false;
+            el.disabled = false;
+        }
+    });
 }
 
 async function showNoticeEditModal(noticeNo) {
@@ -457,9 +475,12 @@ async function showNoticeEditModal(noticeNo) {
                             <i class="cil-file text-primary me-2"></i> 
                             <a href="/download/${file.detailsNo}" class="text-decoration-none small text-dark fw-semibold">${file.filesName}</a>
                         </div>
+                        
+                        ${isAdmin ? `
                         <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteIndividualFile(${file.detailsNo}, this)">
                             <span aria-hidden="true" style="font-size:1.2rem;">&times;</span>
                         </button>
+                        ` : ''}
                     </li>`;
             });
             fileHtml += '</ul>';
@@ -467,6 +488,17 @@ async function showNoticeEditModal(noticeNo) {
         } else {
             fileListDiv.innerHTML = '<p class="text-muted small mt-2">첨부된 파일이 없습니다.</p>';
         }
+        
+        const formFields = ['noticeTitle', 'noticeContent', 'noticePrivacy', 'noticeFiles'];
+        formFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                // isAdmin이 false면 true(막음), isAdmin이 true면 false(품)
+                el.readOnly = !isAdmin;
+                el.disabled = !isAdmin;
+            }
+        });
+        
         new bootstrap.Modal(document.getElementById('noticeModal')).show();
     } catch (e) { console.error(e); alert("오류가 발생했습니다."); }
 }
@@ -522,17 +554,35 @@ document.getElementById('noticeForm').onsubmit = async function(e) {
     const id = document.getElementById('noticeId').value;
     const csrf = getCsrf();
     const formData = new FormData(this);
+    
     const headers = {};
-    if (csrf.header) headers[csrf.header] = csrf.token;
+    if (csrf.header && csrf.token) {
+        headers[csrf.header] = csrf.token;
+    }
+
+    // 📍 서버 컨트롤러 설정에 맞춰 id가 있으면 PUT, 없으면 POST
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/notices/${id}` : '/api/notices';
 
     try {
-        const res = await fetch(id ? `/api/notices/${id}` : '/api/notices', {
-            method: id ? 'PUT' : 'POST',
+        const res = await fetch(url, {
+            method: method,   // 💡 여기가 핵심! id가 있을 때 'PUT'이 들어갑니다.
             headers: headers,
             body: formData 
         });
-        if (res.ok) { alert("저장되었습니다."); location.reload(); }
-    } catch (error) { alert("오류 발생"); }
+        
+        if (res.ok) { 
+            alert("저장되었습니다."); 
+            location.reload(); 
+        } else {
+            // 405 에러가 다시 난다면 서버 콘솔을 다시 확인해야 합니다.
+            const errorMsg = await res.text();
+            alert("저장 실패 (Status: " + res.status + ")\n사유: " + errorMsg);
+        }
+    } catch (error) { 
+        console.error(error); 
+        alert("네트워크 오류 발생"); 
+    }
 };
 
 /* --- 4. 메모 (Memo) API --- */

@@ -87,33 +87,30 @@ public class HomeNoticeRestController {
             @RequestParam(value = "uploadFiles", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal UserDetails user) {
 
-        // 기존 공지 정보 가져오기 (파일 번호 유지를 위함)
+        // 1. 기존 데이터 존재 확인
         HomeNoticeDto existingNotice = noticeMapper.getNotice(noticeNo);
         if (existingNotice == null) return ResponseEntity.notFound().build();
         
-        Integer filesNo = existingNotice.filesNo(); // 기본적으로 기존 파일 번호 유지
+        Integer filesNo = existingNotice.filesNo();
 
         try {
-            // 새로운 파일이 들어왔을 경우에만 업로드 진행
-            if (files != null && !files.isEmpty() && !files.get(0).isEmpty()) {
+            // 2. 파일 리스트가 실제로 비어있지 않은지 더 엄격하게 체크
+            if (files != null && !files.isEmpty() && files.stream().anyMatch(f -> !f.isEmpty())) {
                 filesNo = filesUploadService.uploadFiles(files, user.getUsername(), filesNo);
             }
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("파일 수정 실패");
+            // 📍 여기서 Exception이 터지면 트랜잭션이 이미 rollback-only가 됩니다.
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("파일 처리 중 오류: " + e.getMessage());
         }
 
+        // 3. DTO 생성 및 업데이트
         HomeNoticeDto updateDto = new HomeNoticeDto(
-            noticeNo, 
-            title, 
-            content, 
-            privacySettings, 
-            user.getUsername(), 
-            filesNo, 
-            null
+            noticeNo, title, content, privacySettings, user.getUsername(), filesNo, null
         );
         
         int result = noticeMapper.updateNotice(updateDto);
-        return result > 0 ? ResponseEntity.ok().build() : ResponseEntity.status(403).body("수정 권한이 없습니다.");
+        return result > 0 ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
     }
 
     // 4. 공지사항 삭제
