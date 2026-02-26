@@ -3,7 +3,116 @@
 	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	layout:decorate="~{common/layouts/default-layout}">
+	
+<head>
+<style>
+/* 1. 글로벌 테마 변수 재정의 */
+:root {
+    --pms-card-bg: #ffffff;
+    --pms-text: #212529;
+    --pms-border: #dee2e6;
+    --pms-accent: #321fdb; /* 라이트모드 기본 파랑 */
+    --thead-bg: #f8f9fa;
+}
 
+[data-coreui-theme="dark"] {
+    /* 📍 배경을 완전한 검정 대신 부드러운 다크네이비로 설정 */
+    --pms-card-bg: #2a303d; 
+    --pms-text: #e0e2e6;
+    --pms-border: #3c434f;
+    /* 📍 링크/강조색: 너무 진하지 않은 '소프트 블루' (눈 피로 감소) */
+    --pms-accent: #82b1ff; 
+    /* 📍 테이블 헤더: 카드보다 살짝 더 어두운 톤으로 분리 */
+    --thead-bg: #212631;
+}
+
+/* 2. 아코디언 및 카드 가독성 개선 */
+.accordion-item {
+    background-color: var(--pms-card-bg) !important;
+    border: 1px solid var(--pms-border) !important;
+    margin-bottom: 0.5rem;
+    border-radius: 8px !important;
+    overflow: hidden;
+}
+
+.accordion-button {
+    background-color: var(--pms-card-bg) !important;
+    color: var(--pms-text) !important;
+    font-weight: 600;
+}
+
+/* 열렸을 때 버튼 강조 */
+.accordion-button:not(.collapsed) {
+    color: var(--pms-accent) !important;
+    background-color: rgba(130, 177, 255, 0.05) !important;
+    box-shadow: inset 0 -1px 0 var(--pms-border) !important;
+}
+
+.card {
+    background-color: var(--pms-card-bg) !important;
+    border: 1px solid var(--pms-border) !important;
+}
+
+/* 3. 테이블 헤더 눈부심 해결 (가장 요청하신 부분) */
+.table {
+    color: var(--pms-text) !important;
+}
+
+/* thead 배경색 고정 */
+.table thead.table-light, 
+.table thead {
+    background-color: var(--thead-bg) !important;
+}
+
+.table thead th {
+    background-color: var(--thead-bg) !important;
+    color: var(--pms-text) !important;
+    font-weight: 600;
+    border-bottom: 2px solid var(--pms-border) !important;
+    padding: 12px 8px !important;
+}
+
+/* 4. 링크 및 텍스트 파란색 (가독성 튜닝) */
+a, .text-primary, .name-text {
+    color: var(--pms-accent) !important;
+    transition: 0.2s;
+}
+
+a:hover, .name-text:hover {
+    filter: brightness(1.2);
+    text-decoration: underline !important;
+}
+
+/* 5. 입력창(Select/Input) 스타일 */
+.form-control, .form-select {
+    background-color: var(--pms-card-bg) !important;
+    border-color: var(--pms-border) !important;
+    color: var(--pms-text) !important;
+}
+
+.form-control::placeholder {
+    color: #8a93a2 !important;
+}
+
+/* 6. 테이블 줄무늬 및 호버 (다크모드 대응) */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --cui-table-accent-bg: rgba(255, 255, 255, 0.02) !important;
+    color: var(--pms-text) !important;
+}
+
+.table-hover > tbody > tr:hover > * {
+    --cui-table-accent-bg: rgba(255, 255, 255, 0.04) !important;
+    color: var(--pms-text) !important;
+}
+
+/* 7. 배지 가독성 */
+.text-bg-light {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: var(--pms-text) !important;
+    border: 1px solid var(--pms-border) !important;
+}
+</style>
+</head>
 <body>
 	<div layout:fragment="Content">
 		<div class="accordion" id="settingsAccordion">
