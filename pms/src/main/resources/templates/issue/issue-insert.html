@@ -119,9 +119,8 @@
 					<input type="text" 
 							   class="form-control" 
 							   id="managerName"
-							   th:field="*{userId}"
 							   readonly /> 
-					<input type="hidden" name="managerId" id="managerId" />
+					<input type="hidden" th:field="*{userId}" id="userId" />
 					<div th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
 				</div>
 			</div>

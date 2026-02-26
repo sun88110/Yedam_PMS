@@ -89,7 +89,7 @@
 			<div class="col-md-6">
 				<label class="form-label fw-bold">진척도</label>
 				<div class="view-control shadow-sm bg-white"
-					th:text="${issue.progress + '%'}"></div>
+					th:text="${issue.progress != null ? issue.progress + '%' : '0%'}"></div>
 			</div>
 		</div>
 

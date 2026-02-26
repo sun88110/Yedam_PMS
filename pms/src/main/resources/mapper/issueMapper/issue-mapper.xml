@@ -173,6 +173,7 @@
 		SET PUBLIC_ROLE = #{publicRole},
 		TITLE = #{title},
 		MANAGER_ID = #{managerId},
+		USER_ID = #{userId},
 		CONTENT = #{content},
 		PRIORITY = #{priority},
 		START_DATE = #{startDate},

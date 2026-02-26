@@ -15,7 +15,8 @@ public class WorkReportDto {
 	private int level; // 계층 보여주는 레벨과 권한 정보
 	private String type; // 보고서 종류 일감, 프로젝트, 사용자, 주월별 
 	private String userId;
-	private String managerId; // 담당자
+	private String username; // 담당자
+	private String managerId; 
 	// 프로젝트 정보
 	private Integer projectNo;
 	private String projectCode;

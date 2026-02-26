@@ -26,13 +26,11 @@
 </head>
 <body>
 	<div class="container">
-		<div class="mb-3">
+		<div class="mb-4 mt-3">
+			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
-				<label th:if="${not #lists.isEmpty(reportList)}"
-					th:text="${reportList[0].projectName}" class="text-primary"></label>
-					<label th:if="${#lists.isEmpty(reportList)}"
-					th:text="${projectCode}" class="text-primary"></label>
-				<small class="text-muted">의 소요시간 보고서</small>
+				<span th:text="${project.projectName}" class="text-primary"></span>
+				<small class="text-muted">의 보고서 목록</small>
 			</h3>
 		</div>
 
@@ -53,7 +51,7 @@
 						<li><a class="dropdown-item add-condition" href="#"
 							data-target="field-job">일감별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
-							data-target="field-users">담당자별</a></li>
+							data-target="field-username">담당자별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
 							data-target="field-projectWeek">프로젝트 주별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
@@ -91,11 +89,11 @@
 				<tbody>
 					<tr th:each="row : ${reportList}">
 						<td class="text-satrt"><span th:if="${reportType == 'job'}"
-							th:text="'[' + ${row.projectName} + '] ' + ${row.title}"></span>
+							th:text="${row.title}"></span>
 							<span th:if="${reportType != 'job' and reportType != 'users'}"
 							th:text="${row.projectName}"></span> <span
 							th:if="${reportType == 'users'}"
-							th:text="${row.managerId}"></span>
+							th:text="${row.username}"></span>
 						</td>
 						<td><span th:if="${reportType == 'week'}"
 							th:text="${row.workWeek}"></span> <span
@@ -103,8 +101,11 @@
 							<span
 							th:if="${reportType == 'job' or
 								reportType == 'project' or reportType == 'users'}"
-							th:text="${#dates.format(row.startDate, 'yyyy-MM-dd')} + 
-								' ~ ' + ${#dates.format(row.endDate, 'yyyy-MM-dd')}"></span>
+							th:text="${row.startDate != null and row.endDate != null} ?
+								(${#dates.format(row.startDate, 'yyyy-MM-dd')} + 
+								' ~ ' + ${#dates.format(row.endDate, 'yyyy-MM-dd')}) :
+								'기간 정보 없음'" 
+								></span>
 						</td>
 						<td
 							th:text="${row.estimatedTime ?: row.averageTime}

@@ -13,7 +13,6 @@ import lombok.Data;
 @Alias("IssueDto")
 public class IssueDto {
 	private Integer jobNo;
-   @NotBlank
 	private String managerId;
    @NotNull
 	private Integer publicRole;
@@ -29,7 +28,6 @@ public class IssueDto {
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date endDate;
 	private Integer progress;
-	@NotBlank
 	private String userId;
 	private String username;
 	@NotBlank

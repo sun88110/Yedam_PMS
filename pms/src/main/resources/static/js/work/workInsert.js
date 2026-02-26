@@ -25,7 +25,6 @@ document.addEventListener("DOMContentLoaded", function () {
 		const manager = selectedOption.dataset.manager;
 		// thymeleaf dataset-manager속성 을 접근할 수 있게 함
 		if (manager) {
-			console.log(manager);
 			workersInput.value = manager;
 		} else {
 			// 등록된 일감의 담당자가 업을리는 없지만 일단 없다면 빈칸

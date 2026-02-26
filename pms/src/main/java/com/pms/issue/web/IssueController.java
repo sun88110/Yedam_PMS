@@ -83,11 +83,15 @@ public class IssueController {
 
 	// 일감 등록 form
 	@GetMapping("/new")
-	public String newIssueForm(@PathVariable String projectCode, 
-			Model model, 
-			@ModelAttribute("issue") IssueDto issueDto) {
+	public String newIssueForm(@AuthenticationPrincipal CustomUserDetails customUser,
+											 @PathVariable String projectCode, 
+											 Model model, 
+											 @ModelAttribute("issue") IssueDto issueDto) {
 		
+		UserEntity user = customUser.getUserEntity();
 		issueDto.setProjectCode(projectCode);
+		issueDto.setManagerId(projectCode);
+
 		// 일감 상태 목록
 		List<IssueDto> statusList = issueService.getStatusList(issueDto);
 		// 일감 유형 목록
@@ -106,6 +110,7 @@ public class IssueController {
 		model.addAttribute("managerList", managerList);
 		model.addAttribute("parentIssueList", parentIssueList);
 		model.addAttribute("projectCode", projectCode);
+		model.addAttribute("userId", user.getUserId());
 		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		
 		
@@ -121,6 +126,10 @@ public class IssueController {
 									  RedirectAttributes redirectAttributes, 
 									  @PathVariable String projectCode,
 									  Model model) {
+		
+		UserEntity user = customUser.getUserEntity();	
+		issueDto.setManagerId(user.getUserId());
+		
 		 if (bindingResult.hasErrors()) { 
 			 System.out.println("에러 발생 필드: " + bindingResult.getFieldErrors());
 				issueDto.setProjectCode(projectCode);
@@ -149,7 +158,7 @@ public class IssueController {
 		try {
 			Integer projectNo = projectService.findInfoByCode(projectCode).getProjectNo();
 			issueDto.setProjectNo(projectNo);
-			issueDto.setUserId(customUser.getUsername());
+			issueDto.setHistoryUserId(customUser.getUsername());
 			Integer jobNo = issueService.addIssue(issueDto, files);
 			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + jobNo;
 		} catch (Exception e) {
@@ -201,8 +210,10 @@ public class IssueController {
 					@RequestParam(value = "deleteFiles", required = false) List<Integer> deleteFiles,
 					@RequestParam(value = "files", required = false) List<MultipartFile> newFiles,
 					RedirectAttributes redirectAttributes) {
+		UserEntity user = customUser.getUserEntity();
 		try {
-			issueDto.setHistoryUserId(customUser.getUsername());
+			issueDto.setManagerId(user.getUserId());
+			issueDto.setHistoryUserId(user.getUserId());
 			issueService.modifyIssue(issueDto, deleteFiles, newFiles);
 			redirectAttributes.addFlashAttribute("message", "일감이 수정되었습니다.");
 			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();

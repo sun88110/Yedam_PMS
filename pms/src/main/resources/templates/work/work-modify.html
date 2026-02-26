@@ -21,16 +21,22 @@
 </head>
 <body>
 	<div class="container">
-		<form id="workUpdate" method="post" 
-		th:action="@{/project/user/{projectCode}/work/update(projectCode=${projectCode}, workEntriesNo=${workDetails.workEntriesNo})}">
-			<!-- 일감번호 -->
-			
+		<form id="workUpdate" method="post"
+			th:action="@{/project/user/{projectCode}/work/update(projectCode=${projectCode}, workEntriesNo=${workDetails.workEntriesNo})}">
+
+			<div class="mb-4 mt-3">
+				<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
+				<h3 class="fw-bold">
+					<span th:text="${project.projectName}" class="text-primary"></span>
+					<small class="text-muted">의 소요시간 수정</small>
+				</h3>
+			</div>
+
 			<!-- 해당 일감번호에 대한 값을 가져옴 readonly -->
 			<div class="row mb-3">
 				<div class="col-md-6">
-					<label class="form-label">일감명</label> 
-					<input type="text"
-						class="form-control bg-light" id="title" 
+					<label class="form-label">일감명</label> <input type="text"
+						class="form-control bg-light" id="title"
 						th:value="${workDetails.title}" readonly />
 				</div>
 
@@ -38,7 +44,7 @@
 				<div class="col-md-6">
 					<label class="form-label">담당자</label> <input type="text"
 						class="form-control bg-light" id="workers"
-						th:value="${workDetails.workers}" readonly />
+						th:value="${workDetails.username}" readonly />
 				</div>
 			</div>
 
@@ -84,11 +90,12 @@
 			<!-- 목록으로 / 수정버튼 -->
 			<div class="row md-3">
 				<div class="d-flex gap-2">
-					<a th:href="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
+					<a
+						th:href="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
 						class="btn btn-primary flex-fill text-white">소요시간 조회</a>
 					<button type="button" class="btn btn-success text-white flex-fill"
 						data-bs-toggle="modal" data-bs-target="#workModifyModal">수정</button>
-						<!-- 수정 버튼 눌렀을 때 권한 있는지 체크 -->
+					<!-- 수정 버튼 눌렀을 때 권한 있는지 체크 -->
 				</div>
 			</div>
 		</form>

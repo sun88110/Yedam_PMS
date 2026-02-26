@@ -17,7 +17,7 @@
 		 , p.project_name
 		 , we.work_details_no
 		 , wd.work_type
-		 , u.username
+		 , u.username AS username
 		FROM project p
 		          LEFT JOIN job j
 		          ON p.project_no = j.project_no
@@ -31,6 +31,9 @@
          p.project_code = #{projectCode}
 		  <if test="userId != null">
 		 AND  j.user_id = #{userId}
+  		  </if>
+  		  <if test="username != null">
+  		  AND u.username = #{username}
   		  </if>
 		  <if test="jobNo != null and jobNo != 0">
 		 AND we.job_no = #{jobNo}
@@ -63,12 +66,12 @@
 	      , j.title
 	      , j.manager_id AS managerId
 	      , p.project_code AS projectCode
-	    FROM
-	      job j
-	    JOIN
-	      project p
-	    ON
-	      j.project_no = p.project_no
+	      , u.username
+	    FROM job j
+	    JOIN project p
+	    ON j.project_no = p.project_no
+	    JOIN users u
+	    ON j.user_id = u.user_id
 	    WHERE
 	      p.project_code = #{projectCode}
 	</select>
@@ -117,16 +120,14 @@
 	      , we.work_content AS workContent
 	      , we.work_details_no AS workDetailsNo
 	      , wd.work_type AS workType
-	    FROM
-	      work_entries we
-	    LEFT JOIN
-	      job j
-	    ON
-	      we.job_no = j.job_no
-	    LEFT JOIN
-	      work_details wd
-	    ON
-	      we.work_details_no = wd.work_details_no
+	      , u.username
+	    FROM work_entries we
+	    LEFT JOIN job j
+	    ON we.job_no = j.job_no
+	    JOIN users u
+	    ON j.user_id = u.user_id
+	    LEFT JOIN work_details wd
+	    ON we.work_details_no = wd.work_details_no
 	    WHERE
 	      we.work_entries_no = #{workEntriesNo}
 	</select>
@@ -191,6 +192,7 @@
 	<select id="selectUserReport" resultType="WorkReportDto">
 	  SELECT
               j.manager_id AS managerId
+            , u.username  AS username
             , p.project_name AS projectName
             , p.le 
             , j.title AS title
@@ -203,6 +205,8 @@
             vw_project p
         JOIN job j 
             ON p.project_no = j.project_no
+        LEFT JOIN users u
+            ON j.user_id = u.user_id
         LEFT JOIN work_entries we 
             ON j.job_no = we.job_no
         LEFT JOIN work_details wd
@@ -217,15 +221,19 @@
         		      AND vw.user_id = #{userId}
         						)
         AND p.project_code = #{projectCode}
+        		 <if test="username != null">
+        		     AND u.username = #{username}
+        		 </if>
                  <if test="workType != null and workType != ''">
                      AND wd.work_type = #{workType}
                  </if>
                  <if test="workDate != null">
                      AND we.work_date = #{workDate}
-                 </if>        
+                 </if>    
         GROUP BY 
               p.project_name
             , p.le
+            , u.username 
             , j.manager_id
             , j.title
             , j.start_date

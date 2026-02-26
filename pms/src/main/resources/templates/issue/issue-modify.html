@@ -103,19 +103,15 @@
 				<!-- data-bs-toggle과 target은 Bootstrap5 문법 -->
 				<div class="col-md-6">
 					<button type="button" class="btn btn-outline-primary"
-						data-bs-toggle="modal" data-bs-target="#userSelectModal">
-						담당자 선택</button>
+						data-bs-toggle="modal" data-bs-target="#userSelectModal">담당자
+						선택 *</button>
 					<input type="text" 
-							  class="form-control"
-							  id="managerName"
-							  th:value="${issue.username}" 
-							  readonly /> 
-					<input type="hidden" 
-							   name="managerId" 
-							   id="managerId" 
-							   th:value="${issue.managerId}"/>
-					<input type="hidden" 
-							   name="userId" />
+							   class="form-control" 
+							   id="managerName"
+							   th:value="*{username}"
+							   readonly /> 
+					<input type="hidden" th:field="*{userId}" id="userId" />
+					<div th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
 				</div>
 			</div>
 

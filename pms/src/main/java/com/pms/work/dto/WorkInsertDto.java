@@ -18,8 +18,9 @@ import lombok.ToString;
 public class WorkInsertDto {
 	private Integer jobNo; // 일감 번호
 	private String userId; // 유저 아이디
+	private String username; // 담당자 이름
 	private String title; // 일감 제목
-	private String managerId; // 담당자 이름
+	private String managerId; 
 	private String workers;
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date workDate;

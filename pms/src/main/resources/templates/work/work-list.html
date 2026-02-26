@@ -26,14 +26,11 @@
 </head>
 <body>
 	<div class="container">
-		<div class="mb-3 mt-3">
+		<div class="mb-4 mt-3">
+			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
-				<label th:if="${not #lists.isEmpty(workEntriesList)}"
-					th:text="${workEntriesList[0].projectName}" class="text-primary"></label>
-					<!-- 소요시간 정보가 없으면 projectCode를 보여줌 -->
-				<label th:if="${#lists.isEmpty(workEntriesList)}"
-				th:text="${projectCode}" class="text-primary"></label>
-				<small class="text-muted">의 소요시간 전체 조회</small>
+				<span th:text="${project.projectName}" class="text-primary"></span>
+				<small class="text-muted">의 소요시간 전체 목록</small>
 			</h3>
 		</div>
 

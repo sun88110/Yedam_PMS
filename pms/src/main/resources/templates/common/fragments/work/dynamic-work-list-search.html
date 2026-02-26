@@ -34,7 +34,7 @@
 			<button type="button" class="btn-close btn-remove"
 				data-target="field-workers"></button>
 		</div>
-		<input type="text" name="managerId" class="form-control form-control-sm"
+		<input type="text" name="username" class="form-control form-control-sm"
 			placeholder="담당자명을 입력하세요">
 	</div>
 </div>
@@ -63,7 +63,7 @@
 		</div>
 		<select name="workType" class="form-select form-selected-sm">
 			<option value="0">작업분류 선택</option>
-			<option th:each="status : ${statusList}"
+			<option th:each="status : ${workType}"
 				th:value="${status.workDetailsNo}" th:text="${status.workType}"></option>
 		</select>
 	</div>

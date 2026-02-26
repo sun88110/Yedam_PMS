@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.pms.config.CustomUserDetails;
+import com.pms.project.service.ProjectService;
 import com.pms.user.entity.UserEntity;
 import com.pms.work.dto.WorkInsertDto;
 import com.pms.work.dto.WorkReportDto;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/project/user/{projectCode}/work")
 public class WorkController {
 	private final WorkService workService;
+	private final ProjectService projectService;
 
 	// 소요시간 전체 조회 + 검색기능
 	@GetMapping("/list")
@@ -62,6 +64,8 @@ public class WorkController {
 		model.addAttribute("showOnlyMe", showOnlyMe);
 		model.addAttribute("projectCode", projectCode);
 		model.addAttribute("userId", user.getUserId());
+		model.addAttribute("workType", workService.findWorkType(null));
+		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		model.addAttribute("workEntriesList", workEntriesList);
 		return "work/work-list";
 	}
@@ -90,6 +94,7 @@ public class WorkController {
 		// session에 저장된 userId라는 데이터를 찾아옴 서버는 그냥 Object로 해서 주기에 강제 타입변환
 		model.addAttribute("projectCode", projectCode);
 		model.addAttribute("userId", user.getUserId());
+		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		model.addAttribute("issueList", workService.findMyIssue(workInsertDto));
 		model.addAttribute("workType", workService.findWorkType(null));
 	
@@ -115,9 +120,9 @@ public class WorkController {
 		workUpdateDto.setProjectCode(projectCode);
 		workUpdateDto.setWorkEntriesNo(workEntriesNo);
 
-		
 		model.addAttribute("userId", user.getUserId());
 		model.addAttribute("projectCode", projectCode);
+		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		model.addAttribute("workType", workService.findWorkType(workUpdateDto.getWorkType()));
 		model.addAttribute("workDetails", workService.findWorkEntriesByNo(workUpdateDto));
 		return "work/work-modify";
@@ -172,12 +177,13 @@ public class WorkController {
 			
 			List<WorkReportDto> reportList = workService.findWorkReport(type, workReportDto);
 						
-			model.addAttribute("userId", user.getUserId());
-			model.addAttribute("projectCode", projectCode);
-			
 			model.addAttribute("reportList", reportList);
 			model.addAttribute("reportType", workReportDto.getType());
 		}
+		// model에 담아서 보
+		model.addAttribute("userId", user.getUserId());
+		model.addAttribute("projectCode", projectCode);
+		model.addAttribute("project", projectService.findInfoByCode(projectCode));
 		return "work/work-report";
 
 	}
