@@ -299,16 +299,16 @@
 		        ELSE 'p' || pl.parent_project_no
 		      END                       AS parent
 		    , NULL                        AS project_id
-		    , NULL                        AS worker_id
+		    , pl.user_id                  AS worker_id
 		    , NULL                        AS job_priority
             , pl.project_desc             AS description
             , NULL                        AS job_status_no
             , NULL                        AS job_type_no
             , NULL                        AS public_role
 		  FROM (
-		    SELECT p.project_no, p.project_name,p.start_date, p.end_date, p.project_code, p.parent_project_no, project_desc
+		    SELECT p.project_no, p.project_name,p.start_date, p.end_date, p.project_code, p.parent_project_no, p.project_desc, p.user_id
 		    FROM project p
-		    START WITH p.project_code = 'mes'
+		    START WITH p.project_code = #{projectCode}
 		    CONNECT BY NOCYCLE PRIOR p.project_no = p.parent_project_no
 		  ) pl
 		    UNION ALL
@@ -333,7 +333,7 @@
 		    JOIN (
 		      SELECT p.project_no
 		      FROM project p
-		      START WITH p.project_code = 'mes'
+		      START WITH p.project_code = #{projectCode}
 		      CONNECT BY NOCYCLE PRIOR p.project_no = p.parent_project_no
 		    ) pl ON pl.project_no = j.project_no
 		  )
