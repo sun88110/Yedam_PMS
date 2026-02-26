@@ -88,6 +88,7 @@
 		SET title = #{title},
 		content = #{content},
 		privacy_settings = #{privacySettings},
+		files_no = #{filesNo},
 		update_date = SYSDATE
 		WHERE
 		notice_no = #{noticeNo}

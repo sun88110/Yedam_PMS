@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="|Error ${status} - PMS|">Error - PMS</title>
+    
+    <link rel="stylesheet" href="/coreui/css/style.css">
+    
+    <style>
+        body {
+            background-color: #f8f9fa; /* CoreUI 라이트 배경색 */
+        }
+        .error-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-card {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            padding: 2rem;
+        }
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 1rem;
+            /* 상태 코드별 색상 변경을 위해 class 부여 가능 */
+            color: #3c4b64; 
+        }
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4f5d73;
+            margin-bottom: 1rem;
+        }
+        .error-desc {
+            color: #8a93a2;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        .btn-home {
+            padding: 0.6rem 2rem;
+            font-weight: 600;
+        }
+        /* 장식용 아이콘 스타일 */
+        .icon-box {
+            width: 80px;
+            height: 80px;
+            background: rgba(60, 75, 100, 0.05);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="error-wrapper">
+    <div class="error-card">
+        <div class="icon-box">
+            <svg width="40" height="40" viewBox="0 0 512 512" style="fill: #3c4b64;">
+                <path d="M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5 0-200-89.5-200-200S145.5 56 256 56s200 89.5 200 200-89.5 200-200 200zm101.8-262.2L295.6 256l62.2 62.2c4.7 4.7 4.7 12.3 0 17l-22.6 22.6c-4.7 4.7-12.3 4.7-17 0L256 295.6l-62.2 62.2c-4.7 4.7-12.3 4.7-17 0l-22.6-22.6c-4.7-4.7-4.7-12.3 0-17l62.2-62.2-62.2-62.2c-4.7-4.7-4.7-12.3 0-17l22.6-22.6c4.7-4.7 12.3-4.7 17 0l62.2 62.2 62.2-62.2c4.7-4.7 12.3-4.7 17 0l22.6 22.6c4.7 4.7 4.7 12.3 0 17z"/>
+            </svg>
+        </div>
+
+        <div class="error-code" th:text="${status}">403</div>
+
+        <h1 class="error-title" th:if="${status == 403}">접근 권한이 없습니다</h1>
+        <h1 class="error-title" th:if="${status == 404}">페이지를 찾을 수 없습니다</h1>
+        <h1 class="error-title" th:if="${status == 500}">서버에 오류가 발생했습니다</h1>
+
+        <p class="error-desc">
+            요청하신 작업 수행에 필요한 권한이 없거나, <br>
+            일시적인 시스템 오류일 수 있습니다. <br>
+            문제가 지속되면 관리자에게 문의해 주세요.
+        </p>
+
+        <div class="d-flex justify-content-center gap-2">
+            <button onclick="history.back()" class="btn btn-outline-secondary btn-home">
+                이전 페이지
+            </button>
+            <a href="/home" class="btn btn-primary btn-home">
+                대시보드로 이동
+            </a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

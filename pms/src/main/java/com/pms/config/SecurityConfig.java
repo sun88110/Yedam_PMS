@@ -36,7 +36,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 					.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 					.requestMatchers("/coreui/**").permitAll()
-					.requestMatchers("/home/**", "/user/**").permitAll()
+					.requestMatchers("/home/**", "/user/**", "/error/**").permitAll()
 					.requestMatchers("/settings/**").hasRole("ADMIN")
 					.anyRequest().access(projectAuthorizationManager)
 					//.anyRequest().authenticated()

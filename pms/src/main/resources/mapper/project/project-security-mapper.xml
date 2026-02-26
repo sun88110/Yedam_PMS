@@ -4,10 +4,18 @@
 	<select id="checkAuth" resultType="boolean">
 		SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
 		FROM VW_SECURITY_AUTH v
-		JOIN G_PROJECT gp ON v.GROUP_NO = gp.GROUP_NO
+		
+    	<if test="value != null">
+    	JOIN G_PROJECT gp ON v.GROUP_NO = gp.GROUP_NO
     	JOIN PROJECT p ON gp.PROJECT_NO = p.PROJECT_NO
+    	</if>
+    	
 		WHERE v.user_id = #{userId}
-		AND p.project_code = #{value}
+		
+		<if test="value != null">
+    	AND p.project_code = #{value}
+    	</if>
+		
 		AND v.menu_id = #{menuId}
 		AND (
 		(#{method} = 'READ' AND V.CRUD_READ = 1) OR

@@ -29,7 +29,13 @@ public class ProjectSecurityService {
 
 		// type이 PROJECT고, PM이면 true
 		Integer menuId = menu.getMenuId();
-		String value = findValue(menu.getUrlData(), url);
+		String value;
+		if (!"PROJECT".equals(menu.getType())) {
+		    value = null; 
+		} else {
+			value = findValue(menu.getUrlData(), url);
+		}
+		
 		boolean isPm = "PROJECT".equals(menu.getType()) && projectSecurityMapper.checkPm(userId, value);
 		if (isPm) {
 			return true;
