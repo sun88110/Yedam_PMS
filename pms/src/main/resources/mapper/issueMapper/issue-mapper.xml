@@ -197,7 +197,7 @@
 		) VALUES (
 		HISTORY_SEQ.NEXTVAL
 		, #{changeComment}
-		, #{userId}
+		, #{historyUserId}
 		, CURRENT_TIMESTAMP
 		, #{deleteDate}
 		, #{jobNo}

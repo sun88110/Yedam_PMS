@@ -202,7 +202,7 @@ public class IssueController {
 					@RequestParam(value = "files", required = false) List<MultipartFile> newFiles,
 					RedirectAttributes redirectAttributes) {
 		try {
-			issueDto.setUserId(customUser.getUsername());
+			issueDto.setHistoryUserId(customUser.getUsername());
 			issueService.modifyIssue(issueDto, deleteFiles, newFiles);
 			redirectAttributes.addFlashAttribute("message", "일감이 수정되었습니다.");
 			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();

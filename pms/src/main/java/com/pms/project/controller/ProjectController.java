@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -223,13 +225,31 @@ public class ProjectController {
     
     @PutMapping("/user/{projectCode}/gantt/update")
     @ResponseBody
-    public IssueDto updateGanttData(@PathVariable String projectCode
-                                       , @AuthenticationPrincipal CustomUserDetails customUser
-                                       , @ModelAttribute IssueDto issueDto
-                                       , @RequestParam(value = "deleteFiles", required = false) List<Integer> deleteFiles
-                                   	   , @RequestParam(value = "files", required = false) List<MultipartFile> newFiles ){
+    public ResponseEntity<?> updateGanttData(
+    		@PathVariable String projectCode
+            , @AuthenticationPrincipal CustomUserDetails customUser
+            , @ModelAttribute IssueDto issueDto
+            , @RequestParam(value = "deleteFiles", required = false) List<Integer> deleteFiles
+            , @RequestParam(value = "files", required = false) List<MultipartFile> newFiles ){
     	
-    	return null;
+    	try {
+            issueDto.setHistoryUserId(customUser.getUsername()); 
+
+            // 2. 통합 브랜치의 서비스 로직 호출 (파일 삭제/추가, 데이터 업데이트, 히스토리 저장)
+            issueService.modifyIssue(issueDto, deleteFiles, newFiles);
+            
+            // 3. 간트 차트 리렌더링을 위해 업데이트된 객체 정보 반환 (HTTP 200 OK)
+            // 프론트엔드의 fetch .then(savedTask => { ... }) 로 전달됩니다.
+            return ResponseEntity.ok(issueDto);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            
+            // 4. 에러 발생 시 HTTP 500 응답 전송
+            // 프론트엔드의 fetch .catch() 블록이 이를 낚아채서 "처리 중 오류가 발생했습니다" 메시지를 띄웁니다.
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("간트 일감 수정 중 서버 오류가 발생했습니다.");
+        }
     }
     
     

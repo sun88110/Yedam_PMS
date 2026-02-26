@@ -358,8 +358,18 @@
             .then(savedTask => {
             	ganttIssueModal.hide();
             	
-                const startDateObj = new Date(savedTask.startDate);
-                const endDateObj = new Date(savedTask.endDate);
+            	// 1. 단순 변환 시도 후 에러(NaN)가 나면 문자열 분리해서 확실하게 Date 객체로 파싱
+                let startDateObj = new Date(savedTask.startDate);
+                if (isNaN(startDateObj.getTime()) && typeof savedTask.startDate === 'string') {
+                    const parts = savedTask.startDate.split("-"); // YYYY-MM-DD 기준
+                    startDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                }
+                
+                let endDateObj = new Date(savedTask.endDate);
+                if (isNaN(endDateObj.getTime()) && typeof savedTask.endDate === 'string') {
+                    const parts = savedTask.endDate.split("-");
+                    endDateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+                }
                 
                 const calcDuration = gantt.calculateDuration({
                     start_date: startDateObj, 
@@ -405,13 +415,15 @@
                     gantt.message({text: "일감이 성공적으로 등록되었습니다.", type: "success"});
 
                 } else {
-                    // [2. 기존 일감 수정 시 UI 처리]
+                	// [2. 기존 일감 수정 시 UI 처리]
                     let taskToUpdate = gantt.getTask(currentTaskInfo.id);
-                    
                     // 서버에서 받아온(또는 폼에 있는) 새 데이터로 덮어쓰기
                     taskToUpdate.text = savedTask.title;
-                    taskToUpdate.start_date = formatFunc(startDateObj);
+                    // ★ 핵심 수정: formatFunc()를 지우고 순수 Date 객체(startDateObj)를 그대로 대입!
+                    taskToUpdate.start_date = startDateObj; 
+                    taskToUpdate.end_date = endDateObj; // 내부 계산 꼬임 방지를 위해 endDate도 명시적 세팅
                     taskToUpdate.duration = calcDuration;
+                    
                     taskToUpdate.workerName = managerName;
                     taskToUpdate.jobPriority = priorityName;
                     

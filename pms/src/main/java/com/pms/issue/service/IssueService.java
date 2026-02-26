@@ -95,7 +95,7 @@ public class IssueService {
 		}
 		
 		// 파일 업로드
-		Integer saveFilesNo = filesUploadService.uploadFiles(newFiles, issueDto.getUserId(), issueDto.getFilesNo());
+		Integer saveFilesNo = filesUploadService.uploadFiles(newFiles, issueDto.getHistoryUserId(), issueDto.getFilesNo());
 		issueDto.setFilesNo(saveFilesNo);
 		
 		// 일감 업데이트 -> 히스토리 저장

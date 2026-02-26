@@ -47,6 +47,7 @@ public class IssueDto {
     private String commonName;
     
     // 히스토리
+    private String historyUserId;
     private Integer historyNo;
     private String changeComment;
     @DateTimeFormat(pattern = "yyyy-MM-dd")
