@@ -1,195 +1,401 @@
-<!DOCTYPE html>
-<html lang="ko" xmlns:th="https://www.thymeleaf.org/" 
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" 
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
-      layout:decorate="~{common/layouts/default-layout}" 
-      layout:fragment="Content">
-
-<head>
-<style>
-    /* 1. 기본 테마 변수 설정 (라이트/다크 공통) */
-    :root {
+<!doctype html>
+<html
+  lang="ko"
+  xmlns:th="https://www.thymeleaf.org/"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{common/layouts/default-layout}"
+  layout:fragment="Content"
+>
+  <head>
+    <style>
+      /* 1. 기본 테마 변수 설정 (라이트/다크 공통) */
+      :root {
         --profile-card-bg: #ffffff;
         --profile-text: #333333;
         --profile-border: rgba(0, 0, 0, 0.1);
         --info-badge-bg: #e0f7fa;
         --info-badge-text: #00bcd4;
-    }
+      }
 
-    /* 📍 다크모드일 때 변수값 변경 */
-    [data-coreui-theme="dark"] {
-        --profile-card-bg: #212631;    /* CoreUI 다크 카드 배경색 */
-        --profile-text: #f0f2f5;       /* 밝은 텍스트 */
+      /* 📍 다크모드일 때 변수값 변경 */
+      [data-coreui-theme='dark'] {
+        --profile-card-bg: #212631; /* CoreUI 다크 카드 배경색 */
+        --profile-text: #f0f2f5; /* 밝은 텍스트 */
         --profile-border: rgba(255, 255, 255, 0.1);
         --info-badge-bg: rgba(0, 188, 212, 0.2); /* 반투명 배경 */
         --info-badge-text: #4dd0e1;
-    }
+      }
 
-    /* 2. 카드 및 텍스트 스타일 적용 */
-    .card {
+      /* 2. 카드 및 텍스트 스타일 적용 */
+      .card {
         background-color: var(--profile-card-bg) !important;
         color: var(--profile-text) !important;
         border-color: var(--profile-border) !important;
-    }
-    
-    .card-header {
+      }
+
+      .card-header {
         background-color: transparent !important; /* 헤더 배경 고정 해제 */
         border-bottom: 1px solid var(--profile-border) !important;
-    }
+      }
 
-    .list-group-item {
+      .list-group-item {
         background-color: transparent !important;
         color: var(--profile-text) !important;
         border-color: var(--profile-border) !important;
-    }
+      }
 
-    /* 3. 뱃지 및 아바타 커스텀 */
-    .bg-info-lite { 
+      /* 3. 뱃지 및 아바타 커스텀 */
+      .bg-info-lite {
         background-color: var(--info-badge-bg) !important;
         color: var(--info-badge-text) !important;
-    }
-    
-    .avatar.bg-light {
+      }
+
+      .avatar.bg-light {
         background-color: rgba(0, 0, 0, 0.05) !important;
-    }
-    [data-coreui-theme="dark"] .avatar.bg-light {
+      }
+      [data-coreui-theme='dark'] .avatar.bg-light {
         background-color: rgba(255, 255, 255, 0.1) !important;
-    }
+      }
 
-    /* 4. 장식용 라인 및 호버 효과 */
-    .border-top-primary { border-top: 4px solid #321fdb !important; }
-    .border-start-danger { border-left: 4px solid #e55353 !important; }
-    
-    .clickable-card:hover { 
-        transform: translateY(-5px); 
+      /* 4. 장식용 라인 및 호버 효과 */
+      .border-top-primary {
+        border-top: 4px solid #321fdb !important;
+      }
+      .border-start-danger {
+        border-left: 4px solid #e55353 !important;
+      }
+
+      .clickable-card:hover {
+        transform: translateY(-5px);
         transition: all 0.3s ease;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
-    }
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+      }
 
-    /* 관리자 제어판 다크모드 배경 조정 */
-    [data-coreui-theme="dark"] .bg-light.bg-opacity-50 {
+      /* 관리자 제어판 다크모드 배경 조정 */
+      [data-coreui-theme='dark'] .bg-light.bg-opacity-50 {
         background-color: rgba(255, 255, 255, 0.05) !important;
-    }
-</style>
-    <meta charset="UTF-8">
+      }
+    </style>
+    <meta charset="UTF-8" />
     <title>PMS Dashboard</title>
-</head>
+    <meta charset="UTF-8" />
+    <title>PMS Dashboard</title>
+  </head>
 
-<body>
-
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+  <body>
+    <div class="container-fluid">
+      <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="cil-speedometer me-2"></i>마이페이지
-            </h2>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item small"><a href="#">Home</a></li>
-                    <li class="breadcrumb-item small active" aria-current="page">My Profile</li>
-                </ol>
-            </nav>
+          <h2 class="h3 mb-0 text-gray-800 fw-bold">
+            <i class="cil-speedometer me-2"></i>마이페이지
+          </h2>
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+              <li class="breadcrumb-item small">
+                <a href="#">Home</a>
+              </li>
+              <li class="breadcrumb-item small active" aria-current="page">
+                My Profile
+              </li>
+            </ol>
+          </nav>
         </div>
         <form th:action="@{/user/logout}" method="post">
-            <button type="submit" class="btn btn-outline-danger btn-sm shadow-sm">
-                <i class="cil-account-logout me-1"></i>로그아웃
-            </button>
+          <button type="submit" class="btn btn-outline-danger btn-sm shadow-sm">
+            <i class="cil-account-logout me-1"></i>로그아웃
+          </button>
         </form>
-    </div>
+      </div>
 
-    <div class="row g-4" sec:authorize="isAuthenticated()">
+      <div class="row g-4" sec:authorize="isAuthenticated()">
         <div class="col-lg-5">
-            <div class="card border-top-primary border-top-3 shadow-sm">
-                <div class="card-header bg-white py-3">
-                    <h5 class="card-title mb-0 fw-bold text-primary">
-                        <i class="cil-user me-2"></i>회원 프로필
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="text-center mb-4">
-                        <div class="avatar avatar-xl bg-light mb-3">
-                            <i class="cil-user-follow text-primary fs-3"></i>
-                        </div>
-                        <h5 class="mb-1 fw-bold" sec:authentication="principal.userEntity.username">사용자명</h5>
-                        <p class="text-muted small mb-0" sec:authentication="name">userId</p>
-                    </div>
-                    
-                    <ul class="list-group list-group-flush border-top">
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span class="text-muted"><i class="cil-envelope-closed me-2"></i>이메일</span>
-                            <span class="fw-semibold" sec:authentication="principal.userEntity.email">email@test.com</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span class="text-muted"><i class="cil-shield-check me-2"></i>권한 등급</span>
-                            <span class="badge bg-info-lite text-info" sec:authentication="principal.authorities">ROLE_USER</span>
-                        </li>
-                    </ul>
-                </div>
+          <div class="card border-top-primary border-top-3 shadow-sm">
+            <div
+              class="card-header bg-white py-3 d-flex justify-content-between align-items-center"
+            >
+              <h5 class="card-title mb-0 fw-bold text-primary">
+                <i class="cil-user me-2"></i>회원 프로필
+              </h5>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                data-coreui-toggle="modal"
+                data-coreui-target="#changeProfileModal"
+              >
+                <i class="cil-pencil me-1"></i>정보 수정
+              </button>
             </div>
+
+            <div class="card-body">
+              <div class="text-center mb-4">
+                <div class="avatar avatar-xl bg-light mb-3">
+                  <i class="cil-user-follow text-primary fs-3"></i>
+                </div>
+                <h5
+                  class="mb-1 fw-bold"
+                  sec:authentication="principal.userEntity.username"
+                >
+                  사용자명
+                </h5>
+                <input
+                  type="hidden"
+                  id="currentUserId"
+                  th:value="${#authentication.name}"
+                />
+                <p
+                  class="text-muted small mb-0"
+                  id="displayUserId"
+                  sec:authentication="name"
+                >
+                  userId
+                </p>
+              </div>
+
+              <ul class="list-group list-group-flush border-top">
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center px-0"
+                >
+                  <span class="text-muted">
+                    <i class="cil-envelope-closed me-2"></i>이메일
+                  </span>
+                  <span
+                    class="fw-semibold"
+                    sec:authentication="principal.userEntity.email"
+                    >email@test.com</span
+                  >
+                </li>
+                <li
+                  class="list-group-item d-flex justify-content-between align-items-center px-0"
+                >
+                  <span class="text-muted">
+                    <i class="cil-shield-check me-2"></i>권한 등급
+                  </span>
+                  <span
+                    class="badge bg-info-lite text-info"
+                    sec:authentication="principal.authorities"
+                    >ROLE_USER</span
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
 
         <div class="col-lg-7">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="card text-center h-100 border-0 shadow-sm clickable-card" th:onclick="|location.href='@{/home}'|" style="cursor:pointer;">
-                        <div class="card-body p-4">
-                            <div class="p-3 bg-primary bg-opacity-10 rounded-3 mb-3 d-inline-block">
-                                <i class="cil-home text-primary fs-3"></i>
-                            </div>
-                            <h6 class="fw-bold mb-0">홈 화면</h6>
-                        </div>
-                    </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div
+                class="card text-center h-100 border-0 shadow-sm clickable-card"
+                th:onclick="|location.href='@{/home}'|"
+                style="cursor: pointer"
+              >
+                <div class="card-body p-4">
+                  <div
+                    class="p-3 bg-primary bg-opacity-10 rounded-3 mb-3 d-inline-block"
+                  >
+                    <i class="cil-home text-primary fs-3"></i>
+                  </div>
+                  <h6 class="fw-bold mb-0">홈 화면</h6>
                 </div>
-                <div class="col-md-4">
-                    <div class="card text-center h-100 border-0 shadow-sm" th:onclick="|location.href='@{/issue/list}'|" style="cursor:pointer;">
-                        <div class="card-body p-4">
-                            <div class="p-3 bg-warning bg-opacity-10 rounded-3 mb-3 d-inline-block">
-                                <i class="cil-bug text-warning fs-3"></i>
-                            </div>
-                            <h6 class="fw-bold mb-0">이슈 리스트</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card text-center h-100 border-0 shadow-sm" th:onclick="|location.href='@{/settings/}'|" style="cursor:pointer;">
-                        <div class="card-body p-4">
-                            <div class="p-3 bg-secondary bg-opacity-10 rounded-3 mb-3 d-inline-block">
-                                <i class="cil-settings text-secondary fs-3"></i>
-                            </div>
-                            <h6 class="fw-bold mb-0">시스템 설정</h6>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
+            <div class="col-md-4">
+              <div
+                class="card text-center h-100 border-0 shadow-sm"
+                th:onclick="|location.href='@{/issue/list}'|"
+                style="cursor: pointer"
+              >
+                <div class="card-body p-4">
+                  <div
+                    class="p-3 bg-warning bg-opacity-10 rounded-3 mb-3 d-inline-block"
+                  >
+                    <i class="cil-bug text-warning fs-3"></i>
+                  </div>
+                  <h6 class="fw-bold mb-0">이슈 리스트</h6>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div
+                class="card text-center h-100 border-0 shadow-sm"
+                th:onclick="|location.href='@{/settings/}'|"
+                style="cursor: pointer"
+              >
+                <div class="card-body p-4">
+                  <div
+                    class="p-3 bg-secondary bg-opacity-10 rounded-3 mb-3 d-inline-block"
+                  >
+                    <i class="cil-settings text-secondary fs-3"></i>
+                  </div>
+                  <h6 class="fw-bold mb-0">시스템 설정</h6>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <div sec:authorize="hasRole('ROLE_ADMIN')" class="mt-4">
-                <div class="card border-start-danger border-start-4 shadow-sm bg-light bg-opacity-50">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="fw-bold text-danger mb-1">관리자 제어판</h6>
-                            <p class="small text-muted mb-0">새로운 팀원을 PMS 시스템에 등록할 수 있습니다.</p>
-                        </div>
-                        <button class="btn btn-danger text-white fw-bold px-4" th:onclick="|location.href='@{/user/new}'|">
-                            <i class="cil-user-plus me-2"></i>팀원 등록
+          <div sec:authorize="hasRole('ROLE_ADMIN')" class="mt-4">
+            <div
+              class="card border-start-danger border-start-4 shadow-sm bg-light bg-opacity-50"
+            >
+              <div
+                class="card-body d-flex justify-content-between align-items-center"
+              >
+                <div>
+                  <h6 class="fw-bold text-danger mb-1">관리자 제어판</h6>
+                  <p class="small text-muted mb-0">
+                    새로운 팀원을 PMS 시스템에 등록할 수 있습니다.
+                  </p>
+                </div>
+                <button
+                  class="btn btn-danger text-white fw-bold px-4"
+                  th:onclick="|location.href='@{/user/new}'|"
+                >
+                  <i class="cil-user-plus me-2"></i>팀원 등록
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 정보 수정 모달 -->
+          <div
+            class="modal fade"
+            id="changeProfileModal"
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title fw-bold">회원 정보 수정</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    data-coreui-dismiss="modal"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <form id="profileUpdateForm">
+                  <div class="modal-body">
+                    <div class="mb-3">
+                      <label class="form-label small fw-bold">이름</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="newUsername"
+                        name="username"
+                        th:value="${#authentication.principal.userEntity.username}"
+                        required
+                      />
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label small fw-bold">이메일</label>
+                      <input
+                        type="email"
+                        class="form-control"
+                        id="newEmail"
+                        name="email"
+                        th:value="${#authentication.principal.userEntity.email}"
+                        required
+                      />
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <div class="d-grid">
+                      <p
+                        class="small text-muted mb-2 d-flex justify-content-between align-items-center"
+                      >
+                        <span>비밀번호를 변경하시겠습니까?</span>
+                        <button
+                          type="button"
+                          class="btn btn-outline-secondary btn-sm"
+                          data-coreui-toggle="modal"
+                          data-coreui-target="#confirmPasswordResetModal"
+                        >
+                          <i class="cil-send me-1"></i>재설정 메일 발송
                         </button>
+                      </p>
                     </div>
-                </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      data-coreui-dismiss="modal"
+                    >
+                      취소
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                      정보 수정
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
+          </div>
+
+          <div
+            class="modal fade"
+            id="confirmPasswordResetModal"
+            tabindex="-1"
+            aria-hidden="true"
+          >
+            <div class="modal-dialog modal-sm modal-dialog-centered">
+              <div class="modal-content border-warning">
+                <div class="modal-body text-center py-4">
+                  <i class="cil-warning text-warning fs-1 mb-3"></i>
+                  <h5 class="fw-bold">비밀번호 재설정</h5>
+                  <p class="text-muted small">
+                    등록된 이메일로 재설정 링크를 보낼까요?<br />실행 시 즉시
+                    메일이 발송됩니다.
+                  </p>
+                  <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button
+                      type="button"
+                      class="btn btn-light btn-sm"
+                      data-coreui-dismiss="modal"
+                    >
+                      아니오
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-warning btn-sm text-white"
+                      id="sendResetEmailBtn"
+                    >
+                      네, 보내주세요
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 정보 수정 끝 -->
         </div>
+      </div>
     </div>
-</div>
 
-<style>
-    /* CoreUI 테마 보완용 추가 스타일 */
-    .border-top-primary { border-top: 4px solid #321fdb !important; }
-    .border-start-danger { border-left: 4px solid #e55353 !important; }
-    .bg-info-lite { background-color: #e0f7fa; }
-    .clickable-card:hover { 
-        transform: translateY(-5px); 
+    <script th:src="@{/js/mypage/mypage.js}"></script>
+
+    <style>
+      /* CoreUI 테마 보완용 추가 스타일 */
+      .border-top-primary {
+        border-top: 4px solid #321fdb !important;
+      }
+
+      .border-start-danger {
+        border-left: 4px solid #e55353 !important;
+      }
+
+      .bg-info-lite {
+        background-color: #e0f7fa;
+      }
+
+      .clickable-card:hover {
+        transform: translateY(-5px);
         transition: all 0.3s ease;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-    }
-</style>
-
-</body>
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+      }
+    </style>
+  </body>
 </html>

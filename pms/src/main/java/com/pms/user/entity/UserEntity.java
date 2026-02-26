@@ -60,5 +60,11 @@ public class UserEntity {
 	public void updatePwEntity(String encrytedPw) {
 		this.passwd = encrytedPw;
 	}
+	
+	// 정보 업데이트
+	public void updateProfile(String newUsername, String newEmail) {
+		this.username = newUsername;
+		this.email = newEmail;
+	}
 
 }

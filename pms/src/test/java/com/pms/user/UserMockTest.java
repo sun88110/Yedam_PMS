@@ -21,7 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.pms.user.entity.UserEntity;
 import com.pms.user.repository.UserRepository;
 import com.pms.user.service.UserSecurityService;
-import com.pms.user.service.UserServiceImpl;
+import com.pms.user.service.UserService;
 import com.pms.user.web.UserDto;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,7 +34,7 @@ public class UserMockTest {
 	private BCryptPasswordEncoder passwordEncoder;
 	
 	@InjectMocks
-	private UserServiceImpl userService;
+	private UserService userService;
 	
 	@InjectMocks
 	private UserSecurityService userSecurityService; 

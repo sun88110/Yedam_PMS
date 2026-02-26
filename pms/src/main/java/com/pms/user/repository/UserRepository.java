@@ -17,7 +17,7 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
 			SET u.lastlogin = :lastLogin
 			WHERE u.userId = :userId
 			""")
-	public int updateLastLogin(@Param("userId") String userId, @Param("lastLogin") LocalDateTime lastLogin);
+	int updateLastLogin(@Param("userId") String userId, @Param("lastLogin") LocalDateTime lastLogin);
 
 	@Query(value = """
 			SELECT COUNT(*)
@@ -29,4 +29,5 @@ public interface UserRepository extends JpaRepository<UserEntity, String> {
 			AND p.project_code = :projectCode
 			""", nativeQuery = true)
 	int existsByUserId(@Param("userId") String userId, @Param("projectCode") String projectCode);
+
 }
