@@ -41,12 +41,21 @@ public class FilesUploadService {
         }
 		
 		// 파일 부모 생성
-		FilesEntity filesEntity;
-		if (filesNo != null){
-			filesEntity = filesRepository.findById(filesNo)
-					.orElseThrow(() -> new RuntimeException("존재하지 않는 파일입니다."));
-		} else {
-            // 없으면 새로 생성
+		FilesEntity filesEntity = null;
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		System.out.println(filesNo);
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		if (filesNo != null) {
+			filesEntity = filesRepository.findById(filesNo).orElse(null);
+			filesNo = null;
+		}
+		
+		// 없으면 새로 생성
+		if (filesNo == null) {
             filesEntity = FilesEntity.builder().userId(userId).build();
             filesRepository.save(filesEntity);
         }
@@ -87,7 +96,5 @@ public class FilesUploadService {
 			filesDetailsRepository.save(filesDetails);			
 		}
 	}
-	
-	
 
 }

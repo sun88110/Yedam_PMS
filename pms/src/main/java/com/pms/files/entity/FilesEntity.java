@@ -1,6 +1,6 @@
 package com.pms.files.entity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -26,10 +26,11 @@ public class FilesEntity {
 	private Integer filesNo;
 	private String userId;
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-	private LocalDate uploadDate;
+	private LocalDateTime uploadDate;
 	
 	@Builder
 	public FilesEntity(String userId) {
 		this.userId = userId;
+		this.uploadDate = LocalDateTime.now().withNano(0);	
 	}
 }
