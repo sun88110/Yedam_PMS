@@ -45,7 +45,7 @@
 			</div>
 
 			<!-- 검색조건 추가 버튼 + 조회 버튼 -->
-						<div class="mb-3 d-flex align-items-center justify-content-end gap-2">
+			<div class="mb-3 d-flex align-items-center justify-content-end gap-2">
 			<!-- 내 일감만 보기 toggleMyIssue(this) 함수 -->
 				<div class="form-check form-switch mb-0">
 					<input class="form-check-input"
@@ -65,8 +65,6 @@
 					<button class="btn btn-secondary dropdown-toggle" type="button"
 						data-bs-toggle="dropdown">검색조건 추가</button>
 					<ul class="dropdown-menu">
-						<li><a class="dropdown-item add-condition"
-							data-target="field-jobNo" href="#">일감번호</a></li>
 						<li><a class="dropdown-item add-condition"
 							data-target="field-jobTitle" href="#">제목</a></li>
 						<li><a class="dropdown-item add-condition"
@@ -101,7 +99,6 @@
 		<table class="table table-hover text-center">
 			<thead class="table-light">
 				<tr>
-					<th><i class="bi bi-hash me-1"></i>일감번호</th>
 					<th><i class="bi bi-card-text me-1"></i>일감 제목</th>
 					<th><i class="bi bi-tags me-1"></i>일감 상태</th>
 					<th>유형</th>
@@ -113,7 +110,6 @@
 			</thead>
 			<tbody>
 				<tr th:each="issue : ${issueList}">
-					<td th:text="${issue.jobNo}"></td>
 					<td th:text="${issue.title}"></td>
 					<td th:text="${issue.jobStatus}"
 						th:data-job-status-no="${issue.jobStatusNo}"></td>

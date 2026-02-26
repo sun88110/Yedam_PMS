@@ -84,19 +84,16 @@
 				</div>
 			</div>
 
-			<div class="row md-3">
+			<div class="mt-5 mb-5">
 				<!-- 소요시간 조회로 이동-->
-				<div class="col-6 d-grid">
+				<div class="d-flex justify-content-end gap-2">
 					<a
 						th:href="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
-						class="btn btn-primary text-white flex-fill">소요시간 조회</a>
-				</div>
+						class="btn btn-primary text-white">돌아가기</a>
 				<!-- 전송 -->
-				<div class="col-6 d-grid">
-					<button type="button" class="btn btn-success flex-fill text-white"
+					<button type="button" class="btn btn-success text-white"
 						data-bs-toggle="modal" data-bs-target="#workSubmitModal">등록</button>
 				</div>
-
 			</div>
 		</form>
 	</div>

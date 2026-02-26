@@ -64,9 +64,9 @@
 	    SELECT
 	      j.job_no AS jobNo
 	      , j.title
-	      , j.manager_id AS managerId
 	      , p.project_code AS projectCode
 	      , u.username
+	      , u.user_id
 	    FROM job j
 	    JOIN project p
 	    ON j.project_no = p.project_no
@@ -74,6 +74,7 @@
 	    ON j.user_id = u.user_id
 	    WHERE
 	      p.project_code = #{projectCode}
+	      AND j.user_id = #{userId}
 	</select>
 	<!-- 소요시간 등록에서 사용할 작업분류 조회 -->
 	<select id="selectWorkDetails" resultType="workInsertDto">

@@ -112,9 +112,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // id가 reportSearchForm인 태그 가져옴
-  const reportForm = document.getElementById("reportSearchForm");
-  if (reportForm) {
-    reportForm.addEventListener("submit", function () {
+  const currentForm =
+    document.getElementById("reportSearchForm") ||
+    document.getElementById("searchForm");
+  if (currentForm) {
+    currentForm.addEventListener("submit", function () {
       // 선택이 안된 다른 input 태그의 값은 전송하지 않는다
       document.querySelectorAll(".condition-field.d-none").forEach((field) => {
         field.querySelectorAll("input, select").forEach((el) => {
@@ -124,3 +126,14 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
+function toggleMyWork(checkbox) {
+  // 현재 URL 경로 가져옴
+  const url = window.location.pathname;
+  // 체크가 되어잇으면 ? showOnlyMe=Y 붙이고 아니면 기본 url로 이동
+  if (checkbox.checked) {
+    location.href = url + "?showOnlyMe=Y";
+  } else {
+    location.href = url;
+  }
+}

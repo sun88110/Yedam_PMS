@@ -38,13 +38,14 @@
 		<form
 			th:action="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
 			method="get" id="searchForm">
+			<!-- 검색조건 입력 영역 -->
 			<div id="dynamicSearch" class="row g-3 mb-3">
 				<div th:replace="~{common/fragments/work/dynamic-work-list-search}"></div>
 			</div>
 
 			<!-- 검색조건 추가 버튼 + 조회 버튼 -->
 			<div class="mb-3 d-flex align-items-center justify-content-end gap-2">
-			<!-- 내 소요시간만 보기 -->
+			<!-- 내 소요시간만 보기 toggleMyWork(this) 함수 -->
 				<div class="form-check form-switch mb-0">
 					<input class="form-check-input"
 						 type="checkbox" 
@@ -52,7 +53,7 @@
 						 name="showOnlyMe" 
 						 value="Y" 
 						 th:checked="${showOnlyMe == 'Y'}"
-						 onchange="this.form.submit()"
+						 onchange="toggleMyWork(this)"
 						 autocomplete="off" />
 						<!-- checked는 서버에 넘어온 데이터에 따라 체크박스 체크하느냐 마느냐
 						그리고 내 소요시간만 보기 누르면 바로 동적쿼리 작동 -->
@@ -63,8 +64,6 @@
 					<button class="btn btn-secondary dropdown-toggle" type="button"
 						data-bs-toggle="dropdown">검색조건 추가</button>
 					<ul class="dropdown-menu">
-						<li><a class="dropdown-item add-condition" href="#"
-							data-target="field-jobNo">일감번호</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
 							data-target="field-jobTitle">일감제목</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
@@ -94,7 +93,6 @@
 		<table class="table table-hover text-center">
 			<thead class="table-light">
 				<tr>
-					<th><i class="bi bi-hash me-1"></i>일감번호</th>
 					<th><i class="bi bi-card-text me-1"></i>일감제목</th>
 					<th><i class="bi bi-tags me-1"></i>작업분류</th>
 					<th><i class="bi bi-calendar-check me-1"></i>작업일시</th>
@@ -105,7 +103,6 @@
 			</thead>
 			<tbody>
 				<tr th:each="list : ${workEntriesList}">
-					<td th:text="${list.jobNo}"></td>
 					<td th:text="${list.title}"></td>
 					<td th:text="${list.workType}"></td>
 					<td th:text="${#dates.format(list.workDate, 'yyyy-MM-dd')}"></td>
