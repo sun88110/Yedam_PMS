@@ -24,7 +24,6 @@ public class PwrTokenService {
 
 	@Transactional
 	public String sendResetMail(String userId) {
-		// 존재하는 유저인지 확인
 		UserEntity user = userRepository.findById(userId)
 				.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 아이디"));
 
@@ -34,24 +33,28 @@ public class PwrTokenService {
 
 		// 랜덤 토큰 저장
 		String tokenValue = UUID.randomUUID().toString();
-		PwrTokenEntity newToken = PwrTokenEntity.builder().userId(userId).tokenValue(tokenValue).endTime(5).build();
+		// Redis 전용 엔티티
+        PwrTokenEntity newToken = PwrTokenEntity.builder()
+                								.userId(userId)
+                								.tokenValue(tokenValue)
+                								.expiration(300L)
+                								.build();
+		
 		// 메일 발송
 		emailService.sendPwResetMail(user.getEmail(), tokenValue);
 		pwrTokenRepository.save(newToken);
 
 		return tokenValue;
 	}
-
-	// 토큰 유효성 확인
+	
 	public boolean checkToken(String tokenValue) {
-		return pwrTokenRepository.findByTokenValue(tokenValue).map(token -> !token.tokenTime()).orElse(false);
-	}
+        return pwrTokenRepository.findByTokenValue(tokenValue).isPresent();
+    }
 
 	// 토큰 확인 후 PW 변경
 	@Transactional
 	public void modifyPwService(String token, String newPw) {
-
-		PwrTokenEntity pwrToken = pwrTokenRepository.findByTokenValue(token).filter(t -> !t.tokenTime())
+		PwrTokenEntity pwrToken = pwrTokenRepository.findByTokenValue(token)
 				.orElseThrow(() -> new IllegalArgumentException("토큰이 존재하지 않습니다."));
 
 		UserEntity user = userRepository.findById(pwrToken.getUserId())
@@ -60,7 +63,7 @@ public class PwrTokenService {
 		String encodedPw = passwordEncoder.encode(newPw);
 		user.updatePwEntity(encodedPw);
 
-		// PW 변경 후 DB에서 토큰 삭제
+		// PW 변경 후 Redis에서 토큰 삭제
 		pwrTokenRepository.delete(pwrToken);
 	}
 
