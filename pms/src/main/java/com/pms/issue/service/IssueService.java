@@ -111,5 +111,10 @@ public class IssueService {
 		issueMapper.updateIssue(issueDto);
 		issueMapper.insertIssueHistory(issueDto);
 	}
+	
+	// ✅ 대시보드 전용 메서드 추가
+    public List<IssueSelectDto> selectDashboardIssueList(IssueSelectDto issueSelectDto) {
+        return issueMapper.selectDashboardIssueList(issueSelectDto);
+    }
 
 }

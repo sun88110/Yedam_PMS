@@ -36,5 +36,6 @@ public interface IssueMapper {
 	// 일감 등록 기능
 	Integer insertIssue(IssueDto issueDto);
 	// 
+	List<IssueSelectDto> selectDashboardIssueList(IssueSelectDto issueSelectDto);
 
 }

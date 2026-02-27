@@ -41,5 +41,15 @@ public class JobTypeController {
         }
     }
     @DeleteMapping("/{no}")
-    public void remove(@PathVariable Long no) { jobTypeService.remove(no); }
+    public ResponseEntity<String> remove(@PathVariable Long no) {
+        try {
+            jobTypeService.remove(no);
+            return ResponseEntity.ok("SUCCESS");
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // 📍 이 부분이 있어야 프론트에서 409로 인식합니다!
+            return ResponseEntity.status(409).body("REFERENCED");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

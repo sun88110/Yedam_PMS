@@ -824,10 +824,25 @@ $(document).ready(function () {
 
         $(document).off('click', `.btn-${btnClassBase}-delete`).on('click', `.btn-${btnClassBase}-delete`, function () {
             const id = $(this).data('id');
-            if (confirm("정말로 삭제하시겠습니까?")) {
-                apiCall(`${url}/${id}`, 'DELETE', null, () => {
-                    alert("삭제되었습니다.");
-                    loadFn();
+            // 현재 행(tr)의 첫 번째 자식(td)에서 이름을 가져옵니다. (상태명 혹은 유형명)
+            const itemName = $(this).closest('tr').find('td:first').text().trim();
+
+            if (confirm(`[${itemName}] 항목을 정말로 삭제하시겠습니까?`)) {
+                $.ajax({
+                    url: `${url}/${id}`,
+                    type: 'DELETE',
+                    success: function() {
+                        alert("성공적으로 삭제되었습니다.");
+                        loadFn(); // 리스트 새로고침
+                    },
+                    error: function(xhr) {
+                        // 📍 백엔드에서 에러를 잡아 409를 던졌을 때 작동
+                        if (xhr.status === 409) {
+                            alert(`🚫 삭제 불가: [${itemName}] 항목이 현재 다른 데이터(일감 등)에서 사용 중입니다.\n\n사용 중인 데이터를 먼저 변경한 후 다시 시도해주세요.`);
+                        } else {
+                            alert("삭제 중 서버 오류가 발생했습니다.");
+                        }
+                    }
                 });
             }
         });

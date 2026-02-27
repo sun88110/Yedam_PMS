@@ -38,5 +38,15 @@ public class JobStatusController {
     }
     
     @DeleteMapping("/{no}")
-    public void remove(@PathVariable Long no) { jobStatusService.remove(no); }
+    public ResponseEntity<String> remove(@PathVariable Long no) {
+        try {
+            jobStatusService.remove(no);
+            return ResponseEntity.ok("SUCCESS");
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // 📍 외래 키(FK) 참조 오류가 발생했을 때 Catch!
+            return ResponseEntity.status(409).body("REFERENCED"); 
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("ERROR");
+        }
+    }
 }
