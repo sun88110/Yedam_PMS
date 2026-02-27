@@ -30,7 +30,7 @@
 			<button type="button"
 			        id="btnAddNewProject" 
 			        class="btn btn-dark fw-bold" 
-			        th:data-url="@{/project/new}">
+			        th:data-url="@{/project/create}">
 			    새 프로젝트
 			</button>
         </div>
@@ -93,7 +93,7 @@
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <h5 class="fw-bold text-primary mb-0">
                         <a th:text="${project.projectName}" 
-                           th:href="@{/project/user/{code}/info(code=${project.projectCode})}" 
+                           th:href="@{/project/user/{code}/read(code=${project.projectCode})}" 
                            class="text-decoration-none"></a>
                     </h5>
                     <span th:if="${project.publicYn == 1}" class="badge bg-info-light text-info small" style="font-size: 0.7rem;">Public</span>
@@ -130,7 +130,7 @@
     <div th:each="sub : ${allProjects}" th:if="${sub.parentProjectNo == parentNo}" 
          class="border-start border-secondary border-4 ms-3 ps-3 mb-0"> <div class="d-flex align-items-center gap-2">
             <h6 class="fw-bold text-primary mb-0">
-                <a th:href="@{/project/user/{code}/info(code=${sub.projectCode})}" 
+                <a th:href="@{/project/user/{code}/read(code=${sub.projectCode})}" 
                    th:text="${sub.projectName}" class="text-decoration-none"></a>
             </h6>
             <span th:if="${sub.publicYn == 1}" class="badge bg-info-light text-info small" style="font-size: 0.65rem;">Public</span>

@@ -21,7 +21,7 @@
 </div>	
 <div th:fragment="projectInsertForm" class="card">
 	<div class="card-body">
-		<form th:action="@{${mode == 'new' ? '/project/new' : '/project/user/edit/' + project.projectCode}}" 
+		<form th:action="@{${mode == 'new' ? '/project/create' : '/project/user/edit/' + project.projectCode}}" 
               th:object="${project}" 
               method="post">
             <!--/* 0.프로젝트 기본식별자 */-->
