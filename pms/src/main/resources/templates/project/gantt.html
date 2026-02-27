@@ -141,7 +141,9 @@
         gantt.config.work_time = true;
         gantt.config.correct_work_time = true;
         gantt.config.skip_off_time = true;
-
+        gantt.config.drag_links = false;
+        gantt.message.position = "bottom"; 
+        
         gantt.config.columns = [
             { name: "text",        label: "작업명",   tree: true, width: "*", min_width: 150, resize: true },
             { name: "start_date",  label: "시작일",   width: "*", min_width: 90, align: "center", resize: true },
@@ -406,6 +408,8 @@
                 submitBtn.disabled = false;
                 console.error('Fetch 오류:', error);
                 gantt.message({text: "처리 중 오류가 발생했습니다.", type: "error"});
+                
+                // refreshGanttData();오류발생 시 새로고침
             });
         });
     });
@@ -435,100 +439,125 @@
         }
     }, 60000);
 
-    // 초기 데이터 로딩 
+    // 공통 데이터 렌더링 함수 (SSR, Fetch 모두 사용)
+    function applyGanttData(data) {
+        if (!data) return;
+
+        // --- Select Box 바인딩 ---
+        const bindOptions = (selectName, list, valueKey, textKey) => {
+            const el = document.querySelector(`select[name="${selectName}"]`);
+            if (!el || !list) return;
+            el.innerHTML = '<option value="" disabled selected hidden>선택</option>';
+            list.forEach(item => el.add(new Option(item[textKey], item[valueKey])));
+        };
+
+        bindOptions('jobStatusNo', data.statusList,  'jobStatusNo', 'jobStatus');
+        bindOptions('jobTypeNo',   data.typeList,     'jobTypeNo',   'jobType');
+        bindOptions('priority',    data.priorityList, 'commonNo',    'commonName');
+
+        const managerSelect = document.querySelector('select[name="managerId"]');
+        const workerSelect  = document.querySelector('select[name="userId"]');
+        
+        // 콤보박스 중복 누적을 방지하기 위해 초기화
+        managerSelect.innerHTML = '<option value="" disabled selected hidden>선택</option>';
+        workerSelect.innerHTML = '<option value="" disabled selected hidden>선택</option>';
+
+        (data.managerList || []).forEach(user => {
+            const opt = new Option(user.username, user.userId);
+            managerSelect.add(opt.cloneNode(true));
+            workerSelect.add(opt);
+        });
+
+        // --- 휴일 등록 ---
+        if (data.holidayList) {
+            holidaySet = new Set(data.holidayList);
+
+            // Gantt 엔진에 휴일 등록
+            data.holidayList.forEach(dateStr => {
+                const [y, m, d] = dateStr.split('-');
+                gantt.setWorkTime({ date: new Date(y, m - 1, d), hours: false });
+            });
+
+            // Datepicker 초기화 (재호출 시 중복 바인딩 방지를 위해 destroy 및 이벤트 off 적용)
+            $('.custom-datepicker').datepicker('destroy');
+            $('.custom-datepicker').datepicker({
+                format:         'yyyy-mm-dd',
+                language:       'ko',
+                autoclose:      true,
+                todayHighlight: true,
+                datesDisabled:  Array.from(holidaySet)
+            });
+
+            $('#startDate').off('changeDate').on('changeDate', function(e) {
+                const newStart = e.format('yyyy-mm-dd');
+                $('#endDate').datepicker('setStartDate', newStart);
+                if ($('#endDate').val() < newStart) {
+                    $('#endDate').datepicker('update', newStart);
+                }
+            });
+
+            $('#endDate').off('changeDate').on('changeDate', function(e) {
+                $('#startDate').datepicker('setEndDate', e.format('yyyy-mm-dd'));
+            });
+        }
+
+        // --- Gantt 데이터 파싱 ---
+        const ganttData = data.ganttData;
+        let linkIdCounter = 1;
+
+        ganttData.data.forEach(task => {
+            if (task.parent === "0" || String(task.id).startsWith("p")) {
+                task.open  = true;
+                task.type  = "task";
+                task.color = "#10c16f";
+                task.progressColor = "#65c16f";
+            } else {
+                task.color = "#3db9d3";
+                task.progressColor = "#2a8e9d";
+            }
+
+            const parentId = task.parent || "0";
+            if (parentId !== "0") {
+                ganttData.links.push({
+                    id:     linkIdCounter++,
+                    source: parentId,
+                    target: task.id,
+                    type:   "1"
+                });
+            }
+        });
+
+        gantt.clearAll();
+        gantt.parse(ganttData);
+        renderTodayMarker();
+    }
+
+    // 최초 로딩 (SSR로 받은 데이터를 통신 없이 즉시 그림)
     function loadInitData() {
+        // Controller에서 Model에 담아준 데이터를 Thymeleaf 문법으로 즉시 파싱
+        const initData = /*[[${initData}]]*/ null;
+        
+        if (initData) {
+            applyGanttData(initData);
+        } else {
+            console.error("초기 렌더링용 데이터(initData)가 전달되지 않았습니다.");
+        }
+    }
+
+    // 필요 시 백엔드 데이터를 다시 가져오는 갱신 함수
+    function refreshGanttData() {
         fetch(init_url)
         .then(res => {
-            if (!res.ok) throw new Error("초기 데이터 로드 실패: " + res.status);
+            if (!res.ok) throw new Error("데이터 로드 실패: " + res.status);
             return res.json();
         })
         .then(data => {
-            // --- Select Box 바인딩 ---
-            const bindOptions = (selectName, list, valueKey, textKey) => {
-                const el = document.querySelector(`select[name="${selectName}"]`);
-                if (!el || !list) return;
-                el.innerHTML = '<option value="" disabled selected hidden>선택</option>';
-                list.forEach(item => el.add(new Option(item[textKey], item[valueKey])));
-            };
-
-            bindOptions('jobStatusNo', data.statusList,  'jobStatusNo', 'jobStatus');
-            bindOptions('jobTypeNo',   data.typeList,     'jobTypeNo',   'jobType');
-            bindOptions('priority',    data.priorityList, 'commonNo',    'commonName');
-
-            const managerSelect = document.querySelector('select[name="managerId"]');
-            const workerSelect  = document.querySelector('select[name="userId"]');
-            (data.managerList || []).forEach(user => {
-                const opt = new Option(user.username, user.userId);
-                managerSelect.add(opt.cloneNode(true));
-                workerSelect.add(opt);
-            });
-
-            // --- 휴일 등록 ---
-            if (data.holidayList) {
-                holidaySet = new Set(data.holidayList);
-
-                // Gantt 엔진에 휴일 등록
-                data.holidayList.forEach(dateStr => {
-                    const [y, m, d] = dateStr.split('-');
-                    gantt.setWorkTime({ date: new Date(y, m - 1, d), hours: false });
-                });
-
-                // bootstrap-datepicker 초기화 (휴일 비활성화 + 날짜 상호제약 이벤트)
-                $('.custom-datepicker').datepicker({
-                    format:         'yyyy-mm-dd',
-                    language:       'ko',
-                    autoclose:      true,
-                    todayHighlight: true,
-                    datesDisabled:  Array.from(holidaySet)
-                });
-
-                $('#startDate').on('changeDate', function(e) {
-                    const newStart = e.format('yyyy-mm-dd');
-                    $('#endDate').datepicker('setStartDate', newStart);
-                    if ($('#endDate').val() < newStart) {
-                        $('#endDate').datepicker('update', newStart);
-                    }
-                });
-
-                $('#endDate').on('changeDate', function(e) {
-                    $('#startDate').datepicker('setEndDate', e.format('yyyy-mm-dd'));
-                });
-            }
-
-            // --- Gantt 데이터 파싱 ---
-            // 컨트롤러에서 ganttData 키로 내려옴
-            const ganttData = data.ganttData;
-            let linkIdCounter = 1;
-
-            ganttData.data.forEach(task => {
-                if (task.parent === "0" || String(task.id).startsWith("p")) {
-                    task.open  = true;
-                    task.type  = "task";
-                    task.color = "#10c16f";
-                    task.progressColor = "#65c16f";
-                } else {
-                    task.color = "#3db9d3";
-                    task.progressColor = "#2a8e9d";
-                }
-
-                const parentId = task.parent || "0";
-                if (parentId !== "0") {
-                    ganttData.links.push({
-                        id:     linkIdCounter++,
-                        source: parentId,
-                        target: task.id,
-                        type:   "1"
-                    });
-                }
-            });
-
-            gantt.clearAll();
-            gantt.parse(ganttData);
-            renderTodayMarker();
+            applyGanttData(data);
+            gantt.message({text: "데이터가 최신화되었습니다.", type: "success"});
         })
         .catch(err => {
-            console.error("초기 데이터 로드 오류:", err);
-            gantt.message({text: "데이터 로드 중 오류가 발생했습니다.", type: "error"});
+            console.error("데이터 갱신 오류:", err);
+            gantt.message({text: "데이터 갱신 중 오류가 발생했습니다.", type: "error"});
         });
     }
 

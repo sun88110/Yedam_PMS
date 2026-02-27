@@ -1,5 +1,6 @@
 package com.pms.project.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.ibatis.type.Alias;
@@ -15,7 +16,7 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 @Alias("HolidayDTO")
-public class HolidayDTO {
+public class HolidayDTO implements Serializable {
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date holidayDt;
 	private String isHoliday;

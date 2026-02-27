@@ -14,7 +14,7 @@
         <button class="btn-close d-lg-none" type="button" data-coreui-theme="dark" aria-label="Close" onclick="coreui.Sidebar.getInstance(document.querySelector(&quot;#sidebar&quot;)).toggle()"></button>
       </div>
       <ul class="sidebar-nav" data-coreui="navigation" data-simplebar data-simplebar-auto-hide="true">
-        <li class="nav-item"><a class="nav-link" href="index.html">
+        <li class="nav-item"><a class="nav-link" th:href="@{/home}">
             <svg class="nav-icon">
               <use xlink:href="/coreui/vendors/@coreui/icons/svg/free.svg#cil-speedometer"></use>
             </svg> PMS Project<span class="badge badge-sm bg-info ms-auto"></span></a>
@@ -43,7 +43,7 @@
 			<ul class="nav-group-items compact" th:if="${projectCode != null}">
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 개요</a> </li>
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/history/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 작업내역</a> </li>
-			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 일감</a> </li>
+			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/list/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 일감</a> </li>
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/work/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 소요시간</a> </li>
 			   <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/work/report/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 보고서</a> </li>
 			  <li class="nav-item"> <a class="nav-link" th:href="@{/project/user/{code}/issue/gantt/read(code=${projectCode})}"><span class="nav-icon"><span class="nav-icon-bullet"></span></span> 간트차트</a> </li>

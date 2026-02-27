@@ -1,11 +1,11 @@
 package com.pms.files.service;
 
-import java.io.File;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.s3.AmazonS3;
 import com.pms.files.entity.FilesDetailsEntity;
 import com.pms.files.repository.FilesDetailsRepository;
 import com.pms.files.repository.FilesRepository;
@@ -16,10 +16,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @org.springframework.transaction.annotation.Transactional
 public class FilesDeleteService {
+	
+	private final AmazonS3 amazonS3; // S3 주입
 	private final FilesDetailsRepository filesDetailsRepository;
 	private final FilesRepository fileRepository;
-	@Value("${file.upload.path}")
-	private String uploadPath;
+
+	@Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
 	// 실행 메서드
 	public void deleteFiles(List<Integer> detailsNos) {
@@ -38,11 +41,10 @@ public class FilesDeleteService {
 		FilesDetailsEntity fileDetail = filesDetailsRepository.findById(detailsNo)
 				.orElseThrow(() -> new RuntimeException("저장된 파일이 없습니다."));
 
-		// 하드 삭제
-		File file = new File(uploadPath, fileDetail.getFilesUuid());
-		if (file.exists()) {
-			file.delete();
-		}
+		// S3 삭제
+        if (amazonS3.doesObjectExist(bucket, fileDetail.getFilesUuid())) {
+            amazonS3.deleteObject(bucket, fileDetail.getFilesUuid());
+        }
 
 		// DB 삭제
 		filesDetailsRepository.deleteById(detailsNo);

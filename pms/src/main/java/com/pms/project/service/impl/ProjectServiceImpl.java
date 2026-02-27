@@ -1,20 +1,28 @@
 package com.pms.project.service.impl;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pms.issue.mapper.IssueMapper;
+import com.pms.issue.web.IssueDto;
 import com.pms.project.dto.GanttDTO;
 import com.pms.project.dto.HistoryDTO;
 import com.pms.project.dto.HolidayDTO;
@@ -30,6 +38,7 @@ import com.pms.project.dto.ProjectSearchDTO;
 import com.pms.project.dto.ProjectSelectDTO;
 import com.pms.project.dto.ProjectStatus;
 import com.pms.project.dto.ProjectTotalDTO;
+import com.pms.project.mapper.HolidayMapper;
 import com.pms.project.mapper.ProjectMapper;
 import com.pms.project.service.ProjectService;
 
@@ -41,7 +50,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ProjectServiceImpl implements ProjectService {
 	private final ProjectMapper projectMapper;
-
+	private final HolidayMapper holidayMapper;
+	
+	private final IssueMapper issueMapper;
+	
+	@Autowired
+    @Lazy
+    private ProjectService selfProxy;
+	
 	@Override
 	public List<PMGroupDTO> findIsPM(String userId) {
 		return projectMapper.selectIsPM(userId);
@@ -59,7 +75,7 @@ public class ProjectServiceImpl implements ProjectService {
 	    List<MemberDTO> allMembers = projectMapper.selectMembersByProjectNos(projectNos);
 	    
 	    // ★ 휴일 데이터 캐싱 (is_holiday == 'Y'인 날짜만 모음)
-	    Set<LocalDate> holidaySet = projectMapper.selectHolidays().stream()
+	    Set<LocalDate> holidaySet = selfProxy.findHolidays().stream()
 	            .filter((HolidayDTO h) -> "Y".equals(h.getIsHoliday()))
 	            .map((HolidayDTO h) -> {
 	                return convertToLocalDate(h.getHolidayDt());
@@ -333,29 +349,112 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-	public Map<String, Object> findGanttDataByCode(String projectCode) {
-		List<GanttDTO> list = projectMapper.selectGanttData(projectCode);
+    public Map<String, Object> findGanttDataByCode(String projectCode, String userId) {
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("currentUserId", userId);
 
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        IssueDto paramDto = new IssueDto();
+        paramDto.setProjectCode(projectCode);
+        
+        long totalStartTime = System.currentTimeMillis();
 
-		list.forEach(dto -> {
-			if (dto.getStartDate() != null && dto.getEndDate() != null) {
-				LocalDate start = LocalDate.parse(dto.getStartDate(), formatter);
-				LocalDate end = LocalDate.parse(dto.getEndDate(), formatter);
-				dto.setDuration((int) ChronoUnit.DAYS.between(start, end) + 1);
-				dto.setEndDate(null);
-			}
-		});
+        // 1. 병렬 작업 정의 및 개별 시간 측정
+        CompletableFuture<List<IssueDto>> statusFuture = CompletableFuture.supplyAsync(() -> {
+            long s = System.currentTimeMillis();
+            List<IssueDto> res = issueMapper.selectIssueStatus(paramDto);
+            log.info("[간트 로딩] 1. 상태 목록 조회: {}ms", (System.currentTimeMillis() - s));
+            return res;
+        });
+        
+        CompletableFuture<List<IssueDto>> typeFuture = CompletableFuture.supplyAsync(() -> {
+            long s = System.currentTimeMillis();
+            List<IssueDto> res = issueMapper.selectIssueType(paramDto);
+            log.info("[간트 로딩] 2. 유형 목록 조회: {}ms", (System.currentTimeMillis() - s));
+            return res;
+        });
+        
+        CompletableFuture<List<IssueDto>> priorityFuture = CompletableFuture.supplyAsync(() -> {
+            long s = System.currentTimeMillis();
+            List<IssueDto> res = issueMapper.selectIssuePriority(paramDto);
+            log.info("[간트 로딩] 3. 우선순위 조회: {}ms", (System.currentTimeMillis() - s));
+            return res;
+        });
+        
+        CompletableFuture<List<IssueDto>> managerFuture = CompletableFuture.supplyAsync(() -> {
+            long s = System.currentTimeMillis();
+            List<IssueDto> res = issueMapper.selectIssueManager(paramDto);
+            log.info("[간트 로딩] 4. 담당자(View) 조회: {}ms", (System.currentTimeMillis() - s));
+            return res;
+        });
+        
+        CompletableFuture<List<String>> holidayFuture = CompletableFuture.supplyAsync(() -> {
+            long s = System.currentTimeMillis();
+            
+            // ★ 핵심 변경: findHolidays() 대신 프록시를 통과하는 selfProxy.findHolidays() 호출!!
+            Set<HolidayDTO> rawHolidays = selfProxy.findHolidays(); 
+            
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); 
+            List<String> res = rawHolidays.stream()
+                    .filter(h -> "Y".equals(h.getIsHoliday()))      
+                    .map(h -> sdf.format(h.getHolidayDt()))         
+                    .collect(Collectors.toList());
+            log.info("[간트 로딩] 5. 휴일(Cache) 조회: {}ms", (System.currentTimeMillis() - s));
+            return res;
+        });
 
-		Map<String, Object> result = new LinkedHashMap<>();
-		result.put("data", list);
-		result.put("links", List.of());
-		return result;
-	}
+        // 기존 findGanttDataByCode에 있던 로직을 비동기 블록 내부에 배치
+        CompletableFuture<Map<String, Object>> ganttDataFuture = CompletableFuture.supplyAsync(() -> {
+            long s = System.currentTimeMillis();
+            List<GanttDTO> list = projectMapper.selectGanttData(projectCode);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+
+            list.forEach(dto -> {
+                // ★ raw 데이터가 존재할 때 WAS에서 변환 수행
+                if (dto.getRawStartDate() != null && dto.getRawEndDate() != null) {
+                    LocalDate start = convertToLocalDate(dto.getRawStartDate());
+                    LocalDate end = convertToLocalDate(dto.getRawEndDate());
+                    
+                    dto.setDuration((int) ChronoUnit.DAYS.between(start, end) + 1);
+                    
+                    // 프론트엔드가 요구하는 JSON 규격에 맞게 문자열 덮어쓰기
+                    dto.setStartDate(start.format(formatter));
+                    dto.setEndDate(null);
+                }
+            });
+
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("data", list);
+            result.put("links", List.of()); 
+            
+            log.info("[간트 로딩] 6. 간트 트리 조회 및 계산: {}ms", (System.currentTimeMillis() - s));
+            return result;
+        });
+
+        // 2. 모든 병렬 작업 대기
+        CompletableFuture.allOf(statusFuture, typeFuture, priorityFuture, managerFuture, holidayFuture, ganttDataFuture).join();
+        log.info("[간트 로딩] ★ 병렬 처리 총 대기 시간: {}ms", (System.currentTimeMillis() - totalStartTime));
+
+        // 3. 결과 조립
+        try {
+            responseData.put("statusList", statusFuture.get());
+            responseData.put("typeList", typeFuture.get());
+            responseData.put("priorityList", priorityFuture.get());
+            responseData.put("managerList", managerFuture.get());
+            responseData.put("holidayList", holidayFuture.get());
+            responseData.put("ganttData", ganttDataFuture.get());
+        } catch (Exception e) {
+            log.error("간트 차트 초기 데이터 조회 중 오류", e);
+            throw new RuntimeException("초기 데이터 로드 실패", e);
+        }
+
+        return responseData;
+    }
 
 	@Override
+	@Cacheable("holidays") // 'holidays'라는 이름으로 캐싱
 	public Set<HolidayDTO> findHolidays() {
-		return projectMapper.selectHolidays();
+		// 최초 1회만 DB 쿼리가 실행되고, 두 번째부터는 이 내부 로직을 타지 않고 즉시 반환
+		return holidayMapper.selectHolidays();
 	}
 
 	// 이력 조회

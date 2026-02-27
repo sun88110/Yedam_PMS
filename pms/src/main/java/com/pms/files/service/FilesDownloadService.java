@@ -1,5 +1,7 @@
 package com.pms.files.service;
 
+import static org.hamcrest.CoreMatchers.is;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -11,6 +13,9 @@ import java.util.zip.ZipOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.pms.files.entity.FilesDetailsEntity;
 import com.pms.files.repository.FilesDetailsRepository;
 import com.pms.files.util.FileCryptoUtil;
@@ -21,28 +26,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FilesDownloadService {
 
+	private final AmazonS3 amazonS3;
 	private final FilesDetailsRepository filesDetailsRepository;
 	private final FileCryptoUtil fileCryptoUtil;
-	@Value("${file.upload.path}")
-	private String uploadPath;
+
+	@Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 	
 	// DB에서 파일 조회
 	public FilesDetailsEntity getFileDetails(Integer detailsNo) {
 		return filesDetailsRepository.findById(detailsNo).orElseThrow(() -> new RuntimeException("파일 정보가 없습니다."));
 	}
 	
-	// 다운로드
+	// 단일 다운로드
 	public void downloadFile(Integer detailsNo, OutputStream outputStream) throws Exception {
 		FilesDetailsEntity details = filesDetailsRepository.findById(detailsNo)
 				.orElseThrow(() -> new RuntimeException("일치하는 파일이 존재하지 않습니다."));
 
-		File encryptedFile = new File(uploadPath, details.getFilesUuid());
-		if (!encryptedFile.exists()) {
-			throw new RuntimeException("저장된 경로가 맞지 않습니다.");
-		}
-
-		try (InputStream is = new FileInputStream(encryptedFile)) {
-			fileCryptoUtil.decrypt(is, outputStream);
+		S3Object s3Object = amazonS3.getObject(bucket, details.getFilesUuid());
+		try (S3ObjectInputStream s3is = s3Object.getObjectContent()) {
+			fileCryptoUtil.decrypt(s3is, outputStream);
 		}
 	}
 
@@ -59,22 +62,21 @@ public class FilesDownloadService {
 					continue;
 				}
 
-				File enFile = new File(uploadPath, details.getFilesUuid());
-				if (!enFile.exists()) {
+				if (!amazonS3.doesObjectExist(bucket, details.getFilesUuid())) {
 					continue;
 				}
+				
+				S3Object s3Object = amazonS3.getObject(bucket, details.getFilesUuid());
 
-				String orgName = details.getFilesName();
-				String finalName = (i++) + "_" + orgName;
-
-				ZipEntry zipEntry = new ZipEntry(finalName);
-				zos.putNextEntry(zipEntry);
+				String finalName = details.getFilesName() + "_" + (i++);
+                ZipEntry zipEntry = new ZipEntry(finalName);
+                zos.putNextEntry(zipEntry);
 
 				// 암호화 파일 -> 복호화 -> zip 스트림
 				// decrypt 시 스트림을 닫지 않도록 조심해야 됨
 				// 자세한건 util decryptZip 주석 참고
-				try (InputStream is = new FileInputStream(enFile)) {
-					fileCryptoUtil.decryptZip(is, zos);
+				try (S3ObjectInputStream s3is = s3Object.getObjectContent()) {
+					fileCryptoUtil.decryptZip(s3is, zos);
 				}
 				zos.closeEntry();
 			}
