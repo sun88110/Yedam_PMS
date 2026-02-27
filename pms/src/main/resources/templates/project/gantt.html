@@ -325,7 +325,8 @@
             const formData = new FormData(form);
             
             if (!form.checkValidity()) {
-            	gantt.message({text: "필수 입력값을 모두 입력해 주세요.", type: "error"});
+            	form.reportValidity();
+            	//gantt.message({text: "필수 입력값을 모두 입력해 주세요.", type: "error"});
                 return; // 유효성 실패 시 즉시 중단
             }
             // 더블클릭 방지
@@ -364,90 +365,66 @@
                 return response.json(); 
             })
             .then(savedTask => {
-		    ganttIssueModal.hide();
-		    console.log("*************** 서버 응답1 savedTask:", savedTask);
-		    console.log("서버 응답2 savedTask:", JSON.stringify(savedTask));
-		    
-		    const parseDate = (str) => {
-		        if (!str) return null;
-		        // ISO 형식("2026-02-24T15:00:00.000+00:00")이면 날짜 부분만 추출 후 KST 보정
-		        if (str.includes('T')) {
-		            const datePart = str.substring(0, 10); // "2026-02-24"
-		            const parts = datePart.split("-");
-		            // UTC 15:00 = KST 00:00이므로 +1일 보정
-		            const d = new Date(parts[0], parts[1]-1, parseInt(parts[2]) + 1);
-		            return d;
-		        }
-		        // 일반 형식 처리
-		        const parts = str.split("-");
-		        if (parts[0].length === 4) return new Date(parts[0], parts[1]-1, parts[2]);
-		        return new Date(parts[2], parts[1]-1, parts[0]);
-		    };
-		
-		    const startDateObj = parseDate(savedTask.startDate);
-		    // inclusive end → exclusive end (+1일) 로 duration 계산
-		    const inclusiveEndObj = parseDate(savedTask.endDate);
-		    const exclusiveEndObj = new Date(inclusiveEndObj.valueOf() + 86400000);
-		
-		    const calcDuration = gantt.calculateDuration({
-		        start_date: startDateObj,
-		        end_date: exclusiveEndObj
-		    });
-		
-		    const formatFunc = gantt.date.date_to_str("%d-%m-%Y");
-		    const managerSelect = document.querySelector('select[name="managerId"]');
-		    const managerName = managerSelect.options[managerSelect.selectedIndex].text;
-		    const prioritySelect = document.querySelector('select[name="priority"]');
-		    const priorityName = prioritySelect.options[prioritySelect.selectedIndex].text;
-		    const statusSelect  = document.querySelector('select[name="jobStatusNo"]');
-		    const typeSelect    = document.querySelector('select[name="jobTypeNo"]');
-		    const publicRoleVal = document.querySelector('input[name="publicRole"]:checked');
-		    if (isNew) {
-		        delete currentTaskInfo.$new;
-		        gantt.deleteTask(currentTaskInfo.id);
-		
-		        let newGanttTask = {
-		            id: "j" + savedTask.jobNo,
-		            text: savedTask.title,
-		            start_date: formatFunc(startDateObj),
-		            duration: calcDuration,
-		            description: savedTask.content,
-		            parent: currentTaskInfo.parent,
-		            workerName: managerName,
-		            jobPriority: priorityName,
-		            jobStatusNo:   statusSelect  ? parseInt(statusSelect.value)  : null,
-                    job_status_no: statusSelect  ? parseInt(statusSelect.value)  : null, // camelCase 양쪽 대응
-                    jobTypeNo:     typeSelect    ? parseInt(typeSelect.value)     : null,
-                    job_type_no:   typeSelect    ? parseInt(typeSelect.value)     : null,
-                    publicRole:    publicRoleVal ? parseInt(publicRoleVal.value)  : null,
-		            color: "#3db9d3",
-		            progressColor: "#2a8e9d",
-		            open: true
-		        };
-		        gantt.addTask(newGanttTask, newGanttTask.parent);
+            	ganttIssueModal.hide();
+
+                const parseDate = (str) => {
+                    if (!str) return null;
+                    if (str.includes('T')) {
+                        const parts = str.substring(0, 10).split("-");
+                        return new Date(parts[0], parts[1]-1, parseInt(parts[2]) + 1);
+                    }
+                    const parts = str.split("-");
+                    if (parts[0].length === 4) return new Date(parts[0], parts[1]-1, parts[2]);
+                    return new Date(parts[2], parts[1]-1, parts[0]);
+                };
+
+                const startDateObj    = parseDate(savedTask.startDate);
+                const inclusiveEndObj = parseDate(savedTask.endDate);
+                const exclusiveEndObj = new Date(inclusiveEndObj.valueOf() + 86400000);
+                const calcDuration    = gantt.calculateDuration({ start_date: startDateObj, end_date: exclusiveEndObj });
+                const formatFunc      = gantt.date.date_to_str("%d-%m-%Y");
+
+                const managerSelect  = document.querySelector('select[name="managerId"]');
+                const managerName    = managerSelect.options[managerSelect.selectedIndex].text;
+                const prioritySelect = document.querySelector('select[name="priority"]');
+                const priorityName   = prioritySelect.options[prioritySelect.selectedIndex].text;
+
+                // ★ 공통 필드 객체 한 번만 생성
+                const fields = buildTaskFields(savedTask, startDateObj, exclusiveEndObj, calcDuration, managerName, priorityName);
+
+                if (isNew) {
+                    // [신규] 새 객체에 fields를 spread로 합치고 신규 전용 필드 추가
+                    delete currentTaskInfo.$new;
+                    gantt.deleteTask(currentTaskInfo.id);
+
+                    const newGanttTask = {
+                        ...fields,                          // ★ 공통 필드
+                        id:           "j" + savedTask.jobNo,  // 신규 전용
+                        parent:       currentTaskInfo.parent, // 신규 전용
+                        color:        "#3db9d3",              // 신규 전용
+                        progressColor:"#2a8e9d",              // 신규 전용
+                        open:         true                    // 신규 전용
+                    };
+                    // start_date는 parse용 포맷 문자열로 변환 필요 (addTask는 문자열 또는 Date 모두 허용하나 명시적으로)
+                    newGanttTask.start_date = formatFunc(startDateObj);
+
+                    gantt.addTask(newGanttTask, newGanttTask.parent);
 
                     if (newGanttTask.parent && String(newGanttTask.parent).startsWith("j")) {
                         gantt.addLink({
-                            id: "link_" + newGanttTask.id, 
-                            source: newGanttTask.parent,   
-                            target: newGanttTask.id,       
-                            type: "1"                      
+                            id: "link_" + newGanttTask.id,
+                            source: newGanttTask.parent,
+                            target: newGanttTask.id,
+                            type: "1"
                         });
                     }
                     gantt.message({text: "일감이 성공적으로 등록되었습니다.", type: "success"});
 
                 } else {
-                	// [2. 기존 일감 수정 시 UI 처리]
-                    let taskToUpdate = gantt.getTask(currentTaskInfo.id);
-			        taskToUpdate.text = savedTask.title;
-			        taskToUpdate.start_date = startDateObj;
-			        // ★ end_date는 건드리지 않음 — duration만 세팅하면 Gantt가 재계산
-			        taskToUpdate.duration = calcDuration;
-			        taskToUpdate.workerName = managerName;
-			        taskToUpdate.jobPriority = priorityName;
-			        taskToUpdate.progress = parseFloat(document.getElementById('progressSelect').value) / 100;
-			        taskToUpdate.description = savedTask.description || ""; // ← savedTask에서 직접
-			        gantt.updateTask(currentTaskInfo.id);
+                    // [수정] 기존 객체에 fields를 Object.assign으로 덮어쓰기
+                    const taskToUpdate = gantt.getTask(currentTaskInfo.id);
+                    Object.assign(taskToUpdate, fields);    // ★ 공통 필드 한 번에 덮어쓰기
+                    gantt.updateTask(currentTaskInfo.id);
                     gantt.message({text: "일감이 성공적으로 수정되었습니다.", type: "info"});
                 }
             })
@@ -611,6 +588,26 @@
         })
         .catch(err => console.error("세팅 로드 에러:", err));
     }
+    
+	// 서버응답 + UI값 Gantt task 객체 필드 매핑 함수
+	function buildTaskFields(savedTask, startDateObj, exclusiveEndObj, calcDuration, managerName, priorityName) {
+	    return {
+	        text:          savedTask.title,
+	        start_date:    startDateObj,
+	        end_date:      exclusiveEndObj,
+	        duration:      calcDuration,
+	        description:   savedTask.content || "",
+	        workerName:    managerName,
+	        jobPriority:   priorityName,
+	        progress:      parseFloat(document.getElementById('progressSelect').value) / 100,
+	        publicRole:    savedTask.publicRole,
+	        jobStatusNo:   parseInt(savedTask.jobStatusNo),
+	        job_status_no: parseInt(savedTask.jobStatusNo),
+	        jobTypeNo:     parseInt(savedTask.jobTypeNo),
+	        job_type_no:   parseInt(savedTask.jobTypeNo)
+	    };
+	}
+    
     // ==========================================
     // 3. 페이지가 로드되면 실행되는 메인 로직
     // ==========================================
