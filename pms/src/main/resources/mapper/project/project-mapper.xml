@@ -281,65 +281,64 @@
 	
 	<!--/* 간트차트 조회 */-->
 	<select id="selectGanttData" parameterType="String" resultType="GanttDTO">
-		SELECT
-		  id, text, start_date, end_date, progress, parent, project_id
-		  , u.username AS "worker_name"
-		  , c.common_name AS "job_priority"
-      , description
-      , job_status_no, job_type_no, public_role
-		FROM (
-		  SELECT
-		    'p' || pl.project_no        AS id
-		    , pl.project_name             AS text
-		    , TO_CHAR(pl.start_date,'DD-MM-YYYY') AS start_date
-		    , TO_CHAR(pl.end_date,'DD-MM-YYYY')   AS end_date
-		    , 0                           AS progress
-		    , CASE
-		        WHEN NVL(pl.parent_project_no, 0) = 0 THEN NULL
-		        ELSE 'p' || pl.parent_project_no
-		      END                       AS parent
-		    , NULL                        AS project_id
-		    , pl.user_id                  AS worker_id
-		    , NULL                        AS job_priority
-            , pl.project_desc             AS description
-            , NULL                        AS job_status_no
-            , NULL                        AS job_type_no
-            , NULL                        AS public_role
-		  FROM (
-		    SELECT p.project_no, p.project_name,p.start_date, p.end_date, p.project_code, p.parent_project_no, p.project_desc, p.user_id
-		    FROM project p
-		    START WITH p.project_code = #{projectCode}
-		    CONNECT BY NOCYCLE PRIOR p.project_no = p.parent_project_no
-		  ) pl
-		    UNION ALL
-		    SELECT
-		      'j' || j.job_no                       AS id
-		      , j.title                               AS text
-		      , TO_CHAR(j.start_date, 'DD-MM-YYYY')   AS start_date
-		      , TO_CHAR(j.end_date,   'DD-MM-YYYY')   AS end_date
-		      , j.progress / 100.0                    AS progress
-		      , CASE
-		          WHEN j.parent_job_no IS NULL THEN 'p' || j.project_no
-		          ELSE 'j' || j.parent_job_no
-		        END                                   AS parent
-		      , 'p' || j.project_no                  AS project_id
-		      , j.user_id                            AS worker_id
-		      , j.priority                           AS job_priority
-	          , j.content                            AS description
-	          , j.job_status_no
-	          , j.job_type_no
-	          , j.public_role
-		    FROM job j
-		    JOIN (
-		      SELECT p.project_no
-		      FROM project p
-		      START WITH p.project_code = #{projectCode}
-		      CONNECT BY NOCYCLE PRIOR p.project_no = p.parent_project_no
-		    ) pl ON pl.project_no = j.project_no
-		  )
-		LEFT JOIN users u on u.user_id = worker_id
-		LEFT JOIN common c on c.common_no = job_priority
-		ORDER BY parent desc, id
+	WITH project_tree AS (
+	  SELECT 
+	    p.project_no, p.project_name, p.start_date, p.end_date, p.project_code, p.parent_project_no, p.project_desc
+	  FROM project p
+	  START WITH p.project_code = #{projectCode}
+	  CONNECT BY NOCYCLE PRIOR p.project_no = p.parent_project_no
+	)
+	SELECT
+	  id, text, start_date, end_date, progress, parent, project_id
+	  , u.username AS "worker_name"
+	  , c.common_name AS "job_priority"
+	  , description
+	  , job_status_no, job_type_no, public_role
+	FROM (
+	  SELECT
+	    'p' || pt.project_no AS id
+	    , pt.project_name AS text
+	    , TO_CHAR(pt.start_date, 'DD-MM-YYYY') AS start_date
+	    , TO_CHAR(pt.end_date, 'DD-MM-YYYY') AS end_date
+	    , 0 AS progress
+	    , CASE
+	        WHEN NVL(pt.parent_project_no, 0) = 0 THEN NULL
+	        ELSE 'p' || pt.parent_project_no
+	      END AS parent
+	    , NULL AS project_id
+	    , NULL AS worker_id
+	    , NULL AS job_priority
+	    , pt.project_desc AS description
+	    , NULL AS job_status_no
+	    , NULL AS job_type_no
+	    , NULL AS public_role
+	  FROM project_tree pt
+	
+	  UNION ALL
+	
+	  SELECT 
+	    'j' || j.job_no AS id
+	    , j.title AS text
+	    , TO_CHAR(j.start_date, 'DD-MM-YYYY') AS start_date
+	    , TO_CHAR(j.end_date, 'DD-MM-YYYY') AS end_date
+	    , j.progress / 100.0 AS progress
+	    , CASE 
+	        WHEN j.parent_job_no IS NULL THEN 'p' || j.project_no
+	        ELSE 'j' || j.parent_job_no 
+	      END AS parent
+	    , 'p' || j.project_no AS project_id
+	    , j.user_id AS worker_id
+	    , j.priority AS job_priority
+	    , j.content AS description
+	    , j.job_status_no
+	    , j.job_type_no
+	    , j.public_role
+	    FROM job j
+	    JOIN project_tree pt ON pt.project_no = j.project_no
+	  )
+	LEFT JOIN users u ON u.user_id = worker_id
+	LEFT JOIN common c ON c.common_no = job_priority
+	ORDER BY parent DESC, id
 	</select>
 	
 	<select id="selectHolidays" resultType="HolidayDTO">

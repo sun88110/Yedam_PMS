@@ -141,7 +141,8 @@
         gantt.config.work_time = true;
         gantt.config.correct_work_time = true;
         gantt.config.skip_off_time = true;
-
+        gantt.config.drag_links = false;
+        
         gantt.config.columns = [
             { name: "text",        label: "작업명",   tree: true, width: "*", min_width: 150, resize: true },
             { name: "start_date",  label: "시작일",   width: "*", min_width: 90, align: "center", resize: true },

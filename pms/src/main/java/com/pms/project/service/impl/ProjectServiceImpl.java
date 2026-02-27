@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +60,7 @@ public class ProjectServiceImpl implements ProjectService {
 	    List<MemberDTO> allMembers = projectMapper.selectMembersByProjectNos(projectNos);
 	    
 	    // ★ 휴일 데이터 캐싱 (is_holiday == 'Y'인 날짜만 모음)
-	    Set<LocalDate> holidaySet = projectMapper.selectHolidays().stream()
+	    Set<LocalDate> holidaySet = findHolidays().stream()
 	            .filter((HolidayDTO h) -> "Y".equals(h.getIsHoliday()))
 	            .map((HolidayDTO h) -> {
 	                return convertToLocalDate(h.getHolidayDt());
@@ -354,7 +355,9 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
+	@Cacheable("holidays") // 'holidays'라는 이름으로 캐싱
 	public Set<HolidayDTO> findHolidays() {
+		// 최초 1회만 DB 쿼리가 실행되고, 두 번째부터는 이 내부 로직을 타지 않고 즉시 반환
 		return projectMapper.selectHolidays();
 	}
 
