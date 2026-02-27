@@ -100,7 +100,7 @@ public class WorkServiceImpl implements WorkService {
 		if (type == null) {
 			return null;
 		}
-		// 전달받은 type에 따라 각기 다른 mapper의 Method호출
+		// input hidden에서 전달받은 type에 따라 각기 다른 mapper의 Method호출
 		switch (type.toLowerCase()) {
 		case "job":
 			return workMapper.selectJobReport(workReportDto);

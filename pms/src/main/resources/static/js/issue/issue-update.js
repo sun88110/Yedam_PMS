@@ -1,10 +1,26 @@
 document.addEventListener("DOMContentLoaded", function () {
-	// jQuery 달력
-	$(".datepicker").datepicker({
-		  format: "yyyy-mm-dd",
-		  language: "ko",
-		  autoclose: true,
-		});
+  // jQuery 달력
+  $(".datepicker").datepicker({
+    format: "yyyy-mm-dd",
+    language: "ko",
+    autoclose: true,
+  });
+  // 시작 일자를 선택하면 마감일자는 시작일자 보다 그 앞을 선택할 수 없다
+  $("#startDate").on("changeDate", function (event) {
+    // 시작일 선택 -> 마감일의 선택 가능한 날짜 최소화
+    $("#endDate").datepicker("setStartDate", event.date);
+    // 마감일을 먼저 선택 -> 시작일보다 빠르다면 마감일과 시작일이 동일하게 변경
+    const endDateValue = $("#endDate").datepicker("getDate");
+    if (endDateValue && endDateValue < event.date) {
+      $("#endDate").datepicker("update", event.date);
+    }
+  });
+  // 마감일이 변경될 때 시작일 범위 제한
+  $("#endDate").on("changeDate", function (event) {
+    // 마감일 먼저 선택 그러면 시작 날짜는 마감일 뒤로 못 간다
+    $("#startDate").datepicker("setEndDate", event.date);
+  });
+
   const updateForm = document.getElementById("issueUpdate");
   const confirmUpdateButton = document.getElementById("updateSubmit");
   const fileInput = document.getElementById("files");
@@ -42,7 +58,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // 중복 체크용
       if (!exists) {
         const li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
+        li.className =
+          "list-group-item d-flex justify-content-between align-items-center";
         li.dataset.name = fileName;
         li.innerHTML = `
                     <span>${fileName}</span>
@@ -53,7 +70,9 @@ document.addEventListener("DOMContentLoaded", function () {
         브라우저에서 input type="file"는 보안상 사용자가 직접 수정 불가
         DataTransfer이라는 임시 데이터 보관소     
         */
-        li.querySelector(".new-file-delete").addEventListener("click", function () {
+        li.querySelector(".new-file-delete").addEventListener(
+          "click",
+          function () {
             // X button 누르면 화면에서만 일단 사라짐
             li.remove();
             // DataTransfer 생성

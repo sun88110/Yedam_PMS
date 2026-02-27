@@ -1,0 +1,88 @@
+/* src/main/resources/static/css/theme.css */
+
+:root {
+    /* 더 어둡고 차분한 Material Palette */
+    --bg-color: #1b1e2b;          /* 매우 어두운 배경 */
+    --surface-color: #24283b;     /* 조금 밝은 카드/테이블 배경 */
+    --border-color: #3b3f51;      /* 테두리 */
+    
+    --text-color: #9095b3;        /* 기본 텍스트 (채도 낮춤) */
+    --text-high: #b0b8c4;         /* 강조 텍스트 */
+    
+    /* 보라색 포인트 컬러는 유지하되, 배경을 어둡게 설정 */
+    --primary-color: #89ddff;     /* 보라 대신 차분한 하늘색(Cyan)으로 변경 추천 */
+    --success-color: #a3cc78;     /* 연두색도 톤다운 */
+    
+    --table-hover-color: #2e3347;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Roboto', 'Segoe UI', sans-serif;
+}
+
+/* 1. 기본 요소 스타일 */
+.text-primary { color: var(--primary-color) !important; }
+.text-muted { color: #5c627a !important; }
+
+/* 2. 테이블 스타일링 */
+.table { color: var(--text-color); }
+.table-dark {
+    background-color: var(--surface-color);
+    color: var(--text-high);
+}
+.table-dark th { border-color: var(--border-color); }
+.table-hover tbody tr:hover {
+    color: var(--text-high);
+    background-color: var(--table-hover-color);
+}
+.table td, .table th { border-color: var(--border-color); }
+
+/* 3. 버튼 스타일링 (명도 대비를 대폭 낮춤) */
+.btn-primary { 
+    background-color: var(--surface-color); /* 배경색과 비슷하게 */
+    border: 1px solid var(--border-color);
+    color: var(--text-high); 
+    font-weight: 400;
+}
+.btn-primary:hover { 
+    background-color: var(--border-color); 
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+.btn-secondary:hover { 
+    background-color: var(--border-color); 
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--surface-color); /* 초록색 버튼도 어둡게 */
+    border: 1px solid var(--border-color);
+    color: var(--success-color); /* 글자색에 포인트 */
+    font-weight: 400;
+}
+.btn-success:hover { 
+    background-color: var(--success-color); 
+    color: var(--bg-color);
+}
+
+/* 4. 기타 요소 */
+.dropdown-menu {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+}
+.dropdown-item { color: var(--text-color); }
+.dropdown-item:hover {
+    background-color: var(--table-hover-color);
+    color: var(--text-high);
+}
+.form-check-input:checked {
+    background-color: var(--text-muted);
+    border-color: var(--text-muted);
+}

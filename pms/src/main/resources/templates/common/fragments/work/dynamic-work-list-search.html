@@ -1,71 +1,91 @@
 <!-- 조건을 추가하여 검색 -->
 <!-- 일감제목 -->
-<div th:fragment="JobTitleField" class="col-md-3 condition-field d-none"
-	id="field-jobTitle">
-	<div class="card card-body bg-light shadow-sm">
+<div th:fragment="JobTitleField" 
+		class="col-md-3 condition-field d-none"
+		id="field-jobTitle">
+	<div class="card card-body shadow-sm">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<label class="fw-bold small">일감 제목</label>
-			<button type="button" class="btn-close btn-remove"
-				data-target="field-jobTitle"></button>
+			<!-- x버튼 -->
+			<button type="button" 
+						 class="btn-close btn-remove"
+						 data-target="field-jobTitle"></button>
 		</div>
-		<input type="text" name="title" class="form-control form-control-sm"
-			placeholder="일감 제목을 입력하세요">
+		<input type="text" name="title" class="form-control form-control-sm" placeholder="일감 제목을 입력하세요">
 	</div>
 </div>
 <!-- 일감 담당자 -->
-<div th:fragment="WorkersField" class="col-md-3 condition-field d-none"
-	id="field-workers">
-	<div class="card card-body bg-light shadow-sm">
+<div th:fragment="WorkersField" 
+		class="col-md-3 condition-field d-none"
+		id="field-workers">
+	<div class="card card-body shadow-sm">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<label class="fw-bold small">담당자</label>
-			<button type="button" class="btn-close btn-remove"
-				data-target="field-workers"></button>
+           <!-- x버튼 -->
+			<button type="button" 
+						 class="btn-close btn-remove"
+						data-target="field-workers"></button>
 		</div>
-		<input type="text" name="username" class="form-control form-control-sm"
-			placeholder="담당자명을 입력하세요">
+		<input type="text" 
+				   name="username" 
+				   class="form-control form-control-sm" 
+				   placeholder="담당자명을 입력하세요">
 	</div>
 </div>
 <!-- 작업일시 -->
-<div th:fragment="WorkDateField" class="col-md-3 condition-field d-none"
-	id="field-workDate">
-	<div class="card card-body bg-light shadow-sm">
+<div th:fragment="WorkDateField"
+		class="col-md-3 condition-field d-none"
+		id="field-workDate">
+	<div class="card card-body shadow-sm">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<label class="fw-bold small">작업일시</label>
-			<button type="button" class="btn-close btn-remove"
-				data-target="field-workDate"></button>
+           <!-- x버튼 -->			
+			<button type="button" 
+						 class="btn-close btn-remove"
+						 data-target="field-workDate"></button>
 		</div>
-		<input type="text" name="workDate"
-			class="form-control form-control-sm datepicker"
-			placeholder="작업일시를 선택하세요">
+		<input type="text" 
+				   name="workDate"
+				   class="form-control form-control-sm datepicker"
+				   placeholder="작업일시를 선택하세요">
 	</div>
 </div>
 <!-- 소요시간 작업분류 -->
-<div th:fragment="WorkTypeField" class="col-md-3 condition-field d-none"
-	id="field-workType">
-	<div class="card card-body bg-light shadow-sm">
+<div th:fragment="WorkTypeField" 
+		class="col-md-3 condition-field d-none"
+		id="field-workType">
+	<div class="card card-body shadow-sm">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<label class="fw-bold small">작업분류</label>
-			<button type="button" class="btn-close btn-remove"
-				data-target="field-workType"></button>
+			<!-- x버튼 -->
+			<button type="button" 
+						 class="btn-close btn-remove"
+						 data-target="field-workType"></button>
 		</div>
-		<select name="workType" class="form-select form-selected-sm">
+		<select name="workDetailsNo" class="form-select form-selected-sm">
 			<option value="0">작업분류 선택</option>
 			<option th:each="status : ${workType}"
-				th:value="${status.workDetailsNo}" th:text="${status.workType}"></option>
+						th:value="${status.workDetailsNo}"
+						th:text="${status.workType}"></option>
 		</select>
 	</div>
 </div>
 <!-- 소요시간 상세내용 -->
 <div th:fragment="WorkContentField"
-	class="col-md-3 condition-field d-none" id="field-workContent">
-	<div class="card card-body bg-light shadow-sm">
+		class="col-md-3 condition-field d-none" 
+		id="field-workContent">
+	<div class="card card-body shadow-sm">
 		<div class="d-flex justify-content-between align-items-center mb-2">
 			<label class="fw-bold small">작업내용</label>
-			<button type="button" class="btn-close btn-remove"
-				data-target="field-workContent"></button>
+			<!-- x버튼 -->
+			<button type="button" 
+						 class="btn-close btn-remove"
+						data-target="field-workContent"></button>
 		</div>
-		<input type="text" name="workContent"
-			class="form-control form-control-sm" placeholder="내용 키워드">
+		<input type="text" 
+				   name="workContent"
+				   class="form-control form-control-sm" 
+				   placeholder="내용 키워드">
 	</div>
 </div>
 

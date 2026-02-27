@@ -5,19 +5,19 @@
       <!-- SELECT -->
 	<select id="selectWorkEntries" resultType="WorkSelectDto">
 		SELECT
-		 we.work_entries_no
-		 , we.workers
-		 , we.work_date
-		 , we.work_time
-		 , we.work_content
-		 , we.job_no
-		 , j.title
-		 , j.user_id
-		 , j.manager_id
-		 , p.project_name
-		 , we.work_details_no
-		 , wd.work_type
-		 , u.username AS username
+		 			we.work_entries_no
+				  , we.workers
+		          , we.work_date
+		          , we.work_time
+		          , we.work_content
+		          , we.job_no
+		          , j.title
+		          , j.user_id
+		          , j.manager_id
+		          , p.project_name
+		          , we.work_details_no
+		          , wd.work_type
+		          , u.username AS username
 		FROM project p
 		          LEFT JOIN job j
 		          ON p.project_no = j.project_no
@@ -25,14 +25,14 @@
 		          ON j.job_no = we.job_no
 		          LEFT JOIN work_details wd
 		          ON we.work_details_no = wd.work_details_no
-		          JOIN users u
+		          LEFT JOIN users u
 		          ON j.user_id = u.user_id
 		<where>
          p.project_code = #{projectCode}
-		  <if test="userId != null">
+		  <if test="userId != null and userId != ''">
 		 AND  j.user_id = #{userId}
   		  </if>
-  		  <if test="username != null">
+  		  <if test="username != null and username != ''">
   		  AND u.username = #{username}
   		  </if>
 		  <if test="jobNo != null and jobNo != 0">
@@ -152,6 +152,7 @@
 	   SELECT
             p.le
           , p.project_name AS projectName
+          , u.username
           , j.title AS title
           , j.manager_id AS managerId
           , j.job_no AS jobNo
@@ -167,6 +168,8 @@
             AND m.user_id = #{userId}
         JOIN job j 
              ON p.project_no = j.project_no
+        JOIN users u
+            ON j.user_id = u.user_id
         LEFT JOIN work_entries we 
             ON j.job_no = we.job_no
             <where>
@@ -181,6 +184,7 @@
         GROUP BY
             p.le
             , p.project_name
+            , u.username
             , j.job_no, j.title
             , j.manager_id
             , j.start_date
@@ -224,7 +228,7 @@
         						)
         AND p.project_code = #{projectCode}
         		 <if test="username != null">
-        		     AND u.username = #{username}
+        		     AND u.username LIKE '%' || #{username} || '%'
         		 </if>
                  <if test="workType != null and workType != ''">
                      AND wd.work_type = #{workType}

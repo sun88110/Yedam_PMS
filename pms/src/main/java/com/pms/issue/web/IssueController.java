@@ -247,7 +247,7 @@ public class IssueController {
 		if (issue.getFilesNo() != null)
 			model.addAttribute("fileList", fileListService.findFileList(issue.getFilesNo()));
 		else 
-			model.addAttribute("fileList", new ArrayList<FileListDto>() );
+			model.addAttribute("fileList", new ArrayList<FileListDto>());
 		
 		return "issue/issue-info";
 	}

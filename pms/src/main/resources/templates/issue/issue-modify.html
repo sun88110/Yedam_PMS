@@ -9,7 +9,6 @@
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
-
 <!-- 1. jQuery = JavaScript 라이브러리-->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <!-- 2. bootstrap-datepicker 본체 -->
@@ -23,21 +22,21 @@
 <body>
 	<div class="container">
 		<div class="mb-4 mt-3">
-			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
 				<span th:text="${project.projectName}" class="text-primary"></span>
 				<small class="text-muted">의 일감 수정</small>
 			</h3>
 		</div>
+		<!-- 일감 수정 form -->
 		<form id="issueUpdate"
 			th:action="@{/project/user/{projectCode}/issue/update(projectCode=${projectCode})}"
 			enctype="multipart/form-data" 
 			method="post" 
 			th:object=${issue}>
-					<!-- 수정은 PutMapping 했음 -->
-					<input type="hidden" name="_method" value="PUT">
-					<!-- history 테이블에 입력하기 위해 jobNo를 보내줘야 함 -->
-					<input type="hidden" th:field="*{jobNo}">
+			<!-- 수정은 PutMapping 했음 -->
+			<input type="hidden" name="_method" value="PUT">
+			<!-- history 테이블에 입력하기 위해 jobNo를 보내줘야 함 -->
+			<input type="hidden" th:field="*{jobNo}">
 			<!-- 제목 -->
 			<div class="row mb-3">
 				<div class="col-md-6">
@@ -53,26 +52,31 @@
     					</div>
 				</div>
 			</div>
-
 			<!-- 상태 -->
 			<!-- th:value는 서버로 보내는 값 th:text는 사용자에게 보여주는 값 -->
 			<div class="row mb-3">
 				<div class="col-md-6">
-					<label class="form-label">일감 상태</label> <select class="form-select"
-						name="status" th:field="*{jobStatusNo}">
+					<label class="form-label">일감 상태</label> 
+					<select class="form-select"
+							    name="status" 
+							    th:field="*{jobStatusNo}">
 						<option value="">선택</option>
 						<option th:each="status : ${statusList}"
-							th:value="${status.jobStatusNo}" th:text="${status.jobStatus}"></option>
+									th:value="${status.jobStatusNo}" 
+									th:text="${status.jobStatus}"></option>
 					</select>
 				</div>
 
 				<!-- 유형 -->
 				<div class="col-md-6">
-					<label class="form-label">일감 유형</label> <select class="form-select"
-						name="type" th:field="*{jobTypeNo}">
+					<label class="form-label">일감 유형</label> 
+					<select class="form-select"
+							    name="type"
+							    th:field="*{jobTypeNo}">
 						<option value="">선택</option>
-						<option th:each="type : ${typeList}" th:value="${type.jobTypeNo}"
-							th:text="${type.jobType}"></option>
+						<option th:each="type : ${typeList}" 
+									th:value="${type.jobTypeNo}"
+									th:text="${type.jobType}"></option>
 					</select>
 				</div>
 			</div>
@@ -81,9 +85,11 @@
 			<div class="mb-3">
 				<label class="form-label">상세 설명</label>
 				<div class="form-floating">
-					<textarea class="form-control" id="floatingTextarea2"
-						style="height: 100px" name="content" \
-						th:field="*{content}"></textarea>
+					<textarea class="form-control" 
+									id="floatingTextarea2"
+									style="height: 100px" 
+									name="content"
+									th:field="*{content}"></textarea>
 					<label for="floatingTextarea2"></label>
 				</div>
 			</div>
@@ -91,20 +97,24 @@
 			<div class="row mb-3">
 				<!-- 우선순위 -->
 				<div class="col-md-6">
-					<label class="form-label">우선순위</label> <select class="form-select"
-						name="priority" th:field="*{priority}">
+					<label class="form-label">우선순위</label> 
+					<select class="form-select"
+								name="priority" 
+								th:field="*{priority}">
 						<option value="">선택</option>
 						<option th:each="priority : ${priorityList}"
-							th:value="${priority.commonNo}" th:text="${priority.commonName}"></option>
+									th:value="${priority.commonNo}" 
+									th:text="${priority.commonName}"></option>
 					</select>
 				</div>
 
 				<!-- 담당자 -->
 				<!-- data-bs-toggle과 target은 Bootstrap5 문법 -->
 				<div class="col-md-6">
-					<button type="button" class="btn btn-outline-primary"
-						data-bs-toggle="modal" data-bs-target="#userSelectModal">담당자
-						선택 *</button>
+					<button type="button" 
+								 class="btn btn-outline-primary"
+								 data-bs-toggle="modal" 
+								 data-bs-target="#userSelectModal">담당자 선택 *</button>
 					<input type="text" 
 							   class="form-control" 
 							   id="managerName"
@@ -118,37 +128,48 @@
 			<div class="row mb-3">
 				<!-- 시작일 -->
 				<div class="col-md-6">
-					<label class="form-label">시작일</label><input type="text"
-						class="form-control datepicker" id="startDate" name="startDate"
-						th:value="${#dates.format(issue.startDate, 'yyyy-MM-dd')}"
-						readonly />
+					<label class="form-label">시작일</label>
+					<input type="text"
+							   class="form-control datepicker" 
+							   id="startDate" 
+							   name="startDate"
+							   th:value="${#dates.format(issue.startDate, 'yyyy-MM-dd')}"
+							   readonly />
 				</div>
 
 				<!-- 마감일 -->
 				<div class="col-md-6">
-					<label class="form-label">마감일</label><input type="text"
-						class="form-control datepicker" id="endDate" name="endDate"
-						th:value="${#dates.format(issue.endDate, 'yyyy-MM-dd')}" readonly />
+					<label class="form-label">마감일</label>
+					<input type="text"
+							  class="form-control datepicker" 
+							  id="endDate" 
+							  name="endDate"
+							  th:value="${#dates.format(issue.endDate, 'yyyy-MM-dd')}" 
+							  readonly />
 				</div>
 			</div>
 
 			<div class="row mb-3">
 				<!-- 상위 일감 선택 -->
 				<div class="col-md-6">
-					<button type="button" class="btn btn-outline-primary"
-						data-bs-toggle="modal" data-bs-target="#issueSelectModal">
-						상위일감 선택</button>
+					<button type="button" 
+								 class="btn btn-outline-primary"
+								 data-bs-toggle="modal" 
+								 data-bs-target="#issueSelectModal">상위일감 선택</button>
 					<input type="text" class="form-control" id="jobTitle" readonly />
 					<input type="hidden" name="parentJobNo" id="parentJobNo" value="">
 				</div>
 				
 				<!-- 진척도 -->
 				<div class="col-md-6">
-					<label class="form-label">진척도</label> <select class="form-select"
-						name="progress" th:field="*{progress}">
+					<label class="form-label">진척도</label> 
+					<select class="form-select"
+								name="progress" 
+								th:field="*{progress}">
 						<option value="">선택</option>
 						<option th:each="p : ${#numbers.sequence(0, 10)}"
-							th:value="${(p * 10)}" th:text="${(p * 10) + '%'}"></option>
+									th:value="${(p * 10)}" 
+									th:text="${(p * 10) + '%'}"></option>
 					</select>
 				</div>
 			</div>
@@ -207,43 +228,24 @@
 			 		일감의 유형이 반려로 변경 -->
 			<!-- 수정버튼 -->
 			<div class="row md-3">
-				<div class="d-flex gap-2">
-					<button type="button" class="btn btn-danger flex-fill text-white"
-						data-bs-toggle="modal" data-bs-target="#issueRejectModal">
-						반려</button>
-					<button type="button" class="btn btn-primary flex-fill"
-						data-bs-toggle="modal" data-bs-target="#issueUpdateModal">
-						수정</button>
+				<div class="d-flex gap-2 justify-content-end">
+				<a th:href="@{/project/user/{projectCode}/issue/list/read(projectCode=${projectCode})}"
+						 class="text-white btn btn-primary">돌아가기</a>					 
+				<a th:href="@{/project/user/{projectCode}/issue/work/create(projectCode=${projectCode})}"
+						  class="text-white btn btn-success">소요시간 등록</a>		 
+					<button type="button"
+								class="btn btn-success text-white"
+								data-bs-toggle="modal" 
+								data-bs-target="#issueUpdateModal">수정</button>
 				</div>
 			</div>
 		</form>
-		<!-- form 태그 바깥 부가 기능 영역 Card영역 -->
-		<div class="card">
-			<div class="card-body">
-				<div class="d-flex gap-2 mb-3">
-					<a
-						th:href="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}"
-						class="text-white btn btn-primary">돌아가기</a> <a
-						th:href="@{/project/user/{projectCode}/work/insert(projectCode=${projectCode})}"
-						class="text-white btn btn-success">소요시간 등록</a>
-					<button type="button" class="text-white btn btn-success">보고하기</button>
-				</div>
-				<!-- grid 영역 -->
-				<div id="subContentArea"></div>
-			</div>
-		</div>
 	</div>
-
 	<!-- 모달 fragment 호출 ~{템플릿 재사용 fragment 호출 조각 표현식} -->
-	<th:block
-		th:replace="~{common/fragments/issue/user-select-modal :: UserSelectModal}"></th:block>
-	<th:block
-		th:replace="~{common/fragments/issue/issue-select-modal :: IssueSelectModal}"></th:block>
-	<th:block
-		th:replace="~{common/fragments/issue/issue-update-modal :: IssueUpdateModal}"></th:block>
-	<th:block
-		th:replace="~{common/fragments/issue/issue-reject-modal :: IssueRejectModal}"></th:block>
-		
+	<th:block th:replace="~{common/fragments/issue/user-select-modal :: UserSelectModal}"></th:block>
+	<th:block th:replace="~{common/fragments/issue/issue-select-modal :: IssueSelectModal}"></th:block>
+	<th:block th:replace="~{common/fragments/issue/issue-update-modal :: IssueUpdateModal}"></th:block>
+	<!-- script -->	
 	<script th:src="@{/js/issue/issue-update.js}"></script>
 	<script th:src="@{/js/issue/user-select-modal.js}"></script>
 	<script th:src="@{/js/issue/issue-select-modal.js}"></script>

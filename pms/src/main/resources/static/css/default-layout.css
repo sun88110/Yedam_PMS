@@ -1,0 +1,16 @@
+@charset "UTF-8";
+
+  .simplebar-scrollbar {
+    display: none !important;
+  }
+  .simplebar-track.simplebar-vertical {
+    width: 0 !important;
+  }
+  /* 브라우저 native 스크롤바 숨기기 (스크롤 유지) */
+  .sidebar-nav {  /* 또는 .simplebar-content-wrapper 만약 SimpleBar wrapper 타겟 */
+    -ms-overflow-style: none;  /* IE, Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  .sidebar-nav::-webkit-scrollbar {  /* Chrome, Safari, Opera */
+    display: none;
+  }

@@ -6,8 +6,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<!-- Bootstrap5 icon사용 -->
 <link rel="stylesheet" th:href="@{/css/dynamic-search.css}"/>
+<link rel="stylesheet" th:href="@{/css/modal.css}">
+<!-- Bootstrap5 icon사용 -->
 <link rel="stylesheet"
 	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 <link rel="stylesheet"
@@ -27,59 +28,55 @@
 <body>
 	<div class="container">
 		<div class="mb-4 mt-3">
-			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
 				<span th:text="${project.projectName}" class="text-primary"></span>
 				<small class="text-muted">의 보고서 목록</small>
 			</h3>
 		</div>
 
-		<!-- 검색조건  -->
-		<form th:action="@{/project/user/{projectCode}/work/report(projectCode=${projectCode})}" method="get" id="reportSearchForm">
+		<!-- 검색조건  form-->
+		<form th:action="@{/project/user/{projectCode}/issue/work/report/list/read(projectCode=${projectCode})}"
+				  method="get" 
+				  id="reportSearchForm">
+			<!-- 검색조건 입력 영역 -->
 			<div id="dynamicReportSearch" class="row g-3 mb-3">
-				<div
-					th:replace="~{common/fragments/work/dynamic-work-report-search}"></div>
+				<div th:replace="~{common/fragments/work/dynamic-work-report-search}"></div>
 			</div>
 
-			<!-- 검색조건 추가 버튼 + 조회버튼 -->
-			<div
-				class="mb-3 d-flex align-items-stretch justify-content-end gap-2">
+			<!-- dropdown 영역 -->
+			<div class="mb-3 d-flex align-items-stretch justify-content-end gap-2">
 				<div class="dropdown me-2">
-					<button class="btn btn-secondary dropdown-toggle" type="button"
-						data-bs-toggle="dropdown">검색조건 추가</button>
+					<button class="btn btn-secondary dropdown-toggle" 
+								 type="button"
+								 data-bs-toggle="dropdown">검색조건 추가</button>
 					<ul class="dropdown-menu">
 						<li><a class="dropdown-item add-condition" href="#"
-							data-target="field-job">일감별</a></li>
+									data-target="field-job">일감별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
-							data-target="field-username">담당자별</a></li>
+									data-target="field-username">담당자별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
-							data-target="field-projectWeek">프로젝트 주별</a></li>
+									data-target="field-projectWeek">프로젝트 주별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
-							data-target="field-projectMonth">프로젝트 월별</a>
+									data-target="field-projectMonth">프로젝트 월별</a>
 						</li>
 					</ul>
 				</div>
 				<!-- 조회 버튼 -->
 				<button type="submit" class="btn btn-primary">보고서 조회</button>
 				<!-- 소요시간 조회로 이동-->
-				<a th:href="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
-					class="btn btn-primary text-white d-inline-flex align-items-center justify-content-center">소요시간
-					조회</a>
+				<a th:href="@{/project/user/{projectCode}/issue/work/list/read(projectCode=${projectCode})}"
+					 class="btn btn-primary text-white d-inline-flex align-items-center justify-content-center">소요시간 조회</a>
 			</div>
 		</form>
 		<!-- 보고서로 조회되는 테이블 -->
 		<div th:if="${reportList != null}" class="mt-4">
 			<table class="table table-hover text-center">
-				<thead class="table=light">
+				<thead class="table-dark">
 					<tr>
-						<th
-							th:if="${reportType == 'project'
-						or reportType == 'week' or reportType == 'month'}"
-							class="bi bi-folder2-open me-1">프로젝트</th>
-						<th th:if="${reportType == 'users'}"
-							class="bi bi-person-badge me-1">담당자</th>
-						<th th:if="${reportType == 'job'}"
-							class="bi bi-card-checklist me-1">일감</th>
+						<th th:if="${!#lists.isEmpty(reportList) and reportList[0].username != null}"
+							  class="bi bi-person-badge me-1">담당자</th>
+						<th th:if="${!#lists.isEmpty(reportList) and reportList[0].title != null}"
+							  class="bi bi-card-checklist me-1">일감</th>
 						<th class="bi bi-calendar-range me-1">기간</th>
 						<th class="bi bi-alarm me-1">예상시간</th>
 						<th class="bi bi-play0circle me-1">실제 작업시간</th>
@@ -88,30 +85,25 @@
 				</thead>
 				<tbody>
 					<tr th:each="row : ${reportList}">
-						<td class="text-satrt"><span th:if="${reportType == 'job'}"
-							th:text="${row.title}"></span>
-							<span th:if="${reportType != 'job' and reportType != 'users'}"
-							th:text="${row.projectName}"></span> <span
-							th:if="${reportType == 'users'}"
-							th:text="${row.username}"></span>
+						<td th:if="${row.username != null}"
+							   th:text="${row.username}"></td>
+						<td th:if="${row.title != null}"
+							   th:text="${row.title}"
+							   class="text-start"></td>	   
+						<td>
+							<span th:if="${row.workWeek != null}"
+									  th:text="${row.workWeek}"></span> 
+							<span th:if="${row.workMonth != null}"
+									  th:text="${row.workMonth}"></span>
+							<span th:if="${row.workWeek == null and row.workMonth == null}"
+									  th:text="${row.startDate != null and row.endDate != null} ?
+													(${#dates.format(row.startDate, 'yyyy-MM-dd')} 
+													+ ' ~ ' + 
+													${#dates.format(row.endDate, 'yyyy-MM-dd')}) :
+													'기간 정보 없음'"></span>
 						</td>
-						<td><span th:if="${reportType == 'week'}"
-							th:text="${row.workWeek}"></span> <span
-							th:if="${reportType == 'month'}" th:text="${row.workMonth}"></span>
-							<span
-							th:if="${reportType == 'job' or
-								reportType == 'project' or reportType == 'users'}"
-							th:text="${row.startDate != null and row.endDate != null} ?
-								(${#dates.format(row.startDate, 'yyyy-MM-dd')} + 
-								' ~ ' + ${#dates.format(row.endDate, 'yyyy-MM-dd')}) :
-								'기간 정보 없음'" 
-								></span>
-						</td>
-						<td
-							th:text="${row.estimatedTime ?: row.averageTime}
-							+ '시간'"></td>
-						<td class="fw-bold text-primary"
-							th:text="${row.realWorkTime} + '시간'"></td>
+						<td th:text="${row.estimatedTime ?: row.averageTime} + '시간'"></td>
+						<td class="fw-bold text-primary" th:text="${row.realWorkTime} + '시간'"></td>
 						<td style="width: 150px">
 							<div class="progress" style="height: 10px">
 								<div class="progress-bar" role="progressbar"
@@ -125,7 +117,7 @@
 			</table>
 		</div>
 	</div>
-
+	<!-- script -->
 	<script th:src="@{/js/work/dynamicSearch.js}"></script>
 </body>
 </html>

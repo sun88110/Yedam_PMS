@@ -22,14 +22,11 @@ public interface WorkMapper {
 	// 소요시간 등록 기능 매개변수 타입이 WorkInsertDto  insert된 row 행의 개수
 	int insertWorkEntries(WorkInsertDto workInsertDto);
 	
-	
 	// 소요시간 수정 페이지 수정을 위한 상세조회 단건조회 List안쓴다
 	WorkUpdateDto selectWorkEntriesByNo(WorkUpdateDto workUpdateDto);
 	// 소요시간 수정 기능
 	int updateWorkEntries(WorkUpdateDto workUpdateDto);
 	
-	
-	// 소요시간 보고서 조회
 	// 일감별 소요시간 보고서
 	List<WorkReportDto> selectJobReport(WorkReportDto workReportDto);
 	// 프로젝트별 소요시간 보고서

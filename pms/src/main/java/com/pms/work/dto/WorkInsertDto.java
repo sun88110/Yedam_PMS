@@ -20,7 +20,7 @@ public class WorkInsertDto {
 	private String userId; // 유저 아이디
 	private String username; // 담당자 이름
 	private String title; // 일감 제목
-	private String managerId; 
+	private String managerId; // 등록한 사람 
 	private String workers;
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private Date workDate;

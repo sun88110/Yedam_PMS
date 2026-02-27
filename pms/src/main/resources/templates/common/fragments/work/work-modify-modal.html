@@ -1,21 +1,23 @@
 <th:block th:fragment="WorkModifyModal">
 <!-- 확인 Modal -->
-	<link rel="stylesheet" th:href="@{/css/modal.css}" />
-	<div class="modal fade" id="workModifyModal" tabindex="-1"
-		aria-labelledby="workModifyModalLabel" aria-hidden="true">
+	<div class="modal fade"
+			id="workModifyModal" 
+			tabindex="-1"
+			aria-labelledby="workModifyModalLabel" 
+			aria-hidden="true">
 		<div class="modal-dialog modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="workModifyModalLabel">재확인</h5>
 				</div>
-
 				<div class="modal-body">소요시간을 수정 하시겠습니까?</div>
-
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary"
-						data-bs-dismiss="modal">취소</button>
-						<button type="button" class="btn btn-primary"
-						id="confirmSubmit">확인</button>
+					<button type="button" 
+								class="btn btn-secondary"
+								data-bs-dismiss="modal">취소</button>
+					<button type="button"
+								 class="btn btn-primary"
+								 id="confirmSubmit">확인</button>
 				</div>
 			</div>
 		</div>

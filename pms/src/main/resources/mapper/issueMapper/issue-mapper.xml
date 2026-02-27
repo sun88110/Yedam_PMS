@@ -91,8 +91,8 @@
 	</select>
 	<!-- 일감 담당자 누구를 선택할지 조회 -->
 	<select id="selectIssueManager" resultType="IssueDto">
-	  SELECT m.user_id
-	             , m.username
+	  SELECT DISTINCT m.user_id
+	                            , m.username
 	  FROM vw_member m
 	  JOIN vw_project p
 	  ON m.project_no = p.project_no

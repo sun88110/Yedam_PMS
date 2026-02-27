@@ -5,6 +5,8 @@
 	layout:fragment="Content">
 <head>
 <meta charset="UTF-8" />
+<!-- 모달 css -->
+<link rel="stylesheet" th:href="@{/css/modal.css}" />
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
@@ -21,68 +23,83 @@
 </head>
 <body>
 	<div class="container">
-		<form id="workUpdate" method="post"
-			th:action="@{/project/user/{projectCode}/work/update(projectCode=${projectCode}, workEntriesNo=${workDetails.workEntriesNo})}">
-
+	<!-- 소요시간 수정 form -->
+		<form id="workUpdate"
+				  method="post"
+				  th:action="@{/project/user/{projectCode}/issue/work/update(projectCode=${projectCode}, workEntriesNo=${workDetails.workEntriesNo})}">
 			<div class="mb-4 mt-3">
-				<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 				<h3 class="fw-bold">
 					<span th:text="${project.projectName}" class="text-primary"></span>
 					<small class="text-muted">의 소요시간 수정</small>
 				</h3>
 			</div>
-
+			<!-- 소요시간 일감 담당자 정보 수정은 안됨  -->
 			<!-- 해당 일감번호에 대한 값을 가져옴 readonly -->
 			<div class="row mb-3">
 				<div class="col-md-6">
-					<label class="form-label">일감명</label> <input type="text"
-						class="form-control bg-light" id="title"
-						th:value="${workDetails.title}" readonly />
+					<label class="form-label">일감명</label> 
+					<input type="text"
+							   class="form-control bg-light" id="title"
+							   th:value="${workDetails.title}"
+							   readonly />
 				</div>
 
 				<!-- 일감번호를 가져오면 해당 일감 담당자의 정보도 같이 불러옴 -->
 				<div class="col-md-6">
-					<label class="form-label">담당자</label> <input type="text"
-						class="form-control bg-light" id="workers"
-						th:value="${workDetails.username}" readonly />
+					<label class="form-label">담당자</label> 
+					<input type="text"
+							   class="form-control bg-light" 
+							   id="workers"
+							   th:value="${workDetails.username}" 
+							   readonly />
 				</div>
 			</div>
 
 			<div class="row mb-3">
 				<!-- 작업일자 -->
 				<div class="col-md-6">
-					<label class="form-label">작업일자</label><input type="text"
-						class="form-control datepicker" id="workDate" name="workDate"
-						th:value="${#dates.format(workDetails.workDate, 'yyyy-MM-dd')}"
-						placeholder="실제 근무한 날짜 선택" />
+					<label class="form-label">작업일자</label>
+					<input type="text"
+							   class="form-control datepicker" 
+							   id="workDate" 
+							   name="workDate"
+							   th:value="${#dates.format(workDetails.workDate, 'yyyy-MM-dd')}"
+							   placeholder="실제 근무한 날짜 선택" />
 				</div>
 
 				<!-- 근무시간 -->
 				<div class="col-md-6">
-					<label class="form-label">근무한 시간</label><input type="number"
-						class="form-control" id="workTime" name="workTime"
-						th:value="${workDetails.workTime}" placeholder="숫자만 입력" />
+					<label class="form-label">근무한 시간</label>
+					<input type="number"
+							   class="form-control" 
+							   id="workTime"
+							    name="workTime"
+								th:value="${workDetails.workTime}" 
+								placeholder="숫자만 입력" />
 				</div>
 			</div>
 
 			<div class="mb-3">
 				<label class="form-label">상세 설명</label>
 				<div class="form-floating">
-					<textarea class="form-control" id="workContent"
-						style="height: 100px" name="workContent"
-						th:text="${workDetails.workContent}"></textarea>
+					<textarea class="form-control" 
+									id="workContent"
+									style="height: 100px" 
+									name="workContent"
+									th:text="${workDetails.workContent}"></textarea>
 				</div>
 			</div>
 
 			<div class="row mb-3">
 				<!-- 작업분류 -->
 				<div class="col-md-6">
-					<label class="form-label">작업분류</label> <select class="form-select"
-						name="workDetailsNo">
+					<label class="form-label">작업분류</label> 
+					<select class="form-select" name="workDetailsNo">
 						<option value="">선택</option>
 						<option th:each="status : ${workType}"
-							th:value="${status.workDetailsNo}" th:text="${status.workType}"
-							th:selected="${status.workDetailsNo == workDetails.workDetailsNo}"></option>
+									th:value="${status.workDetailsNo}" 
+									th:text="${status.workType}"
+									th:selected="${status.workDetailsNo == workDetails.workDetailsNo}"></option>
 					</select>
 				</div>
 			</div>
@@ -90,21 +107,21 @@
 			<!-- 목록으로 / 수정버튼 -->
 			<div class="mt-5 mb-5">
 				<div class="d-flex justify-content-end gap-2">
-					<a
-						th:href="@{/project/user/{projectCode}/work/list(projectCode=${projectCode})}"
-						class="btn btn-primary text-white">돌아가기</a>
-					<button type="button" class="btn btn-success text-white"
-						data-bs-toggle="modal" data-bs-target="#workModifyModal">수정</button>
-					<!-- 수정 버튼 눌렀을 때 권한 있는지 체크 -->
+					<a th:href="@{/project/user/{projectCode}/issue/work/list/read(projectCode=${projectCode})}"
+						 class="btn btn-primary text-white">돌아가기</a>
+					<button type="button" 
+								class="btn btn-success text-white"
+								data-bs-toggle="modal" 
+								data-bs-target="#workModifyModal">수정</button>
+					<!-- 수정 버튼 눌렀을 때 권한 있는지 체크 지금은 권한 없으면 마이페이지로 감 -->
 				</div>
 			</div>
 		</form>
 	</div>
 
 	<!-- 모달 fragment 호출 ~{템플릿 재사용 fragment 호출 조각 표현식} -->
-	<th:block
-		th:replace="~{common/fragments/work/work-modify-modal :: WorkModifyModal}"></th:block>
-
+	<th:block th:replace="~{common/fragments/work/work-modify-modal :: WorkModifyModal}"></th:block>
+	<!-- script -->
 	<script th:src="@{/js/work/workModify.js}"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@
 	layout:fragment="Content">
 <head>
 <meta charset="UTF-8" />
+<!-- 모달 css -->
 <link rel="stylesheet" th:href="@{/css/modal.css}" />
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet"
@@ -20,19 +21,17 @@
 <title>일감 등록</title>
 </head>
 <body>
-
 	<div class="container">
 		<div class="mb-4 mt-3">
-			<!-- #lists.isEmpty는 thymeleaf의 유틸함수 -->
 			<h3 class="fw-bold">
-				<span
-					th:text="${project.projectName}"
-					class="text-primary"></span> <small class="text-muted">의 전체
-					일감 목록</small>
+				<span th:text="${project.projectName}"
+						  class="text-primary"></span> 
+				<small class="text-muted">의 전체 일감 목록</small>
 			</h3>
 		</div>
+		<!-- 일감 등록 form -->
 		<form id="issueInsert"
-			th:action="@{/project/user/{projectCode}/issue/new(projectCode=${projectCode})}"
+			th:action="@{/project/user/{projectCode}/issue/create(projectCode=${projectCode})}"
 			enctype="multipart/form-data" 
 			method="post" 
 			th:object="${issue}">
@@ -44,6 +43,7 @@
 					name="title" 
 					placeholder="제목을 입력하세요"
 					th:field=*{title} />
+				<!-- 유효성 검사시 에러 메세지 출력되는 곳 -->
 				<div th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
 			</div>
 
@@ -61,8 +61,7 @@
 								  	 th:value="${status.jobStatusNo}">
 						</option>
 					</select>
-					<div th:if="${#fields.hasErrors('jobStatusNo')}"
-						th:errors="*{jobStatusNo}"></div>
+					<div th:if="${#fields.hasErrors('jobStatusNo')}" th:errors="*{jobStatusNo}"></div>
 				</div>
 
 				<!-- 유형 -->
@@ -77,26 +76,22 @@
 									th:value="${type.jobTypeNo}">
 						</option>
 					</select>
-					<div th:if="${#fields.hasErrors('jobTypeNo')}"
-						th:errors="*{jobTypeNo}"></div>
+					<div th:if="${#fields.hasErrors('jobTypeNo')}" th:errors="*{jobTypeNo}"></div>
 				</div>
 			</div>
 
 			<!-- 상세 설명 -->
 			<div class="mb-3">
-				<label class="form-label">상세 설명</label>
-				<div class="form-floating">
+				<label for="content" class="form-label">상세 설명</label>
 					<textarea class="form-control" 
 								   placeholder="상세 설명을 입력하세요"
-								   id="floatingTextarea2" 
-								   style="height: 100px" 
+								   id="content" 
+								   style="height: 100px; resize: none;"
 								   name="content"></textarea>
-					<label for="floatingTextarea"></label>
-				</div>
 			</div>
-
+			
+			<!-- 우선순위 -->
 			<div class="row mb-3">
-				<!-- 우선순위 -->
 				<div class="col-md-6">
 					<label class="form-label">우선순위 *</label> 
 					<select class="form-select" 
@@ -104,18 +99,20 @@
 							    name="priority">
 						<option value="">선택</option>
 						<option th:each="priority : ${priorityList}"
-							th:value="${priority.commonNo}" th:text="${priority.commonName}"></option>
+								     th:value="${priority.commonNo}" 
+								     th:text="${priority.commonName}"></option>
 					</select>
 					<div th:if="${#fields.hasErrors('priority')}"
-						th:errors="*{priority}"></div>
+						    th:errors="*{priority}"></div>
 				</div>
 
 				<!-- 담당자 -->
 				<!-- data-bs-toggle과 target은 Bootstrap5 문법 -->
 				<div class="col-md-6">
-					<button type="button" class="btn btn-outline-primary"
-						data-bs-toggle="modal" data-bs-target="#userSelectModal">담당자
-						선택 *</button>
+					<button type="button" 
+								 class="btn btn-outline-primary"
+								 data-bs-toggle="modal" 
+								 data-bs-target="#userSelectModal">담당자 선택 *</button>
 					<input type="text" 
 							   class="form-control" 
 							   id="managerName"
@@ -128,16 +125,24 @@
 			<div class="row mb-3">
 				<!-- 시작일 -->
 				<div class="col-md-6">
-					<label class="form-label">시작일</label><input type="text"
-						class="form-control datepicker" id="startDate" name="startDate"
-						placeholder="시작 날짜 선택" readonly />
+					<label class="form-label">시작일</label>
+					<input type="text"
+							   class="form-control datepicker" 
+							   id="startDate" 
+							   name="startDate"
+							   placeholder="시작 날짜 선택" 
+							   readonly />
 				</div>
 
 				<!-- 마감일 -->
 				<div class="col-md-6">
-					<label class="form-label">마감일</label><input type="text"
-						class="form-control datepicker" id="endDate" name="endDate"
-						placeholder="마감 날짜 선택" readonly />
+					<label class="form-label">마감일</label>
+					<input type="text"
+							   class="form-control datepicker" 
+							   id="endDate" 
+							   name="endDate"
+							   placeholder="마감 날짜 선택" 
+							   readonly />
 				</div>
 			</div>
 
@@ -156,8 +161,8 @@
 
 				<!-- 진척도 -->
 				<div class="col-md-6">
-					<label class="form-label">진척도</label> <select class="form-select"
-						name="progress">
+					<label class="form-label">진척도</label> 
+					<select class="form-select" name="progress">
 						<option value="">선택</option>
 						<option th:each="p : ${#numbers.sequence(0, 10)}"
 									th:value="${p * 10}" 
@@ -184,44 +189,46 @@
 				<!-- 공개범위  1이면 전체   0이면 일부공개-->
 				<div class="col-md-5 d-flex flex-column justify-content-center">
 					<label class="form-label mb-2">공개범위 *</label>
-
 					<div class="d-flex gap-5">
 						<div class="form-check">
-							<input class="form-check-input" type="radio" id="public"
-								value="1" th:field="*{publicRole}" /> <label
-								class="form-check-label" for="public">전체공개</label>
+							<input class="form-check-input" 
+									   type="radio" 
+									   id="public"
+									   value="1" 
+									   th:field="*{publicRole}" /> 
+							<label class="form-check-label" for="public">전체공개</label>
 						</div>
 						<div class="form-check">
-							<input class="form-check-input" type="radio"
-								th:field="*{publicRole}" id="private" value="0" /> <label
-								class="form-check-label" for="private">일부공개</label>
+							<input class="form-check-input" 
+									   type="radio"
+									   th:field="*{publicRole}"
+								 	   id="private"
+								 	   value="0" /> 
+							<label class="form-check-label" for="private">일부공개</label>
 						</div>
 					</div>
-					<div th:if="${#fields.hasErrors('publicRole')}"
-						th:errors="*{publicRole}"></div>
+					<div th:if="${#fields.hasErrors('publicRole')}" th:errors="*{publicRole}"></div>
 				</div>
 			</div>
 
 			<!-- 전송 -->
 			<div class="mt-4 mb-5">
 				<div class="d-flex gap-2 justify-content-end">
-					<a
-						th:href="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}"
-						class="btn btn-primary">돌아가기</a>
-					<button type="button" class="btn btn-success text-white"
-						data-bs-toggle="modal" data-bs-target="#issueSubmitModal">등록</button>
+					<a th:href="@{/project/user/{projectCode}/issue/list/read(projectCode=${projectCode})}"
+						 class="btn btn-primary">돌아가기</a>
+					<button type="button" 
+								 class="btn btn-success text-white"
+							     data-bs-toggle="modal" 
+							     data-bs-target="#issueSubmitModal">등록</button>
 				</div>
 			</div>
 		</form>
 	</div>
 
 	<!-- 모달 fragment 호출 ~{템플릿 재사용 fragment 호출 조각 표현식} -->
-	<th:block
-		th:replace="~{common/fragments/issue/user-select-modal :: UserSelectModal}"></th:block>
-	<th:block
-		th:replace="~{common/fragments/issue/issue-select-modal :: IssueSelectModal}"></th:block>
-	<th:block
-		th:replace="~{common/fragments/issue/issue-submit-modal :: IssueSubmitModal}"></th:block>
+	<th:block th:replace="~{common/fragments/issue/user-select-modal :: UserSelectModal}"></th:block>
+	<th:block th:replace="~{common/fragments/issue/issue-select-modal :: IssueSelectModal}"></th:block>
+	<th:block th:replace="~{common/fragments/issue/issue-submit-modal :: IssueSubmitModal}"></th:block>
 
 	<script th:src="@{/js/issue/issue-insert.js}"></script>
 	<script th:src="@{/js/issue/user-select-modal.js}"></script>

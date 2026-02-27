@@ -27,13 +27,13 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/project/user/{projectCode}/work")
+@RequestMapping("/project/user/{projectCode}/issue/work")
 public class WorkController {
 	private final WorkService workService;
 	private final ProjectService projectService;
 
 	// 소요시간 전체 조회 + 검색기능
-	@GetMapping("/list")
+	@GetMapping("/list/read")
 	public String workList(@AuthenticationPrincipal CustomUserDetails customUser, 
 									@PathVariable String projectCode,
 									@RequestParam(value = "showOnlyMe", required = false) String showOnlyMe,
@@ -81,7 +81,7 @@ public class WorkController {
 	 */
 
 	// 소요시간 등록 화면 + 작업분류의 이름 가져오기 + 프로젝트의 일감 번호
-	@GetMapping("/insert")
+	@GetMapping("/create")
 	public String workAddPage(@AuthenticationPrincipal CustomUserDetails customUser, 
 											 @PathVariable String projectCode, 
 											 Model model,
@@ -99,15 +99,14 @@ public class WorkController {
 		model.addAttribute("issueList", workService.findMyIssue(workInsertDto));
 		model.addAttribute("workType", workService.findWorkType(null));
 	
-		System.out.println("조회된 일감" + workService.findMyIssue(workInsertDto));
 		return "work/work-add";
 	}
 	// 쇼요시간 등록 기능
-	@PostMapping("/insert")
+	@PostMapping("/create")
 	public String workAdd(@PathVariable String projectCode, 
 									  WorkInsertDto workInsertDto) {
 		workService.addWorkEntries(workInsertDto);
-		return "redirect:/project/user/" + projectCode + "/work/list";
+		return "redirect:/project/user/" + projectCode + "/issue/work/list/read";
 	}
 
 	// 소요시간 수정화면 이미 등록된 정보를 서버가 제공 + 작업분류 가져오기
@@ -141,41 +140,35 @@ public class WorkController {
 		WorkUpdateDto originData = workService.findWorkEntriesByNo(workUpdateDto);
 		
 		if (originData == null) {
-			return "redirect:/project/user/" + projectCode + "/work/list";
+			return "redirect:/project/user/" + projectCode + "/issue/work/list/read";
 		}
 		// 현재 로그인 한 사용자 Id 가져와서 
 		UserEntity user = customUser.getUserEntity();
 		// 권한 확인 admin
-		boolean isAdmin = user.isAdmin();
-		
+		boolean isAdmin = user.isAdmin();	
 		// pm 여부 추가
-		
-		// 본인
+		// 본인 확인
 		boolean isMine = user.getUserId().equals(originData.getUserId());
-		
 		// admin 아니고 본인 것도 아니면 권한없음 403으로
 		if (!isAdmin && !isMine) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return null;
 		}
 		// admin 이거나 본인이면 넘어감
-		
-		// URL에서 받은 workEntries 변수 가져온다 
-		// 기능 실행
+		// URL에서 받은 workEntries 변수 가져온다음 기능 실행
 		workUpdateDto.setWorkEntriesNo(workEntriesNo);
 		workService.modifyWorkEntries(workUpdateDto);
-		System.out.println(workUpdateDto);
-		return "redirect:/project/user/" + projectCode + "/work/list";
+		return "redirect:/project/user/" + projectCode + "/issue/work/list/read";
 	}
 
 	// 소요시간 보고서
-	@GetMapping("/report")
+	@GetMapping("/report/list/read")
 	public String workReport(@AuthenticationPrincipal CustomUserDetails customUser, 
 										  @PathVariable String projectCode,
-		WorkReportDto workReportDto, Model model) {
+										  WorkReportDto workReportDto, 
+										  Model model) {
 		
 		UserEntity user = customUser.getUserEntity();
-
 		workReportDto.setProjectCode(projectCode);
 		workReportDto.setUserId(user.getUserId());
 
@@ -186,14 +179,13 @@ public class WorkController {
 			// type이 "field-job,field-project" 여러개 넘어오면 인덱스 0번째 를 기준으로 처리
 			if (type.contains(",")) {
 				type = type.split(",")[0];
-			}
-			
+			}		
 			List<WorkReportDto> reportList = workService.findWorkReport(type, workReportDto);
 						
 			model.addAttribute("reportList", reportList);
 			model.addAttribute("reportType", workReportDto.getType());
 		}
-		// model에 담아서 보
+		// model에 담아서 보냄
 		model.addAttribute("userId", user.getUserId());
 		model.addAttribute("projectCode", projectCode);
 		model.addAttribute("project", projectService.findInfoByCode(projectCode));

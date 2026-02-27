@@ -2,13 +2,6 @@
  * DOMContentLoaded html파일을 다 만들고 나면 JavaScript 코드를 실행한다
  */
 document.addEventListener("DOMContentLoaded", function () {
-  /* 검색조건 추가 메뉴에서 항목을 클릭하면 
-   class명이 add-condition인 걸다 가져와서 각각에
-  변수명 menuItem으로  클릭 이벤트를 준다
-  변수명 targeId는 data-target 아이디
-  targetDiv는 그 아이디의 html요소를 가져옴
-  if 만약 그 요소가 있으면 d-none을 지운다
-  */
   $(".datepicker").datepicker({
     format: "yyyy-mm-dd",
     language: "ko",
