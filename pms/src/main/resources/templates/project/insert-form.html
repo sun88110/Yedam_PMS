@@ -220,19 +220,32 @@ toggleInheritCheckbox();
 parentProjectSelect.addEventListener('change', toggleInheritCheckbox);
 
 document.addEventListener('DOMContentLoaded', function() {
-    // 오늘 날짜를 yyyy-mm-dd 형식으로 가져오기
     const today = new Date().toISOString().split('T')[0];
-    
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
-    
-    // 시작일과 종료일의 최소 날짜를 오늘로 제한
+
+    // 시작일 최소값: 오늘
     startDateInput.min = today;
     endDateInput.min = today;
-    
-    // 시작일이 변경되면 종료일의 최소 날짜를 시작일로 업데이트 (UX 보너스)
+
     startDateInput.addEventListener('change', function() {
-        endDateInput.min = this.value;
+        const selectedStart = this.value;
+        // 종료일 최소값을 시작일로 설정
+        endDateInput.min = selectedStart;
+        // 종료일이 시작일보다 이전이면 시작일로 맞춤
+        if (endDateInput.value && endDateInput.value < selectedStart) {
+            endDateInput.value = selectedStart;
+        }
+    });
+
+    endDateInput.addEventListener('change', function() {
+        const selectedEnd = this.value;
+        // 시작일 최대값을 종료일로 설정
+        startDateInput.max = selectedEnd;
+        // 시작일이 종료일보다 이후면 종료일로 맞춤
+        if (startDateInput.value && startDateInput.value > selectedEnd) {
+            startDateInput.value = selectedEnd;
+        }
     });
 });
 </script>
