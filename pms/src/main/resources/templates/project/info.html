@@ -72,8 +72,8 @@
 
   <div class="card-footer d-flex gap-2">
     <a th:href="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}" class="text-decoration-none">모든 일감 보기</a><span class="text-muted">|</span>
-    <a th:href="@{/project/user/{projectCode}/history(projectCode=${projectCode})}" class="text-decoration-none">변경 사항 보기</a> <span class="text-muted">|</span>
-    <a th:href="@{/project/user/{projectCode}/gantt(projectCode=${projectCode})}" class="text-decoration-none">Gantt 차트</a>
+    <a th:href="@{/project/user/{projectCode}/issue/history/read(projectCode=${projectCode})}" class="text-decoration-none">변경 사항 보기</a> <span class="text-muted">|</span>
+    <a th:href="@{/project/user/{projectCode}/issue/gantt/read(projectCode=${projectCode})}" class="text-decoration-none">Gantt 차트</a>
   </div>
 </div>
 
@@ -156,7 +156,7 @@
 			<ul th:if="${not #lists.isEmpty(childProjects)}" class="list-group list-group-flush">
 	        	<li th:each=" cp : ${childProjects}" class="list-group-item d-flex align-items-center gap-2">
 	        		<i class="cil-folder text-success"></i>
-	        		<a th:href="@{/project/user/{projectCode}/info(projectCode=${cp.projectCode})}"
+	        		<a th:href="@{/project/user/{projectCode}/read(projectCode=${cp.projectCode})}"
 	        			 class="text-decoration-none fw-semibold" th:text="${cp.projectName}"></a>
           			<span class="ms-auto badge bg-success-subtle text-success" th:text="${cp.statusName}"></span>
 	        	</li>

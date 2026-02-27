@@ -53,7 +53,7 @@ public class ProjectController {
     private final IssueMapper issueMapper;
     private final IssueService issueService;
     
-    @GetMapping("/")
+    @GetMapping("/read")
     public String listProjects(Model model 
     		, @ModelAttribute ProjectSearchDTO searchDTO
     		, @AuthenticationPrincipal CustomUserDetails customUser 
@@ -86,7 +86,7 @@ public class ProjectController {
     }
     
 	// 새 프로젝트 등록화면 불러오기
-    @GetMapping("/new")
+    @GetMapping("/create")
     public String getAddProject(Model model) {
     	model.addAttribute("project", new ProjectInsertDTO()); // 전달받을 값을 입력하기위한 빈 객체
     	model.addAttribute("parentProjects", projectService.findParentProjects()); // 빈객체에 입력할 상속 가능한 프로젝트 목록
@@ -96,7 +96,7 @@ public class ProjectController {
     }
     
     // 프로젝트 입력 처리
-    @PostMapping("/new")
+    @PostMapping("/create")
     public String addProject(
     		@ModelAttribute ProjectInsertDTO dto
     		, @AuthenticationPrincipal CustomUserDetails customUser 
@@ -108,7 +108,7 @@ public class ProjectController {
     	if(!projectService.findParentProjectDuration(dto)) {
     		redirectAttributes.addFlashAttribute("errorMessage", "하위프로젝트의 작업기간은 상위프로젝트의 작업기간을 벗어날 수 없습니다.");
 			redirectAttributes.addFlashAttribute("project", dto);
-			return "redirect:/project/new";
+			return "redirect:/project/create";
     	}
     	
     	boolean isSuccess = projectService.addProject(dto);
@@ -116,17 +116,17 @@ public class ProjectController {
     		// 임시 flash 메모리에 Toast 표시값 저장 
     		redirectAttributes.addFlashAttribute("successMessage", "프로젝트가 정상적으로 등록 되었습니다.");
     		// 만들기 : 만들고 계속하기
-    		return continueParam != null ? "redirect:/project/new" : "redirect:/project/";
+    		return continueParam != null ? "redirect:/project/create" : "redirect:/project/read";
 		}else {
 			redirectAttributes.addFlashAttribute("errorMessage", "중복되는 식별자는 등록할 수 없습니다.");
 			redirectAttributes.addFlashAttribute("project", dto);
-			return "redirect:/project/new";
+			return "redirect:/project/create";
 		}
     }
     
     
     // @PathVariable: 단일값 처리 + 매개변수에 어노테이션선언으로 필수값 선언, 반드시 받을거라 default 사용하지않기로
-    @GetMapping("/user/{projectCode}/info")
+    @GetMapping("/user/{projectCode}/read")
     public String getProjectInfo(@PathVariable String projectCode, Model model, HttpSession session
     		, @AuthenticationPrincipal CustomUserDetails customUser) {
     	// 세션을 활용하여 pathVal 사용하지않는 페이지에서 프로젝트 코드값 조회
@@ -145,28 +145,14 @@ public class ProjectController {
 		return "project/info";
     }
     
-    
-    // 프로젝트 list -> settings.project 로 이동
-    @GetMapping("/user/{projectCode}/edit")
-    public String getEditProject(@PathVariable String projectCode) {
-    	return "null";
-    }
-    
     // 페이지 전달 
-    @GetMapping("/user/{projectCode}/gantt")
-    public String getGantProject(@PathVariable String projectCode, Model model) {
+    @GetMapping("/user/{projectCode}/issue/gantt/read")
+    public String getGantProject(@PathVariable String projectCode) {
     	return "project/gantt";
     }
     
-    // 데이터 전달
-    @GetMapping("/user/{projectCode}/gantt/data")
+    @GetMapping("/user/{projectCode}/issue/gantt/data/read")
     @ResponseBody // 타임리프가 개입하여 웹페이지를 찾지않고 JSON을 반환
-    public Map<String, Object> getGanttDataApi(@PathVariable String projectCode) {
-    	return projectService.findGanttDataByCode(projectCode);
-    }
-    
-    @GetMapping("/user/{projectCode}/gantt/setting")
-    @ResponseBody
     public Map<String, Object> getGanttInsertData(@PathVariable String projectCode
     		, @AuthenticationPrincipal CustomUserDetails customUser) {
     	
@@ -201,11 +187,11 @@ public class ProjectController {
         responseData.put("priorityList", priorityList);
         responseData.put("managerList", managerList);
         responseData.put("holidayList", holidayStrList); // 휴일정보 추가
-        
+        responseData.put("ganttData",projectService.findGanttDataByCode(projectCode));
         return responseData;
     }
 	
-    @PostMapping("/user/{projectCode}/gantt/insert")
+    @PostMapping("/user/{projectCode}/issue/gantt/create")
     @ResponseBody
     public IssueDto addGanttData(
             @PathVariable String projectCode
@@ -228,7 +214,7 @@ public class ProjectController {
         return issueDto;
     }
     
-    @PutMapping("/user/{projectCode}/gantt/update")
+    @PutMapping("/user/{projectCode}/issue/gantt/update")
     @ResponseBody
     public ResponseEntity<?> updateGanttData(
     		@PathVariable String projectCode
@@ -258,7 +244,7 @@ public class ProjectController {
     }
     
     
-    @GetMapping("/user/{projectCode}/history")
+    @GetMapping("/user/{projectCode}/issue/history/read")
     public String getHistory(@PathVariable String projectCode, Model model) {
     	
     	List<HistoryDTO> historyList = projectService.findHistoryByCode(projectCode);
