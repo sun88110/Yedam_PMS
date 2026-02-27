@@ -122,6 +122,7 @@
 	      , we.work_details_no AS workDetailsNo
 	      , wd.work_type AS workType
 	      , u.username
+	      , u.user_id
 	    FROM work_entries we
 	    LEFT JOIN job j
 	    ON we.job_no = j.job_no

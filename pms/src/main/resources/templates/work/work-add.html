@@ -33,17 +33,18 @@
 			<!-- 해당 프로젝트의 일감번호에 대한 값을 가져옴 -->
 			<div class="row mb-3">
 				<div class="col-md-6">
-					<label for="jobNo" class="form-label">일감선택</label> <select
+					<label for="jobNo" class="form-label">일감선택 *</label> <select
 						class="form-select" id="jobNo" name="jobNo">
 						<option value=""></option>
 						<option th:each="issue : ${issueList}" th:text="${issue.title}"
 							th:value="${issue.jobNo}" th:data-manager="${issue.username}"></option>
 					</select>
+					<div class="error-msg text-danger small mt-1" id="error-jobNo"></div>
 				</div>
 
 				<!-- 해당 일감 담당자의 정보를 자동으로 불러옴 -->
 				<div class="col-md-6">
-					<label class="form-label">담당자</label> <input type="text"
+					<label class="form-label">담당자 *</label> <input type="text"
 						class="form-control" id="workers" name="workers" readonly />
 				</div>
 			</div>
@@ -51,36 +52,42 @@
 			<div class="row mb-3">
 				<!-- 작업일자 -->
 				<div class="col-md-6">
-					<label class="form-label">작업일자</label><input type="text"
+					<label class="form-label">작업일자 *</label><input type="text"
 						class="form-control datepicker" id="workDate" name="workDate"
 						placeholder="실제 근무한 날짜 선택" readonly />
+				<div class="error-msg text-danger small mt-1" id="error-workDate"></div>
 				</div>
 
 				<!-- 근무시간 -->
 				<div class="col-md-6">
-					<label class="form-label">근무한 시간</label><input type="number"
+					<label class="form-label">근무한 시간 *</label><input type="number"
 						class="form-control" id="workTime" name="workTime"
 						placeholder="숫자만 입력" />
+				<div class="error-msg text-danger small mt-1" id="error-workTime"></div>
 				</div>
 			</div>
 
 			<div class="mb-3">
-				<label class="form-label">상세 설명</label>
+				<label class="form-label">상세 설명 *</label>
 				<div class="form-floating">
 					<textarea class="form-control" id="workContent"
 						style="height: 100px" name="workContent"></textarea>
 				</div>
+				<div class="error-msg text-danger small mt-1" id="error-workContent"></div>
 			</div>
 
 			<div class="row mb-3">
 				<!-- 작업분류 -->
 				<div class="col-md-6">
-					<label class="form-label">작업분류</label> <select class="form-select"
-						name="workDetailsNo">
+					<label class="form-label">작업분류 *</label>
+					 <select class="form-select"
+								name="workDetailsNo"
+								id="workDetailsNo">
 						<option value="">선택</option>
 						<option th:each="status : ${workType}"
 							th:value="${status.workDetailsNo}" th:text="${status.workType}"></option>
 					</select>
+					<div class="error-msg text-danger small mt-1" id="error-workDetailsNo"></div>
 				</div>
 			</div>
 
@@ -92,7 +99,7 @@
 						class="btn btn-primary text-white">돌아가기</a>
 				<!-- 전송 -->
 					<button type="button" class="btn btn-success text-white"
-						data-bs-toggle="modal" data-bs-target="#workSubmitModal">등록</button>
+						 id="preSubmitBtn">등록</button>
 				</div>
 			</div>
 		</form>

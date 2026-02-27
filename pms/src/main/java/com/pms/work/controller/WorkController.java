@@ -21,6 +21,7 @@ import com.pms.work.dto.WorkSelectDto;
 import com.pms.work.dto.WorkUpdateDto;
 import com.pms.work.service.WorkService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -114,7 +115,9 @@ public class WorkController {
 	public String workModifyPage(@AuthenticationPrincipal CustomUserDetails customUser, 
 												 @PathVariable String projectCode, 
 												 @RequestParam("workNo") Integer workEntriesNo,
-		Model model, WorkUpdateDto workUpdateDto) {
+												 Model model, 
+												 WorkUpdateDto workUpdateDto) {
+		
 		UserEntity user = customUser.getUserEntity();
 	
 		workUpdateDto.setProjectCode(projectCode);
@@ -132,7 +135,14 @@ public class WorkController {
 	public String workModify(@AuthenticationPrincipal CustomUserDetails customUser, 
 										  @PathVariable String projectCode,
 										  @RequestParam("workEntriesNo") Integer workEntriesNo,
-			WorkUpdateDto workUpdateDto) {
+										  WorkUpdateDto workUpdateDto,
+										  HttpServletResponse response) throws Exception {
+		
+		WorkUpdateDto originData = workService.findWorkEntriesByNo(workUpdateDto);
+		
+		if (originData == null) {
+			return "redirect:/project/user/" + projectCode + "/work/list";
+		}
 		// 현재 로그인 한 사용자 Id 가져와서 
 		UserEntity user = customUser.getUserEntity();
 		// 권한 확인 admin
@@ -141,17 +151,20 @@ public class WorkController {
 		// pm 여부 추가
 		
 		// 본인
-		boolean isMine = user.getUserId().equals(workUpdateDto.getUserId());
+		boolean isMine = user.getUserId().equals(originData.getUserId());
 		
+		// admin 아니고 본인 것도 아니면 권한없음 403으로
 		if (!isAdmin && !isMine) {
-			// admin 아니고 본인 것도 아니면 목록으로
-			return "redirect:/project/user/" + projectCode + "/work/list";
+			response.sendError(HttpServletResponse.SC_FORBIDDEN);
+			return null;
 		}
 		// admin 이거나 본인이면 넘어감
 		
-		// URL에서 받은 workEntries 변수 가져온다
+		// URL에서 받은 workEntries 변수 가져온다 
+		// 기능 실행
 		workUpdateDto.setWorkEntriesNo(workEntriesNo);
 		workService.modifyWorkEntries(workUpdateDto);
+		System.out.println(workUpdateDto);
 		return "redirect:/project/user/" + projectCode + "/work/list";
 	}
 

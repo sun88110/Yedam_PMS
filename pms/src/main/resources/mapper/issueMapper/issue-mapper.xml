@@ -37,6 +37,9 @@
         <if test="userId != null">
           AND j.manager_id = #{userId}
         </if>
+        <if test="username !=null">
+          AND u.username = #{username}
+        </if>
         <if test="jobStatusNo !=null and jobStatusNo != '0' and jobStatusNo !=''">
           AND j.job_status_no = #{jobStatusNo}
         </if>
