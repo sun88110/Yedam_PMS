@@ -7,7 +7,7 @@
 
 	<select id="selectGroupAll"
 		resultType="com.pms.setting.groups.vo.GroupsVO">
-		SELECT
+		SELECT DISTINCT
 		g.GROUP_NO AS groupNo,
 		g.GROUPNAME AS groupName,
 		g.STATUS AS status,
