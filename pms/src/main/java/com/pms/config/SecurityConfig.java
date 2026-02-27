@@ -38,16 +38,9 @@ public class SecurityConfig {
 					.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 					.requestMatchers("/coreui/**").permitAll()
 					.requestMatchers("/home/**", "/user/**", "/download/**", "/error", "/error/**").permitAll()
-					.requestMatchers("/settings/**").hasRole("ADMIN")
+					.requestMatchers("/settings/**").access(projectAuthorizationManager)
 					.anyRequest().access(projectAuthorizationManager)
 					)
-			.exceptionHandling(exception -> exception
-	                .accessDeniedHandler((req, res, accessDeniedException) -> {
-	                    res.sendRedirect("/error");
-	                })
-	                .authenticationEntryPoint((req, res, authException) -> {
-	                    res.sendRedirect("/error"); 
-	                }))
 			.formLogin(form -> form
 					.loginPage("/user/login")
 					.loginProcessingUrl("/user/login")

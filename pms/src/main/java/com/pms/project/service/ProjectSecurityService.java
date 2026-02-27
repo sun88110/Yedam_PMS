@@ -20,7 +20,6 @@ public class ProjectSecurityService {
 
 	@Transactional(readOnly = true)
 	public boolean isAuth(String userId, String url, String method) {
-		System.out.println("URL: " + url + ", Method: " + method);
 		// 등록된 menu인지 확인
 		ProjectSecurityMenuDto menu = findMenu(url);
 		if (menu == null) {
@@ -28,14 +27,13 @@ public class ProjectSecurityService {
 		}
 
 		Integer menuId = menu.getMenuId();
-		String value;
+		String value = null;
 		if (menu.getUrlData().contains("{projectCode}")) {
 		    value = findValue(menu.getUrlData(), url);
-		} else {
-		    value = null;
-		}
-		System.out.println("menuId: " + menuId);
-		System.out.println("value: " + value);
+		} else if (menu.getMenuId() == 410) { 
+	        return false;
+	    }
+		
 		boolean isPm = "PROJECT".equals(menu.getType()) && projectSecurityMapper.checkPm(userId, value);
 		if (isPm) {
 			return true;
@@ -45,7 +43,7 @@ public class ProjectSecurityService {
 	}
 
 	// DB에서 url 검색
-	private ProjectSecurityMenuDto findMenu(String url) {
+	public ProjectSecurityMenuDto findMenu(String url) {
 		return projectSecurityMapper.selectAllMenus().stream().filter(m -> pathMatcher.match(m.getUrlData(), url))
 				.max((m1, m2) -> pathMatcher.getPatternComparator(url).compare(m1.getUrlData(), m2.getUrlData()))
 				.orElse(null);
@@ -56,5 +54,13 @@ public class ProjectSecurityService {
 		Map<String, String> value = pathMatcher.extractUriTemplateVariables(menu, url);
 		String result = value.values().stream().findFirst().orElse(null);
 		return result;
+	}
+	
+	// manager에서 사용하는 메서드
+	public boolean isPm(String userId, String projectNo) {
+		if (projectNo == null || userId == null) {
+			return false;
+		}
+	    return projectSecurityMapper.checkPm(userId, projectNo);
 	}
 }

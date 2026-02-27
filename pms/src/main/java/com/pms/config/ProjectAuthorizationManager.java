@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
 
+import com.pms.project.dto.ProjectSecurityMenuDto;
 import com.pms.project.service.ProjectSecurityService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,9 +35,25 @@ public class ProjectAuthorizationManager implements AuthorizationManager<Request
 		}
 
 		String userId = auth.getName();
-		String reqUri = context.getRequest().getRequestURI();
-		String method = getMethod(context.getRequest());
-
+		HttpServletRequest request = context.getRequest();
+	    String reqUri = request.getRequestURI();
+	    
+	    // 프로젝트 관리 url 확인
+	    ProjectSecurityMenuDto menu = projectSecurityService.findMenu(reqUri);
+	    
+		// 410번(프로젝트 설정)일 경우 처리
+		String projectNo = null;
+		if (menu != null && menu.getMenuId() == 410) {
+			projectNo = request.getParameter("projectNo");
+		}
+		// PM 체크
+		if (projectNo != null) {
+			boolean result = projectSecurityService.isPm(userId, projectNo);
+			return new AuthorizationDecision(result);
+		}
+	    
+	    // 권한 체크
+		String method = getMethod(request);
 		boolean isAuth = projectSecurityService.isAuth(userId, reqUri, method);
 
 		return new AuthorizationDecision(isAuth);
