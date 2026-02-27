@@ -32,7 +32,6 @@ import com.pms.issue.service.IssueService;
 import com.pms.issue.web.IssueDto;
 import com.pms.project.common.mapper.ProjectCommonStatusMapper;
 import com.pms.project.dto.HistoryDTO;
-import com.pms.project.dto.HolidayDTO;
 import com.pms.project.dto.ProjectInsertDTO;
 import com.pms.project.dto.ProjectSearchDTO; // 추가
 import com.pms.project.service.ProjectService;
@@ -49,8 +48,6 @@ public class ProjectController {
     // 인터페이스 타입으로 주입받아 결합도를 낮춤
     private final ProjectService projectService;
     private final ProjectCommonStatusMapper projectCommonStatusMapper;
-    
-    private final IssueMapper issueMapper;
     private final IssueService issueService;
     
     @GetMapping("/read")
@@ -145,50 +142,23 @@ public class ProjectController {
 		return "project/info";
     }
     
-    // 페이지 전달 
+    // 최초 - 화면과 데이터를 한 번에 던져줌
     @GetMapping("/user/{projectCode}/issue/gantt/read")
-    public String getGantProject(@PathVariable String projectCode) {
-    	return "project/gantt";
+    public String getGantProject(@PathVariable String projectCode, Model model, @AuthenticationPrincipal CustomUserDetails customUser) {
+        String userId = customUser.getUserEntity().getUserId();
+        // 서비스에서 병렬 처리된 전체 데이터를 받아옴
+        Map<String, Object> initData = projectService.findGanttDataByCode(projectCode, userId);
+        model.addAttribute("initData", initData);
+        return "project/gantt";
     }
-    
+
+    // 데이터 갱신 - fetch 요청(API 방식)
     @GetMapping("/user/{projectCode}/issue/gantt/data/read")
-    @ResponseBody // 타임리프가 개입하여 웹페이지를 찾지않고 JSON을 반환
-    public Map<String, Object> getGanttInsertData(@PathVariable String projectCode
-    		, @AuthenticationPrincipal CustomUserDetails customUser) {
-    	
-    	// 1. 결과를 한 번에 담을 Map 컨테이너 생성
-        Map<String, Object> responseData = new HashMap<>();
-
-        // 2. 로그인한 내 정보 (Security 에서 추출)
-        String currentUserId = customUser.getUserEntity().getUserId();
-        responseData.put("currentUserId", currentUserId);
-
-        // 3. 매퍼를 호출하여 각각의 리스트 데이터를 가져옵니다.
-        // (매퍼 인터페이스 파라미터 구성에 따라 빈 DTO를 넘기거나 생략하세요)
-        IssueDto paramDto = new IssueDto();
-        paramDto.setProjectCode(projectCode);
-        
-        List<IssueDto> statusList = issueMapper.selectIssueStatus(paramDto);
-        List<IssueDto> typeList = issueMapper.selectIssueType(paramDto);
-        List<IssueDto> priorityList = issueMapper.selectIssuePriority(paramDto);
-        List<IssueDto> managerList = issueMapper.selectIssueManager(paramDto);
-        
-        Set<HolidayDTO> rawHolidays = projectService.findHolidays(); 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-        List<String> holidayStrList = rawHolidays.stream()
-                .filter(h -> "Y".equals(h.getIsHoliday()))      // 1. 쉬는 날('Y')만 필터링
-                .map(h -> sdf.format(h.getHolidayDt()))         // 2. Date 객체를 "2026-02-28" 형태의 문자열로 변환
-                .collect(Collectors.toList());                  // 3. 리스트로 수집
-
-        // 4. 조회한 리스트들을 모두 Map에 포장합니다.
-        responseData.put("statusList", statusList);
-        responseData.put("typeList", typeList);
-        responseData.put("priorityList", priorityList);
-        responseData.put("managerList", managerList);
-        responseData.put("holidayList", holidayStrList); // 휴일정보 추가
-        responseData.put("ganttData",projectService.findGanttDataByCode(projectCode));
-        return responseData;
+    @ResponseBody 
+    public Map<String, Object> getGanttDataApi(@PathVariable String projectCode, @AuthenticationPrincipal CustomUserDetails customUser) {
+        String userId = customUser.getUserEntity().getUserId();
+        // 동일한 병렬 처리 서비스를 호출하여 순수 JSON 데이터만 반환
+        return projectService.findGanttDataByCode(projectCode, userId);
     }
 	
     @PostMapping("/user/{projectCode}/issue/gantt/create")

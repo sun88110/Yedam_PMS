@@ -282,14 +282,13 @@
 	<!--/* 간트차트 조회 */-->
 	<select id="selectGanttData" parameterType="String" resultType="GanttDTO">
 	WITH project_tree AS (
-	  SELECT 
-	    p.project_no, p.project_name, p.start_date, p.end_date, p.project_code, p.parent_project_no, p.project_desc
+	  SELECT /*+ MATERIALIZE */   p.project_no, p.project_name, p.start_date, p.end_date, p.project_code, p.parent_project_no, p.project_desc
 	  FROM project p
 	  START WITH p.project_code = #{projectCode}
 	  CONNECT BY NOCYCLE PRIOR p.project_no = p.parent_project_no
 	)
 	SELECT
-	  id, text, start_date, end_date, progress, parent, project_id
+	  id, text, rawStartDate, rawEndDate, progress, parent, project_id
 	  , u.username AS "worker_name"
 	  , c.common_name AS "job_priority"
 	  , description
@@ -298,8 +297,8 @@
 	  SELECT
 	    'p' || pt.project_no AS id
 	    , pt.project_name AS text
-	    , TO_CHAR(pt.start_date, 'DD-MM-YYYY') AS start_date
-	    , TO_CHAR(pt.end_date, 'DD-MM-YYYY') AS end_date
+	    , pt.start_date AS rawStartDate
+	    , pt.end_date AS rawEndDate
 	    , 0 AS progress
 	    , CASE
 	        WHEN NVL(pt.parent_project_no, 0) = 0 THEN NULL
@@ -319,8 +318,8 @@
 	  SELECT 
 	    'j' || j.job_no AS id
 	    , j.title AS text
-	    , TO_CHAR(j.start_date, 'DD-MM-YYYY') AS start_date
-	    , TO_CHAR(j.end_date, 'DD-MM-YYYY') AS end_date
+	    , j.start_date AS rawStartDate
+	    , j.end_date AS rawEndDate
 	    , j.progress / 100.0 AS progress
 	    , CASE 
 	        WHEN j.parent_job_no IS NULL THEN 'p' || j.project_no
