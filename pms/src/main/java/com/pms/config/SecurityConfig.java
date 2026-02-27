@@ -33,14 +33,21 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf(csrf -> csrf.disable())
+			.headers(headers -> headers.cacheControl(cache -> cache.disable()))
 			.authorizeHttpRequests(auth -> auth
 					.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 					.requestMatchers("/coreui/**").permitAll()
-					.requestMatchers("/home/**", "/user/**", "/error/**").permitAll()
+					.requestMatchers("/home/**", "/user/**", "/download/**", "/error", "/error/**").permitAll()
 					.requestMatchers("/settings/**").hasRole("ADMIN")
 					.anyRequest().access(projectAuthorizationManager)
-					//.anyRequest().authenticated()
 					)
+			.exceptionHandling(exception -> exception
+	                .accessDeniedHandler((req, res, accessDeniedException) -> {
+	                    res.sendRedirect("/error");
+	                })
+	                .authenticationEntryPoint((req, res, authException) -> {
+	                    res.sendRedirect("/error"); 
+	                }))
 			.formLogin(form -> form
 					.loginPage("/user/login")
 					.loginProcessingUrl("/user/login")

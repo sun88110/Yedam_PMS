@@ -37,7 +37,7 @@ public class IssueController {
 	private final ProjectService projectService;
 
 	// 일감 전체 리스트
-	@GetMapping("/list")
+	@GetMapping("/list/read")
 	public String findIssueList(@AuthenticationPrincipal CustomUserDetails customUser, 
 											@PathVariable String projectCode,
 											Model model, 
@@ -82,7 +82,7 @@ public class IssueController {
 	}
 
 	// 일감 등록 form
-	@GetMapping("/new")
+	@GetMapping("/create")
 	public String newIssueForm(@AuthenticationPrincipal CustomUserDetails customUser,
 											 @PathVariable String projectCode, 
 											 Model model, 
@@ -118,7 +118,7 @@ public class IssueController {
 	}
 
 	// 일감 등록 기능
-	@PostMapping("/new")
+	@PostMapping("/create")
 	public String addIssue(@AuthenticationPrincipal CustomUserDetails customUser, 
 									  @Valid @ModelAttribute("issue") IssueDto issueDto, 
 									  BindingResult bindingResult,
@@ -130,41 +130,40 @@ public class IssueController {
 		UserEntity user = customUser.getUserEntity();	
 		issueDto.setManagerId(user.getUserId());
 		
-		 if (bindingResult.hasErrors()) { 
-			 System.out.println("에러 발생 필드: " + bindingResult.getFieldErrors());
-				issueDto.setProjectCode(projectCode);
-				// 일감 상태 목록
-				List<IssueDto> statusList = issueService.getStatusList(issueDto);
-				// 일감 유형 목록
-				List<IssueDto> typeList = issueService.getTypeList(issueDto);
-				// 우선순위 목록
-				List<IssueDto> priorityList = issueService.getPriorityList(issueDto);
-				// 프로젝트 참여중인 멤버 목록
-				List<IssueDto> managerList = issueService.getManagerList(issueDto);
-				// 프로젝트에 등록된 일감 목록
-				List<IssueDto> parentIssueList = issueService.getParentIssueList(issueDto);
-				// model 에 담아서 보냄
-				model.addAttribute("statusList", statusList);
-				model.addAttribute("typeList", typeList);
-				model.addAttribute("priorityList", priorityList);
-				model.addAttribute("managerList", managerList);
-				model.addAttribute("parentIssueList", parentIssueList);
-				model.addAttribute("projectCode", projectCode);
-				model.addAttribute("project", projectService.findInfoByCode(projectCode));
-				
-				return "issue/issue-insert";
-		 }
+		if (bindingResult.hasErrors()) {
+			issueDto.setProjectCode(projectCode);
+			// 일감 상태 목록
+			List<IssueDto> statusList = issueService.getStatusList(issueDto);
+			// 일감 유형 목록
+			List<IssueDto> typeList = issueService.getTypeList(issueDto);
+			// 우선순위 목록
+			List<IssueDto> priorityList = issueService.getPriorityList(issueDto);
+			// 프로젝트 참여중인 멤버 목록
+			List<IssueDto> managerList = issueService.getManagerList(issueDto);
+			// 프로젝트에 등록된 일감 목록
+			List<IssueDto> parentIssueList = issueService.getParentIssueList(issueDto);
+			// model 에 담아서 보냄
+			model.addAttribute("statusList", statusList);
+			model.addAttribute("typeList", typeList);
+			model.addAttribute("priorityList", priorityList);
+			model.addAttribute("managerList", managerList);
+			model.addAttribute("parentIssueList", parentIssueList);
+			model.addAttribute("projectCode", projectCode);
+			model.addAttribute("project", projectService.findInfoByCode(projectCode));
+
+			return "issue/issue-insert";
+		}
 
 		try {
 			Integer projectNo = projectService.findInfoByCode(projectCode).getProjectNo();
 			issueDto.setProjectNo(projectNo);
 			issueDto.setHistoryUserId(customUser.getUsername());
 			Integer jobNo = issueService.addIssue(issueDto, files);
-			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + jobNo;
+			return "redirect:/project/user/" + projectCode + "/issue/read/info?jobNo=" + jobNo;
 		} catch (Exception e) {
 			e.printStackTrace();
 			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-			return "redirect:/project/user/" + projectCode + "/issue/new";
+			return "redirect:/project/user/" + projectCode + "/issue/read";
 		}
 	}
 		
@@ -216,17 +215,17 @@ public class IssueController {
 			issueDto.setHistoryUserId(user.getUserId());
 			issueService.modifyIssue(issueDto, deleteFiles, newFiles);
 			redirectAttributes.addFlashAttribute("message", "일감이 수정되었습니다.");
-			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();
+			return "redirect:/project/user/" + projectCode + "/issue/info/read?jobNo=" + issueDto.getJobNo();
 		} catch (Exception e) {
 			e.printStackTrace();
 			redirectAttributes.addFlashAttribute("error", "일감이 수정 중 오류가 발생하였습니다.");
-			return "redirect:/project/user/" + projectCode + "/issue/info?jobNo=" + issueDto.getJobNo();
+			return "redirect:/project/user/" + projectCode + "/issue/info/read?jobNo=" + issueDto.getJobNo();
 		}
 	}
 	
 	
 	// 일감 상세조회 form
-	@GetMapping("/info")
+	@GetMapping("/info/read")
 	public String issueInfoPage(@AuthenticationPrincipal CustomUserDetails customUser,
 			                                    @PathVariable String projectCode,
 			                                    @RequestParam("jobNo") Integer jobNo, 
