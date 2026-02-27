@@ -1,5 +1,7 @@
 package com.pms.project.dto;
 
+import java.util.Date;
+
 import org.apache.ibatis.type.Alias;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -43,5 +45,9 @@ public class GanttDTO {
     // 조회 값을바탕으로 계산 한 값
     private int duration;
     private double curProgress;
+    
+    // 조회속도상승을위한 컬럼
+    private Date rawStartDate;
+    private Date rawEndDate;
     
 }

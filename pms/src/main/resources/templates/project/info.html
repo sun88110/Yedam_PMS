@@ -71,7 +71,7 @@
   </div>
 
   <div class="card-footer d-flex gap-2">
-    <a th:href="@{/project/user/{projectCode}/issue/list(projectCode=${projectCode})}" class="text-decoration-none">모든 일감 보기</a><span class="text-muted">|</span>
+    <a th:href="@{/project/user/{projectCode}/issue/list/read(projectCode=${projectCode})}" class="text-decoration-none">모든 일감 보기</a><span class="text-muted">|</span>
     <a th:href="@{/project/user/{projectCode}/issue/history/read(projectCode=${projectCode})}" class="text-decoration-none">변경 사항 보기</a> <span class="text-muted">|</span>
     <a th:href="@{/project/user/{projectCode}/issue/gantt/read(projectCode=${projectCode})}" class="text-decoration-none">Gantt 차트</a>
   </div>
