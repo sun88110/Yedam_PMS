@@ -97,6 +97,12 @@ public class ProjectServiceImpl implements ProjectService {
 	    	p.setIsPm(pmProjectNos.contains(p.getProjectNo()));
 	    	
 	    	boolean isPmAuth = pmProjectNos.contains(p.getProjectNo());
+	    	// 부모가 목록에 없으면 부모 번호를 0(루트)으로 초기화
+	    	if (p.getParentProjectNo() != null && p.getParentProjectNo() > 0) {
+	            if (!projectNos.contains(p.getParentProjectNo())) {
+	                p.setParentProjectNo(0); // View 렌더링을 위해 Root 강제 승격
+	            }
+	        }
 	    	log.info("프로젝트 [{}] (코드: {}) - 계산된 isPm 값: {}", p.getProjectName(), p.getProjectCode(), isPmAuth);
 	    	
 	        p.setProjectTotalDTO(calculateSubtreeStats(p, projects, jobMap, memberMap, holidaySet)); 
