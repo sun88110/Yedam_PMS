@@ -71,4 +71,8 @@ public interface ProjectMapper {
     
     // History
     List<HistoryDTO> selectHistoryByCode(@Param("projectCode") String projectCode);
+    // 선택된 기간의 이력 조회
+    List<HistoryDTO> selectHistoryByCodeAndDate(Map<String, Object> params);
+    // 과거의 일감 존재 여부 확인
+    int selectCountOlderHistory(Map<String, Object> params);
 }

@@ -453,7 +453,7 @@ public class ProjectServiceImpl implements ProjectService {
                         dto.getId().startsWith("p") || // 프로젝트 행 통과
                         (dto.getPublicRole() != null && dto.getPublicRole() == 1) || // 전체공개 통과
                         userId.equals(dto.getWorkerId()) // 내가 작업자인 경우 통과
-                        || userId.equals(dto.getManagerId()) // 쿼리에 매니저 ID가 있다면 추가
+                        || userId.equals(dto.getManagerId()) // 내가 매니저인 경우 통과
                     )
                     .collect(Collectors.toList());
             }
@@ -511,6 +511,14 @@ public class ProjectServiceImpl implements ProjectService {
 	@Override
 	public List<HistoryDTO> findHistoryByCode(String projectCode) {
 		return projectMapper.selectHistoryByCode(projectCode);
+	}
+	@Override
+	public List<HistoryDTO> findHistoryByCodeAndDate(Map<String, Object> params) {
+		return projectMapper.selectHistoryByCodeAndDate(params);
+	}
+	@Override
+	public int findCountOlderHistory(Map<String, Object> params) {
+		return projectMapper.selectCountOlderHistory(params);
 	}
 
 }

@@ -358,30 +358,44 @@
 	</select>
 	
 	<!-- 변경 이력조회 -->
-	<select id="selectHistoryByCode" resultType="HistoryDTO">
-		SELECT h.history_no
-		  , h.change_comment AS "desc"
-		  , h.history_date
-		  , h.delete_date
-		  , h.job_no
-		  , h.user_id
-		  , u.username
-		  , j.title
-		  , jt.job_type
-		  , j.job_type_no
-		  , js.job_status
-		  , j.job_status_no
-		FROM history h
-		JOIN job j ON h.job_no = j.job_no
-		JOIN (
-		    SELECT project_no
-		    FROM project
-		    START WITH project_code = #{projectCode}
-		    CONNECT BY PRIOR project_no = parent_project_no
-		) p                ON j.project_no = p.project_no
-		JOIN users u ON u.user_id = h.user_id
-		JOIN job_type jtON jt.job_type_no = j.job_type_no
-		JOIN job_status js ON js.job_status_no = j.job_status_no
-		ORDER BY h.history_date DESC
+	<select id="selectHistoryByCodeAndDate" parameterType="map" resultType="HistoryDTO">
+	    SELECT h.history_no
+	      , h.change_comment AS "desc"
+	      , h.history_date
+	      , h.delete_date
+	      , h.job_no
+	      , h.user_id
+	      , u.username
+	      , j.title
+	      , jt.job_type
+	      , j.job_type_no
+	      , js.job_status
+	      , j.job_status_no
+	    FROM history h
+	    JOIN job j ON h.job_no = j.job_no
+	    JOIN (
+	        SELECT project_no
+	        FROM project
+	        START WITH project_code = #{projectCode}
+	        CONNECT BY PRIOR project_no = parent_project_no
+	    ) p                ON j.project_no = p.project_no
+	    JOIN users u       ON u.user_id = h.user_id
+	    JOIN job_type jt   ON jt.job_type_no = j.job_type_no JOIN job_status js ON js.job_status_no = j.job_status_no
+	    WHERE h.history_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') 
+	                             AND TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
+	    ORDER BY h.history_date DESC
+	</select>
+	
+	<select id="selectCountOlderHistory" parameterType="map" resultType="int">
+	    SELECT COUNT(h.history_no)
+	    FROM history h
+	    JOIN job j ON h.job_no = j.job_no
+	    JOIN (
+	        SELECT project_no
+	        FROM project
+	        START WITH project_code = #{projectCode}
+	        CONNECT BY PRIOR project_no = parent_project_no
+	    ) p ON j.project_no = p.project_no
+	    WHERE h.history_date &lt; TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS')
 	</select>
 </mapper>

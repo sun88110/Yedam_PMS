@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,24 +234,65 @@ public class ProjectController {
     
     
     @GetMapping("/user/{projectCode}/issue/history/read")
-    public String getHistory(@PathVariable String projectCode, Model model) {
-    	
-    	List<HistoryDTO> historyList = projectService.findHistoryByCode(projectCode);
-    	// 오늘 날짜 구하기
+    public String getHistory(
+            @PathVariable String projectCode,
+            @RequestParam(defaultValue = "1") int page, // 현재 페이지
+            @RequestParam(defaultValue = "7") int days, // 페이징 단위 (7일 기본)
+            Model model) {
+        
+        // 1. 날짜 범위 계산 (예: page 1이면 오늘 ~ 6일 전)
+        LocalDate toDate = LocalDate.now().minusDays((page - 1) * days);
+        LocalDate fromDate = toDate.minusDays(days - 1);
+
+        // Oracle 조회를 위한 날짜 포맷팅 (시작일 00시 ~ 종료일 23시 59분)
+        String startDate = fromDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 00:00:00";
+        String endDate = toDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 23:59:59";
+
+        // 2. 파라미터 맵 세팅 (Service 및 Mapper에 전달)
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectCode", projectCode);
+        params.put("startDate", startDate);
+        params.put("endDate", endDate);
+
+        // 3. 서비스 호출 (해당 기간의 히스토리 조회 & 더 이전 데이터가 있는지 카운트)
+        // ※ ProjectService 및 ProjectMapper 인터페이스에 아래 두 메서드를 추가해야 합니다.
+        List<HistoryDTO> historyList = projectService.findHistoryByCodeAndDate(params);
+        int olderHistoryCount = projectService.findCountOlderHistory(params);
+
+        // 4. 날짜별 뼈대 생성 및 그룹핑 로직
         String todayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        Map<String, List<HistoryDTO>> groupedHistory = new LinkedHashMap<>();
 
-        // 날짜(yyyy/MM/dd)를 Key로, 해당 날짜의 작업내역 List를 Value로 묶기 - 순서를 보장하기 위해 반드시 LinkedHashMap을 사용
-        Map<String, List<HistoryDTO>> groupedHistory = historyList.stream()
-            .collect(Collectors.groupingBy(
-                dto -> {
-                    String dateStr = new SimpleDateFormat("yyyy/MM/dd").format(dto.getHistoryDate());
-                    return dateStr.equals(todayStr) ? "오늘" : dateStr; // 오늘이면 "오늘"로 변환
-                },
-                LinkedHashMap::new, // 내림차순 정렬 순서 유지
-                Collectors.toList()
-            ));
+        // 4-1. toDate(최신)부터 fromDate(과거)까지 1일씩 빼면서 Map의 Key를 빈 리스트와 함께 미리 세팅 (내림차순 유지)
+        LocalDate currentDateIter = toDate;
+        while (!currentDateIter.isBefore(fromDate)) {
+            String dateStr = currentDateIter.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            String key = dateStr.equals(todayStr) ? "오늘" : dateStr;
+            groupedHistory.put(key, new ArrayList<>()); // 빈 리스트로 초기화
+            
+            currentDateIter = currentDateIter.minusDays(1);
+        }
 
+        // 4-2. DB 조회 결과(historyList)를 미리 만들어둔 날짜 뼈대(Map)에 분류해서 담기
+        for (HistoryDTO dto : historyList) {
+            String dateStr = new SimpleDateFormat("yyyy/MM/dd").format(dto.getHistoryDate());
+            String key = dateStr.equals(todayStr) ? "오늘" : dateStr;
+            
+            // 생성해둔 뼈대에 날짜가 존재하면 리스트에 데이터 추가
+            if (groupedHistory.containsKey(key)) {
+                groupedHistory.get(key).add(dto);
+            }
+        }
+
+        // 5. 뷰(View)로 데이터 전달
+        model.addAttribute("info", projectService.findInfoByCode(projectCode));
         model.addAttribute("groupedHistory", groupedHistory);
+        model.addAttribute("projectCode", projectCode); // 페이징 URL에 사용
+        model.addAttribute("currentPage", page);
+        model.addAttribute("days", days);
+        model.addAttribute("hasPrev", page > 1); // 1페이지보다 크면 이전 버튼 활성화
+        model.addAttribute("hasNext", olderHistoryCount > 0); // 과거 데이터가 있으면 다음 버튼 활성화
+
         return "project/history";
     }
 }
