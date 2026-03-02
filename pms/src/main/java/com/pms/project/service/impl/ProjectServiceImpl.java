@@ -382,7 +382,7 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-    public Map<String, Object> findGanttDataByCode(String projectCode, String userId) {
+    public Map<String, Object> findGanttDataByCode(String projectCode, String userId, boolean isAdmin) {
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("currentUserId", userId);
 
@@ -391,7 +391,7 @@ public class ProjectServiceImpl implements ProjectService {
         
         long totalStartTime = System.currentTimeMillis();
 
-        // 1. 병렬 작업 정의 및 개별 시간 측정
+        // 병렬 작업
         CompletableFuture<List<IssueDto>> statusFuture = CompletableFuture.supplyAsync(() -> {
             long s = System.currentTimeMillis();
             List<IssueDto> res = issueMapper.selectIssueStatus(paramDto);
@@ -435,12 +435,29 @@ public class ProjectServiceImpl implements ProjectService {
             return res;
         });
 
+        // 내가 PM인지 권한체크
+        CompletableFuture<Boolean> isPmFuture = CompletableFuture.supplyAsync(() -> {
+            List<PMGroupDTO> pmList = projectMapper.selectIsPM(userId);
+            return pmList.stream().anyMatch(pm -> projectCode.equals(pm.getProjectCode()));
+        });
         // 기존 findGanttDataByCode에 있던 로직을 비동기 블록 내부에 배치
         CompletableFuture<Map<String, Object>> ganttDataFuture = CompletableFuture.supplyAsync(() -> {
             long s = System.currentTimeMillis();
             List<GanttDTO> list = projectMapper.selectGanttData(projectCode);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
+            
+            boolean isPm = isPmFuture.join();// 비동기조회가 끝날때까지 대기
+            if (!isAdmin && !isPm) {
+                list = list.stream()
+                    .filter(dto -> 
+                        dto.getId().startsWith("p") || // 프로젝트 행 통과
+                        (dto.getPublicRole() != null && dto.getPublicRole() == 1) || // 전체공개 통과
+                        userId.equals(dto.getWorkerId()) // 내가 작업자인 경우 통과
+                        || userId.equals(dto.getManagerId()) // 쿼리에 매니저 ID가 있다면 추가
+                    )
+                    .collect(Collectors.toList());
+            }
+            
             list.forEach(dto -> {
                 // ★ raw 데이터가 존재할 때 WAS에서 변환 수행
                 if (dto.getRawStartDate() != null && dto.getRawEndDate() != null) {

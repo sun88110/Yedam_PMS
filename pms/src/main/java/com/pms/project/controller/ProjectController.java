@@ -133,6 +133,9 @@ public class ProjectController {
     	// 세션을 활용하여 pathVal 사용하지않는 페이지에서 프로젝트 코드값 조회
     	session.setAttribute("projectCode", projectCode);
     	
+    	boolean isPm = projectService.findIsPM(customUser.getUserEntity().getUserId()).stream()
+                .anyMatch(pmDto -> projectCode.equals(pmDto.getProjectCode()));
+    	
     	model.addAttribute("info", projectService.findInfoByCode(projectCode));
     	model.addAttribute("trackerData", projectService.findJobTrackerPivot(projectCode));
     	model.addAttribute("groupMembers", projectService.findGroupMemberByCode(projectCode));
@@ -141,7 +144,7 @@ public class ProjectController {
     	
 		// 권한을 바탕으로 프로젝트 수정버튼이 보임
 		model.addAttribute("admin", customUser.getUserEntity().isAdmin() );
-        model.addAttribute("pm", projectService.findIsPM(customUser.getUserEntity().getUserId()).size() > 0);
+        model.addAttribute("pm", isPm);
 		
 		return "project/info";
     }
@@ -150,8 +153,9 @@ public class ProjectController {
     @GetMapping("/user/{projectCode}/issue/gantt/read")
     public String getGantProject(@PathVariable String projectCode, Model model, @AuthenticationPrincipal CustomUserDetails customUser) {
         String userId = customUser.getUserEntity().getUserId();
+        boolean isAdmin = customUser.getUserEntity().isAdmin();
         // 서비스에서 병렬 처리된 전체 데이터를 받아옴
-        Map<String, Object> initData = projectService.findGanttDataByCode(projectCode, userId);
+        Map<String, Object> initData = projectService.findGanttDataByCode(projectCode, userId, isAdmin);
         model.addAttribute("initData", initData);
         return "project/gantt";
     }
@@ -161,8 +165,9 @@ public class ProjectController {
     @ResponseBody 
     public Map<String, Object> getGanttDataApi(@PathVariable String projectCode, @AuthenticationPrincipal CustomUserDetails customUser) {
         String userId = customUser.getUserEntity().getUserId();
+        boolean isAdmin = customUser.getUserEntity().isAdmin();
         // 동일한 병렬 처리 서비스를 호출하여 순수 JSON 데이터만 반환
-        return projectService.findGanttDataByCode(projectCode, userId);
+        return projectService.findGanttDataByCode(projectCode, userId, isAdmin);
     }
     @GetMapping("/user/{projectCode}/issue/gantt/files/read")
     @ResponseBody

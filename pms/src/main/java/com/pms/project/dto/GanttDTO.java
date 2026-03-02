@@ -4,6 +4,7 @@ import java.util.Date;
 
 import org.apache.ibatis.type.Alias;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
@@ -35,7 +36,10 @@ public class GanttDTO {
     @JsonProperty("job_type_no")
     private Integer jobTypeNo;
     private Integer publicRole;
-    
+    @JsonIgnore
+    private String workerId; // 권한 필터링용도
+    @JsonIgnore
+    private String managerId;
     private Integer filesNo; // 파일 그룹 번호 (첨부파일 조회용)
     
     // dhtmlx 간트차트가 시작일과 종료일을 산정하면서 자동으로 계산하는부분이 있어 종료일은 duration 계산 이후 null 바꾸고 화면에 표시하기위한 종료일을 따로 마련

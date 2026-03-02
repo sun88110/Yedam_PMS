@@ -40,7 +40,7 @@ public interface ProjectService {
     List<ProjectSelectDTO> findFirstChildsByCode(String projectCode);
     
     // 간트차트
-    Map<String, Object> findGanttDataByCode(String projectCode, String userId);
+    Map<String, Object> findGanttDataByCode(String projectCode, String userId, boolean isAdmin);
     Set<HolidayDTO> findHolidays();
     
     // 이력조회

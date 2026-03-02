@@ -4,10 +4,12 @@
 
 	<select id="selectIsPM" resultType="PMGroupDTO">
 	SELECT 
-	  project_no
-      , group_no
-      , pm
+	  gp.project_no
+      , gp.group_no
+      , gp.pm
+      , p.project_code
 	FROM g_project gp
+	JOIN project p ON gp.project_no = p.project_no
 	WHERE gp.pm = 1
 	AND EXISTS (
 	    SELECT 1
@@ -298,7 +300,7 @@
 	  , u.username AS "worker_name"
 	  , c.common_name AS "job_priority"
 	  , description
-	  , job_status_no, job_type_no, public_role, files_no, worker_id
+	  , job_status_no, job_type_no, public_role, files_no, worker_id, manager_id
 	FROM (
 	  SELECT
 	    'p' || pt.project_no AS id
@@ -312,6 +314,7 @@
 	      END AS parent
 	    , NULL AS project_id
 	    , NULL AS worker_id
+	    , NULL AS manager_id
 	    , NULL AS job_priority
 	    , pt.project_desc AS description
 	    , NULL AS job_status_no
@@ -334,6 +337,7 @@
 	      END AS parent
 	    , 'p' || j.project_no AS project_id
 	    , j.user_id AS worker_id
+	    , j.manager_id
 	    , j.priority AS job_priority
 	    , j.content AS description
 	    , j.job_status_no
