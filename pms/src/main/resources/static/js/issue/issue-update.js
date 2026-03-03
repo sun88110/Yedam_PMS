@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	        // UI 생성
 	        const li = document.createElement("li");
-	        li.className = "list-group-item d-flex justify-content-between align-items-center";
+	        li.className = "list-group-item d-flex shadow-sm justify-content-between align-items-center";
 	        li.dataset.name = fileName;
 	        li.innerHTML = `
 	            <span>${fileName} <span class="btn btn-primary">추가된 파일</span></span>

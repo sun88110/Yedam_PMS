@@ -37,7 +37,7 @@
 			<div class="mb-3">
 				<label class="form-label">제목 *</label> 
 				<input type="text"
-					class="form-control mt-2" 
+					class="form-control mt-2 shadow-sm" 
 					name="title" 
 					placeholder="제목을 입력하세요"
 					th:field=*{title} />
@@ -50,7 +50,7 @@
 			<div class="row mb-3">
 				<div class="col-md-6">
 					<label class="form-label">일감 상태 *</label> 
-					<select class="form-select" 
+					<select class="form-select shadow-sm" 
 								th:field="*{jobStatusNo}" 
 								name="jobStatusNo">
 						<option value="">선택</option>
@@ -65,7 +65,7 @@
 				<!-- 유형 -->
 				<div class="col-md-6">
 					<label class="form-label">일감 유형 *</label> 
-					<select class="form-select"
+					<select class="form-select shadow-sm"
 							    th:field="*{jobTypeNo}"
 							    name="jobTypeNo">
 						<option value="">선택</option>
@@ -81,7 +81,7 @@
 			<!-- 상세 설명 -->
 			<div class="mb-3">
 				<label for="content" class="form-label">상세 설명</label>
-					<textarea class="form-control" 
+					<textarea class="form-control shadow-sm" 
 								   placeholder="상세 설명을 입력하세요"
 								   id="content" 
 								   style="height: 100px; resize: none;"
@@ -92,7 +92,7 @@
 			<div class="row mb-3">
 				<div class="col-md-6">
 					<label class="form-label">우선순위 *</label> 
-					<select class="form-select" 
+					<select class="form-select shadow-sm" 
 							   	th:field="*{priority}"
 							    name="priority">
 						<option value="">선택</option>
@@ -112,7 +112,7 @@
 								 data-bs-toggle="modal" 
 								 data-bs-target="#userSelectModal">담당자 선택 *</button>
 					<input type="text" 
-							   class="form-control" 
+							   class="form-control shadow-sm" 
 							   id="managerName"
 							   readonly /> 
 					<input type="hidden" th:field="*{userId}" id="userId" />
@@ -125,7 +125,7 @@
 				<div class="col-md-6">
 					<label class="form-label">시작일</label>
 					<input type="text"
-							   class="form-control datepicker" 
+							   class="form-control shadow-sm datepicker" 
 							   id="startDate" 
 							   name="startDate"
 							   placeholder="시작 날짜 선택" 
@@ -136,7 +136,7 @@
 				<div class="col-md-6">
 					<label class="form-label">마감일</label>
 					<input type="text"
-							   class="form-control datepicker" 
+							   class="form-control shadow-sm datepicker" 
 							   id="endDate" 
 							   name="endDate"
 							   placeholder="마감 날짜 선택" 
@@ -153,14 +153,14 @@
 								data-bs-target="#issueSelectModal">
 								상위일감 선택
 					</button>
-					<input type="text" class="form-control" id="jobTitle" readonly />
+					<input type="text" class="form-control shadow-sm" id="jobTitle" readonly />
 					<input type="hidden" name="parentJobNo" id="parentJobNo" value="">
 				</div>
 
 				<!-- 진척도 -->
 				<div class="col-md-6">
 					<label class="form-label">진척도</label> 
-					<select class="form-select" name="progress">
+					<select class="form-select shadow-sm" name="progress">
 						<option value="">선택</option>
 						<option th:each="p : ${#numbers.sequence(0, 10)}"
 									th:value="${p * 10}" 
@@ -179,7 +179,7 @@
 					왜냐하면 file 그 자체를 담아야 하기 때문에 
 					form 제출시 enctype="multipart/form-data 가 type="file"을 찾는다 
 					그 file 속성안의 실제 파일들을 꺼내서 HTTP Body에 담아서 전송-->
-					<input class="form-control" type="file" id="files" name="files" multiple />
+					<input class="form-control shadow-sm" type="file" id="files" name="files" multiple />
 					<!-- 여러개 선택시 첨부파일 이름이 표시 -->
 					<ul id="fileList" class="mt-2 list-group"></ul>
 				</div>
@@ -187,7 +187,7 @@
 				<!-- 공개범위  1이면 전체   0이면 일부공개-->
 				<div class="col-md-5 d-flex flex-column justify-content-center">
 					<label class="form-label mb-2">공개범위 *</label>
-					<div class="d-flex gap-5">
+					<div class="p-2 d-flex gap-4 rounded border shadow-sm">
 						<div class="form-check">
 							<input class="form-check-input" 
 									   type="radio" 

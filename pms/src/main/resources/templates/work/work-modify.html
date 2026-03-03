@@ -37,7 +37,8 @@
 				<div class="col-md-6">
 					<label class="form-label">일감명</label> 
 					<input type="text"
-							   class="form-control bg-light" id="title"
+							   class="form-control shadow-sm" 
+							   id="title"
 							   th:value="${workDetails.title}"
 							   readonly />
 				</div>
@@ -46,7 +47,7 @@
 				<div class="col-md-6">
 					<label class="form-label">담당자</label> 
 					<input type="text"
-							   class="form-control bg-light" 
+							   class="form-control shadow-sm" 
 							   id="workers"
 							   th:value="${workDetails.username}" 
 							   readonly />
@@ -58,7 +59,7 @@
 				<div class="col-md-6">
 					<label class="form-label">작업일자</label>
 					<input type="text"
-							   class="form-control datepicker" 
+							   class="form-control datepicker shadow-sm" 
 							   id="workDate" 
 							   name="workDate"
 							   th:value="${#dates.format(workDetails.workDate, 'yyyy-MM-dd')}"
@@ -69,7 +70,7 @@
 				<div class="col-md-6">
 					<label class="form-label">근무한 시간</label>
 					<input type="number"
-							   class="form-control" 
+							   class="form-control shadow-sm" 
 							   id="workTime"
 							    name="workTime"
 								th:value="${workDetails.workTime}" 
@@ -79,8 +80,8 @@
 
 			<div class="mb-3">
 				<label class="form-label">상세 설명</label>
-				<div class="form-floating">
-					<textarea class="form-control" 
+				<div>
+					<textarea class="form-control shadow-sm" 
 									id="workContent"
 									style="height: 100px" 
 									name="workContent"
@@ -92,7 +93,7 @@
 				<!-- 작업분류 -->
 				<div class="col-md-6">
 					<label class="form-label">작업분류</label> 
-					<select class="form-select" name="workDetailsNo">
+					<select class="form-select shadow-sm" name="workDetailsNo">
 						<option value="">선택</option>
 						<option th:each="status : ${workType}"
 									th:value="${status.workDetailsNo}" 

@@ -71,10 +71,8 @@
 			<table class="table table-hover text-center">
 				<thead>
 					<tr>
-						<th th:if="${!#lists.isEmpty(reportList) and reportList[0].username != null}"
-							  class="bi bi-person-badge me-1">담당자</th>
-						<th th:if="${!#lists.isEmpty(reportList) and reportList[0].title != null}"
-							  class="bi bi-card-checklist me-1">일감</th>
+						<th class="bi bi-person-badge me-1">담당자</th>
+						<th class="bi bi-card-checklist me-1">일감</th>
 						<th class="bi bi-calendar-range me-1">기간</th>
 						<th class="bi bi-alarm me-1">예상시간</th>
 						<th class="bi bi-play0circle me-1">실제 작업시간</th>
@@ -112,7 +110,7 @@
 						</td>
 					</tr>
 				<tr th:if="${#lists.isEmpty(reportList)}">
-					<td colspan="8">등록된 보고서 내역이 없습니다</td>
+					<td colspan="8">검색 조건을 추가하여 보고서를 조회해 주세요</td>
 				</tr>
 				</tbody>
 			</table>

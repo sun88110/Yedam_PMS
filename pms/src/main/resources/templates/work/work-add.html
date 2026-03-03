@@ -34,7 +34,7 @@
 			<div class="row mb-3">
 				<div class="col-md-6">
 					<label for="jobNo" class="form-label">일감선택 *</label> 
-					<select class="form-select" id="jobNo" name="jobNo">
+					<select class="form-select shadow-sm" id="jobNo" name="jobNo">
 						<option value=""></option>
 						<option th:each="issue : ${issueList}" 
 									th:text="${issue.title}"
@@ -47,7 +47,7 @@
 				<!-- 해당 일감 담당자의 정보를 자동으로 불러옴 -->
 				<div class="col-md-6">
 					<label class="form-label">담당자 *</label> 
-					<input type="text" class="form-control" id="workers" name="workers" readonly />
+					<input type="text" class="form-control shadow-sm" id="workers" name="workers" readonly />
 				</div>
 			</div>
 
@@ -55,7 +55,7 @@
 				<!-- 작업일자 -->
 				<div class="col-md-6">
 					<label class="form-label">작업일자 *</label>
-					<input type="text" class="form-control datepicker" id="workDate" name="workDate"
+					<input type="text" class="form-control shadow-sm datepicker" id="workDate" name="workDate"
 							   placeholder="실제 근무한 날짜 선택" readonly />
 				<div class="error-msg text-danger small mt-1" id="error-workDate"></div>
 				</div>
@@ -63,7 +63,7 @@
 				<!-- 근무시간 -->
 				<div class="col-md-6">
 					<label class="form-label">근무한 시간 *</label>
-					<input type="number" class="form-control" id="workTime" name="workTime"
+					<input type="number" class="form-control shadow-sm" id="workTime" name="workTime"
 							   placeholder="숫자만 입력" />
 				<div class="error-msg text-danger small mt-1" id="error-workTime"></div>
 				</div>
@@ -71,7 +71,7 @@
 
 			<div class="mb-3">
 				<label class="form-label">상세 설명 *</label>
-					<textarea class="form-control" id="workContent"
+					<textarea class="form-control shadow-sm" id="workContent"
 									style="height: 100px" name="workContent"></textarea>
 				<div class="error-msg text-danger small mt-1" id="error-workContent"></div>
 			</div>
@@ -80,7 +80,7 @@
 				<!-- 작업분류 -->
 				<div class="col-md-6">
 					<label class="form-label">작업분류 *</label>
-					 <select class="form-select"
+					 <select class="form-select shadow-sm"
 								 name="workDetailsNo"
 								 id="workDetailsNo">
 						<option value="">선택</option>
