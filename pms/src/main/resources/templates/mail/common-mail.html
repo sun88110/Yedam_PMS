@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f7f9; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;">
+	<table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7f9; padding: 20px 0;">
+		<tr>
+			<td align="center">
+				<table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border: 1px solid #ebedef; border-radius: 8px; overflow: hidden;">
+					<tr>
+						<td style="background-color: #321fdb; height: 5px;"></td>
+					</tr>
+					<tr>
+						<td style="padding: 40px;">
+							<h2 style="color: #321fdb; font-size: 24px; margin-top: 0;" th:utext="${title}">제목</h2>
+							<p style="color: #4f5d73; font-size: 16px; line-height: 1.6; margin: 20px 0 30px 0;" th:utext="${message}">메시지 내용</p>
+
+							<table border="0" cellspacing="0" cellpadding="0" align="center">
+								<tr>
+									<td align="center" style="border-radius: 5px;" bgcolor="#321fdb">
+										<a th:href="${link}" target="_blank" style="font-size: 16px; color: #ffffff; text-decoration: none; padding: 15px 30px; display: inline-block; font-weight: bold;"> <span th:text="${buttonText}">버튼 텍스트</span>
+										</a>
+									</td>
+								</tr>
+							</table>
+
+							<hr style="border: 0; border-top: 1px solid #ebedef; margin: 40px 0 20px 0;">
+							<p style="font-size: 12px; color: #8a93a2; text-align: center;">
+								본 메일은 PMS 시스템에서 자동으로 발송되었습니다.<br> 본인이 요청하지 않은 경우 이 메일을 무시해 주세요.
+							</p>
+						</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

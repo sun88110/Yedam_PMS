@@ -1,5 +1,7 @@
 package com.pms.user.web;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.pms.user.service.UserService;
@@ -62,17 +65,18 @@ public class UserController {
 
 	// 이메일 발송
 	@PostMapping("/updateEmailSend")
-	public String sendResetMail(
+	@ResponseBody
+	public ResponseEntity<String> sendResetMail(
 			@RequestParam("userId") String userId,
 			@RequestParam("newUsername") String newUsername,
 			@RequestParam("newEmail") String newEmail,
 			RedirectAttributes rttr) {
 		try {
 			userService.sendCheckEmail(userId, newUsername, newEmail);
-			return "redirect:/user/logout";
+			return ResponseEntity.ok("success");
 		} catch (Exception e) {
 			rttr.addFlashAttribute("error", "메일 발송 중 오류가 발생하였습니다.");
-			return "redirect:/";
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 		}
 	}
 
