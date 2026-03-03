@@ -470,7 +470,12 @@
                 formData.append("_method", "PUT"); // 스프링에게 이 POST 요청을 PUT으로 취급하라고 지시!
             }
 
-            fetch(targetUrl, { method: reqMethod, body: formData })
+            fetch(targetUrl, { 
+            	method: reqMethod
+            	, headers: {
+                    [window.csrfHeader]: window.csrfToken
+                }
+            	, body: formData })
             .then(response => {
                 submitBtn.disabled = false;
                 if (!response.ok) throw new Error("서버 응답 오류: " + response.status);

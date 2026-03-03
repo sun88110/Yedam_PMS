@@ -33,5 +33,10 @@
     <script src="/coreui/js/widgets.js"></script>
     */-->
 		
+	<!--/* csrf */-->
+	<meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
+    
+    <script th:src="@{/js/project/csrf-setup.js}"></script>
 </th:block>
 </html>
