@@ -7,9 +7,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 @Alias("WorkReportDto")
 public class WorkReportDto {
 	private String type; // 보고서 종류 일감, 프로젝트, 사용자, 주월별 

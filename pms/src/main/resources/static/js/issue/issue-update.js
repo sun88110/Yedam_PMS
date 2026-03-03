@@ -25,22 +25,41 @@ document.addEventListener("DOMContentLoaded", function () {
   const confirmUpdateButton = document.getElementById("updateSubmit");
   const fileInput = document.getElementById("files");
   const fileList = document.getElementById("fileList");
+  const commentInput = updateForm.querySelector("input[name='changeComment']");
+  const errorMessage = document.getElementById("commentError");
+  // Bootstrap 5 모달 인스턴스
+  const modalElement = document.getElementById('issueUpdateModal');
+  const updateModal = bootstrap.Modal.getOrCreateInstance(modalElement);
 
   // 모달 내 '수정' 확인 버튼 클릭 시
   // 수정사유를 입력하지 않았을 시
   if (confirmUpdateButton) {
-    confirmUpdateButton.addEventListener("click", function () {
-      const comment = updateForm.querySelector(
-        "input[name='changeComment']",
-      ).value;
-      if (!comment || comment.trim() === "") {
-        alert("수정 사유를 입력해주세요.");
-        return;
-      }
-      updateForm.submit();
-    });
-  }
+      confirmUpdateButton.addEventListener("click", function () {
+        const commentValue = commentInput.value.trim();
 
+        //  유효성 검사: 수정 사유가 비어있는지 확인
+        if (!commentValue) {
+			updateModal.hide();
+          // 경고 문구 표시 (d-none 제거)
+          if (errorMessage) errorMessage.classList.remove("d-none");
+          
+          // 입력창에 빨간 테두리 추가 (Bootstrap 클래스)
+          commentInput.classList.add("is-invalid");
+          
+          // 입력창으로 포커스 이동
+          commentInput.focus();
+          
+          // 함수 종료 (submit 방지)
+          return;
+        }
+
+        // 2. 값이 정상적으로 입력되었다면 경고 제거 후 제출
+        if (errorMessage) errorMessage.classList.add("d-none");
+        commentInput.classList.remove("is-invalid");
+        
+        updateForm.submit();
+      });
+    }
   // 새로운 파일 첨부 시 리스트 추가
   fileInput.addEventListener("change", function () {
     for (let i = 0; i < fileInput.files.length; i++) {

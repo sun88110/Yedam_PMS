@@ -104,8 +104,6 @@ public class WorkServiceImpl implements WorkService {
 		switch (type.toLowerCase()) {
 		case "job":
 			return workMapper.selectJobReport(workReportDto);
-		case "project":
-			return workMapper.selectProjectReport(workReportDto);
 		case "users":
 			return workMapper.selectUserReport(workReportDto);
 		case "week":
@@ -113,7 +111,8 @@ public class WorkServiceImpl implements WorkService {
 		case "month":
 			return workMapper.selectMonthReport(workReportDto);
 		default:
-			return null; // 잘못된 type이 들어왔을 때
+			// 잘못된 type이 들어왔을 때
+			return null;
 		}
 	};
 

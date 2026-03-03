@@ -25,20 +25,11 @@
                  JOIN users u
                  ON j.user_id = u.user_id
         WHERE p.project_code = #{projectCode}
-        <if test="userId != null and userId !=''">
-          AND j.user_id = #{userId}
-        </if>
-        <if test="jobNo != null and jobNo != '0'">
-          AND j.job_no = #{jobNo}
-        </if>
         <if test="title != null">
           AND j.title LIKE '%' || #{title} || '%'
         </if>
-        <if test="userId != null">
-          AND j.manager_id = #{userId}
-        </if>
         <if test="username !=null">
-          AND u.username = #{username}
+          AND u.username LIKE '%' || #{username} || '%'
         </if>
         <if test="jobStatusNo !=null and jobStatusNo != '0' and jobStatusNo !=''">
           AND j.job_status_no = #{jobStatusNo}

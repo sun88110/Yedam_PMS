@@ -152,7 +152,7 @@ public class WorkController {
 		// admin 아니고 본인 것도 아니면 권한없음 403으로
 		if (!isAdmin && !isMine) {
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
-			return null;
+			return "error/403";
 		}
 		// admin 이거나 본인이면 넘어감
 		// URL에서 받은 workEntries 변수 가져온다음 기능 실행
@@ -188,7 +188,7 @@ public class WorkController {
 		// model에 담아서 보냄
 		model.addAttribute("userId", user.getUserId());
 		model.addAttribute("projectCode", projectCode);
-		model.addAttribute("project", projectService.findInfoByCode(projectCode));
+		model.addAttribute("project", projectService.findInfoByCode(projectCode));;
 		return "work/work-report";
 
 	}

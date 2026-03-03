@@ -6,8 +6,6 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" th:href="@{/css/dynamic-search.css}" />
-<link rel="stylesheet" th:href="@{/css/modal.css}">
 <!-- Bootstrap5 icon사용 -->
 <link rel="stylesheet"
 	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
@@ -61,7 +59,7 @@
 				</div>
 				<!-- dropdown 영역 -->
 				<div class="dropdown me-2">
-					<button class="btn btn-secondary dropdown-toggle" 
+					<button class="btn btn-primary dropdown-toggle" 
 								 type="button"
 								data-bs-toggle="dropdown">검색조건 추가</button>
 					<ul class="dropdown-menu">
@@ -81,16 +79,16 @@
 				<button type="submit" class="btn btn-primary">소요시간 조회</button>
 				<!-- 소요시간 관련 보고서로 이동 -->
 				<a th:href="@{/project/user/{projectCode}/issue/work/report/list/read(projectCode=${projectCode})}"
-					 class="btn btn-primary text-white d-inline-flex align-items-center justify-content-center">보고서 조회</a>
+					 class="btn btn-primary d-inline-flex align-items-center justify-content-center">보고서 조회</a>
 				<!-- 소요시간 등록으로 이동 -->
 				<a th:href="@{/project/user/{projectCode}/issue/work/create(projectCode=${projectCode})}"
-					 class="btn btn-success text-white d-inline-flex align-items-center justify-content-center">소요시간등록</a>
+					 class="btn btn-primary d-inline-flex align-items-center justify-content-center">소요시간등록</a>
 			</div>
 		</form>
 
 		<!-- 검색 결과에 따라 소요시간 전체 조회되는 테이블 -->
 		<table class="table table-hover text-center">
-			<thead class="table-dark">
+			<thead>
 				<tr>
 					<th><i class="bi bi-card-text me-1"></i>일감제목</th>
 					<th><i class="bi bi-tags me-1"></i>작업분류</th>
@@ -108,7 +106,7 @@
 					<td th:text="${list.workTime}"></td>
 					<td th:text="${list.username}"></td>
 					<td><a th:href="@{/project/user/{projectCode}/issue/work/update(projectCode=${projectCode}, workNo=${list.workEntriesNo})}"
-								 class="btn btn-sm btn-outline-primary">수정</a></td>
+								 class="btn btn-sm btn-primary">수정</a></td>
 				</tr>
 				<tr th:if="${#lists.isEmpty(workEntriesList)}">
 					<td colspan="8">등록된 소요시간 내역이 없습니다</td>

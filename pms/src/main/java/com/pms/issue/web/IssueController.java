@@ -159,11 +159,11 @@ public class IssueController {
 			issueDto.setProjectNo(projectNo);
 			issueDto.setHistoryUserId(customUser.getUsername());
 			Integer jobNo = issueService.addIssue(issueDto, files);
-			return "redirect:/project/user/" + projectCode + "/issue/read/info?jobNo=" + jobNo;
+			return "redirect:/project/user/" + projectCode + "/issue/info/read?jobNo=" + jobNo;
 		} catch (Exception e) {
 			e.printStackTrace();
 			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-			return "redirect:/project/user/" + projectCode + "/issue/read";
+			return "redirect:/project/user/" + projectCode + "/issue/list/read";
 		}
 	}
 		

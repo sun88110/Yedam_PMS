@@ -5,7 +5,6 @@
 	layout:fragment="Content">
 <head>
 <meta charset="UTF-8" />
-<link rel="stylesheet" th:href="@{/css/modal.css}" />
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
@@ -47,7 +46,7 @@
 				<div class="col-md-6">
 					<label class="form-label">수정 사유 작성</label> 
 					<input type="text" name="changeComment" class="form-control mt-2" />
-						<div class="form-text text-danger mt-1" style="font-size: 0.85rem;">
+						<div id="commentError" class="form-text text-danger mt-1" style="font-size: 0.85rem;">
         					<i class="bi bi-exclamation-circle me-1"></i>수정 사유는 필수 입력 사항입니다.
     					</div>
 				</div>
@@ -112,9 +111,9 @@
 				<!-- data-bs-toggle과 target은 Bootstrap5 문법 -->
 				<div class="col-md-6">
 					<button type="button" 
-								 class="btn btn-outline-primary"
+								 class="btn btn-primary"
 								 data-bs-toggle="modal" 
-								 data-bs-target="#userSelectModal">담당자 선택 *</button>
+								 data-bs-target="#userSelectModal">담당자 선택</button>
 					<input type="text" 
 							   class="form-control" 
 							   id="managerName"
@@ -153,7 +152,7 @@
 				<!-- 상위 일감 선택 -->
 				<div class="col-md-6">
 					<button type="button" 
-								 class="btn btn-outline-primary"
+								 class="btn btn-primary"
 								 data-bs-toggle="modal" 
 								 data-bs-target="#issueSelectModal">상위일감 선택</button>
 					<input type="text" class="form-control" id="jobTitle" readonly />
@@ -181,9 +180,7 @@
 					<input class="form-control" type="file" id="files" name="files" multiple />
 					<!-- 여러개 선택시 첨부파일 이름이 표시 -->
 					<div class="border rounded p-2 bg-light">
-						<div class="form-text fw-bold mb-2 pb-1 border-bottom">
-           					 <i class="bi bi-files me-1"></i>현재 등록된 첨부파일
-        				</div>
+						<span>현재 등록된 첨부파일</span>
 						<ul id="fileList" class="mt-2 list-group">
 							<li th:each="file : ${fileList}"
 								 th:data-no="${file.detailsNo}"
@@ -230,11 +227,11 @@
 			<div class="row md-3">
 				<div class="d-flex gap-2 justify-content-end">
 				<a th:href="@{/project/user/{projectCode}/issue/list/read(projectCode=${projectCode})}"
-						 class="text-white btn btn-primary">돌아가기</a>					 
+						 class="btn btn-primary">돌아가기</a>					 
 				<a th:href="@{/project/user/{projectCode}/issue/work/create(projectCode=${projectCode})}"
-						  class="text-white btn btn-success">소요시간 등록</a>		 
+						  class="btn btn-primary">소요시간 등록</a>		 
 					<button type="button"
-								class="btn btn-success text-white"
+								class="btn btn-primary"
 								data-bs-toggle="modal" 
 								data-bs-target="#issueUpdateModal">수정</button>
 				</div>

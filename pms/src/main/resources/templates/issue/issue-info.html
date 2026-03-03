@@ -6,7 +6,6 @@
 <head>
 <meta charset="UTF-8" />
 <!-- bootstrap-datepicker -->
-<link rel="stylesheet" th:href="@{/css/modal.css}"/>
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
 
@@ -34,9 +33,7 @@
 		<div class="row mb-3">
 			<!-- 상태 -->
 			<div class="col-md-6 mb-3 mb-md-0">
-				<label class="form-label fw-bold"> <i
-					class="bi bi-info-circle me-1"></i>일감 상태
-				</label>
+				<label class="form-label fw-bold">일감 상태</label>
 				<div class="view-control shadow-sm" th:text="${issue.jobStatus}"></div>
 			</div>
 			<!-- 유형 -->
@@ -156,8 +153,6 @@
 				 class="btn btn-primary">돌아가기</a>
 		</div>
 	</div>
-
-	<!-- form 태그 바깥 부가 기능 영역 Card영역 -->
 	<!-- 수정이력 Card -->
 	<div class="card history-card">
 		<div class="card-header history-header">

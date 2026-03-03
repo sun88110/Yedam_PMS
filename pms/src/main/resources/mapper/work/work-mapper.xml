@@ -173,10 +173,7 @@
         LEFT JOIN work_entries we 
             ON j.job_no = we.job_no
             <where>
-             AND p.project_code = #{projectCode}
-                <if test="jobNo != null and jobNo !=0">
-                    AND j.job_no = #{jobNo}
-                </if>
+                    p.project_code = #{projectCode}
                 <if test="title != null and title != ''">
                     AND j.title LIKE '%' || #{title} || '%'
                 </if>
@@ -192,7 +189,7 @@
         ORDER BY
             p.le, p.project_name
 	</select>
-
+	
 	<!-- 사용자별 소요시간 보고서 
 	로그인한 유저가 해당 프로젝트 멤버인지 확인 (EXISTS로 중복 방지) *-->
 	<select id="selectUserReport" resultType="WorkReportDto">

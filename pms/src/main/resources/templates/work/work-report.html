@@ -6,8 +6,6 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" th:href="@{/css/dynamic-search.css}"/>
-<link rel="stylesheet" th:href="@{/css/modal.css}">
 <!-- Bootstrap5 icon사용 -->
 <link rel="stylesheet"
 	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
@@ -46,7 +44,7 @@
 			<!-- dropdown 영역 -->
 			<div class="mb-3 d-flex align-items-stretch justify-content-end gap-2">
 				<div class="dropdown me-2">
-					<button class="btn btn-secondary dropdown-toggle" 
+					<button class="btn btn-primary dropdown-toggle" 
 								 type="button"
 								 data-bs-toggle="dropdown">검색조건 추가</button>
 					<ul class="dropdown-menu">
@@ -65,13 +63,13 @@
 				<button type="submit" class="btn btn-primary">보고서 조회</button>
 				<!-- 소요시간 조회로 이동-->
 				<a th:href="@{/project/user/{projectCode}/issue/work/list/read(projectCode=${projectCode})}"
-					 class="btn btn-primary text-white d-inline-flex align-items-center justify-content-center">소요시간 조회</a>
+					 class="btn btn-primary d-inline-flex align-items-center justify-content-center">소요시간 조회</a>
 			</div>
 		</form>
 		<!-- 보고서로 조회되는 테이블 -->
 		<div th:if="${reportList != null}" class="mt-4">
 			<table class="table table-hover text-center">
-				<thead class="table-dark">
+				<thead>
 					<tr>
 						<th th:if="${!#lists.isEmpty(reportList) and reportList[0].username != null}"
 							  class="bi bi-person-badge me-1">담당자</th>

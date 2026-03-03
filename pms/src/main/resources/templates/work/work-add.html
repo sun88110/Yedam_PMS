@@ -5,8 +5,6 @@
 	layout:fragment="Content">
 <head>
 <meta charset="UTF-8" />
-<!-- 모달  css -->
-<link rel="stylesheet" th:href="@{/css/modal.css}" />
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
@@ -98,9 +96,9 @@
 				<!-- 소요시간 조회로 이동-->
 				<div class="d-flex justify-content-end gap-2">
 					<a th:href="@{/project/user/{projectCode}/issue/work/list/read(projectCode=${projectCode})}"
-						 class="btn btn-primary text-white">돌아가기</a>
+						 class="btn btn-primary">돌아가기</a>
 				<!-- 전송 -->
-					<button type="button" class="btn btn-success text-white" id="preSubmitBtn">등록</button>
+					<button type="button" class="btn btn-primary" id="preSubmitBtn">등록</button>
 				</div>
 			</div>
 		</form>

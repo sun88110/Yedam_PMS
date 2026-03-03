@@ -5,8 +5,6 @@
 	layout:fragment="Content">
 <head>
 <meta charset="UTF-8" />
-<!-- 모달 css -->
-<link rel="stylesheet" th:href="@{/css/modal.css}" />
 <!-- bootstrap-datepicker -->
 <link rel="stylesheet"
 	href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" />
@@ -110,7 +108,7 @@
 				<!-- data-bs-toggle과 target은 Bootstrap5 문법 -->
 				<div class="col-md-6">
 					<button type="button" 
-								 class="btn btn-outline-primary"
+								 class="btn btn-primary"
 								 data-bs-toggle="modal" 
 								 data-bs-target="#userSelectModal">담당자 선택 *</button>
 					<input type="text" 
@@ -150,7 +148,7 @@
 				<!-- 상위 일감 선택 -->
 				<div class="col-md-6">
 					<button type="button" 
-								class="btn btn-outline-primary"
+								class="btn btn-primary"
 								data-bs-toggle="modal" 
 								data-bs-target="#issueSelectModal">
 								상위일감 선택
@@ -217,7 +215,7 @@
 					<a th:href="@{/project/user/{projectCode}/issue/list/read(projectCode=${projectCode})}"
 						 class="btn btn-primary">돌아가기</a>
 					<button type="button" 
-								 class="btn btn-success text-white"
+								 class="btn btn-primary"
 							     data-bs-toggle="modal" 
 							     data-bs-target="#issueSubmitModal">등록</button>
 				</div>

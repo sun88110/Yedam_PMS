@@ -1,88 +1,232 @@
 /* src/main/resources/static/css/theme.css */
 
-:root {
-    /* 더 어둡고 차분한 Material Palette */
-    --bg-color: #1b1e2b;          /* 매우 어두운 배경 */
-    --surface-color: #24283b;     /* 조금 밝은 카드/테이블 배경 */
-    --border-color: #3b3f51;      /* 테두리 */
+/*라이트 모드 속성이 활성화 디었을 때만 변수와 스타일이 적용됩니다 */
+[data-coreui-theme="light"] {
+    --point-color: #8ac2c4;
+    --point-hover: #036d65;
+    --bg-light-gray: #F9F9FB;
+    --text-soft: #8E8E93;    /* iOS 시스템 그레이 색상 */
     
-    --text-color: #9095b3;        /* 기본 텍스트 (채도 낮춤) */
-    --text-high: #b0b8c4;         /* 강조 텍스트 */
+    --thead-bg: rgba(4, 138, 129, 0.15);
     
-    /* 보라색 포인트 컬러는 유지하되, 배경을 어둡게 설정 */
-    --primary-color: #89ddff;     /* 보라 대신 차분한 하늘색(Cyan)으로 변경 추천 */
-    --success-color: #a3cc78;     /* 연두색도 톤다운 */
+    background-color: var(--bg-light-gray) !important;
+    /* body 태그와 컨테이너 영역까지 확실하게 적용 */
+  & body, 
+    .wrapper, 
+    .body,
+    .container-lg {
+        background-color: var(--bg-light-gray) !important;
+    }
+    label, 
+    .form-label, 
+    .form-check-label {
+        color: #333333 !important;
+        font-weight: 500;
+    }
+    .table th {
+        font-weight: 500 !important; 
+        color: #333333 !important; /* 배경이 연하므로 글자는 조금 더 진하게 */
+        border-bottom: 2px solid rgba(4, 138, 129, 0.3) !important; /* 하단 선도 포인트 컬러로 통일 */
+    }
+    .table thead {
+        background-color: #ffffff !important; /* 헤더도 흰색으로 통일 */
+    }
+
+    /* 2. 텍스트 뮤티드(부연 설명) 색상도 통일 */
+    .text-muted {
+        color: var(--text-soft) !important;
+    }
+
+    /* 3. 입력창 내부 글자색도 연하게 맞추고 싶다면 추가 */
+    .form-control, .form-select {
+        color: var(--text-soft) !important;
+    }
     
-    --table-hover-color: #2e3347;
+
+
+    /* 라이트 모드 전용 버튼 스타일 */
+   .btn-primary {
+        background-color: transparent !important; /* 배경을 투명하게 */
+        border: 2px solid var(--point-color) !important; /* 테두리 두께와 색상 */
+        color: #555555; /* 글자색을 포인트 컬러로 */
+        font-weight: 500;
+        transition: all 0.2s ease-in-out;
+    }
+
+.btn-primary:hover {
+	  /* hover되면 배경색깔이 보임 */
+        background-color: var(--point-color) !important; 
+        border-color: var(--point-color) !important;
+        color: #ffffff !important;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--point-color) !important;
+        border-color: var(--point-color) !important;
+        /* focus(클릭 시 외곽선) 색상도 맞추고 싶다면 아래 추가 */
+        filter: hue-rotate(0deg); /* 기존 파란색 필터 제거 효과 */
+    }
+
+    .form-check-input:focus {
+        border-color: var(--text-soft);
+        box-shadow: 0 0 0 0.25rem rgba(4, 138, 129, 0.25); /* 포인트 컬러의 반투명 효과 */
+    }
+    .modal-content .list-group-item {
+        transition: all 0.2s ease;
+        border-left: 0 solid var(--point-color);
+        cursor: pointer;
+        color: #555555; /* 연한 검정 */
+    }
+
+    .modal-content .list-group-item:hover {
+        /* 포인트 컬러 #048A81의 매우 연한 배경색 (10% 농도) */
+        background-color: rgba(4, 138, 129, 0.1) !important;
+        color: var(--point-color) !important;
+        /* 왼쪽 강조 선 */
+        border-left: 5px solid var(--point-color) !important;
+        padding-left: 20px !important;
+    }
+    /* 필요 시 라이트 모드 전용 테이블이나 텍스트 색상을 여기에 추가하세요 */
 }
 
-body {
+
+
+
+/* 다크모드 속성이 활성화되었을 때만 변수와 스타일이 적용됩니다. */
+[data-coreui-theme="dark"] {
+    /* 1. 변수 정의 */
+    --bg-color: #24283b;
+    --surface-color: #2e324a;
+    --border-color: #3b3f5c;
+    --text-color: #aeb5d0;
+    --text-high: #b0b8c4;
+    --primary-color: #5856D6;
+    --success-color: #a3cc78;
+    --table-hover-color: #2e3347;
+
+    /* 2. 기본 배경 및 텍스트 */
     background-color: var(--bg-color);
     color: var(--text-color);
-    font-family: 'Roboto', 'Segoe UI', sans-serif;
-}
+    & body {
+        background-color: var(--bg-color) !important;
+    }
 
-/* 1. 기본 요소 스타일 */
-.text-primary { color: var(--primary-color) !important; }
-.text-muted { color: #5c627a !important; }
+    /* 3. 텍스트 유틸리티 */
+    .text-primary { color: var(--primary-color) !important; }
+    .text-muted { color: #5c627a !important; }
 
-/* 2. 테이블 스타일링 */
-.table { color: var(--text-color); }
-.table-dark {
-    background-color: var(--surface-color);
-    color: var(--text-high);
-}
-.table-dark th { border-color: var(--border-color); }
-.table-hover tbody tr:hover {
-    color: var(--text-high);
-    background-color: var(--table-hover-color);
-}
-.table td, .table th { border-color: var(--border-color); }
+    /* 4. 테이블 스타일링 */
+   .table {
+     background-color: var(--surface-color) !important; /* 어두운 카드 배경 */
+        border-collapse: separate !important;
+        border-spacing: 0;
+        border-radius: 12px !important;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* 더 깊은 그림자 */
+        border: 1px solid var(--border-color) !important;
+        margin-top: 20px;
+        color: var(--text-color) !important; /* 기본 글씨 연한 파랑/회색 */
+    }
+    
+    .table th {
+       background: rgba(255, 255, 255, 0.03) !important; /* 헤더만 미세하게 밝게 */
+        color: var(--text-high) !important; /* 헤더 글씨 밝게 */
+        font-weight: 600 !important;
+        font-size: 0.9rem;
+        padding: 16px !important;
+        /* 요청하신 반투명 선 효과 */
+        border-bottom: 3px solid rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* 3. 테이블 본문 행(Row) 스타일 */
+    .table td {
+        padding: 14px 16px !important;
+        vertical-align: middle;
+        color: var(--text-color) !important; /* 본문 글씨 잘 보이게 */
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+    
+    .table-hover tbody tr:hover {
+       background-color: rgba(255, 255, 255, 0.05) !important; 
+        transition: background-color 0.2s ease;
+    }
+    
+    .table tbody tr:last-child td {
+        border-bottom: none !important;
+    }
+    
+    .table th {
+       border-bottom: 3px solid rgba(255, 255, 255, 0.4) !important;
+        font-weight: 600 !important; /* 선이 굵어지므로 글자도 조금 더 힘있게 */
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
 
-/* 3. 버튼 스타일링 (명도 대비를 대폭 낮춤) */
-.btn-primary { 
-    background-color: var(--surface-color); /* 배경색과 비슷하게 */
-    border: 1px solid var(--border-color);
-    color: var(--text-high); 
-    font-weight: 400;
-}
-.btn-primary:hover { 
-    background-color: var(--border-color); 
-    color: white;
-}
+    /* 5. 버튼 스타일링 */
+    .btn-primary { 
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-high); 
+        font-weight: 400;
+    }
+    .btn-primary:hover { 
+        background-color: var(--border-color); 
+        color: white;
+    }
 
-.btn-secondary {
-    background-color: var(--surface-color);
-    border: 1px solid var(--border-color);
-    color: var(--text-color);
-}
-.btn-secondary:hover { 
-    background-color: var(--border-color); 
-    color: white;
-}
+    .btn-secondary {
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+    }
+    .btn-secondary:hover { 
+        background-color: var(--border-color); 
+        color: white;
+    }
 
-.btn-success {
-    background-color: var(--surface-color); /* 초록색 버튼도 어둡게 */
-    border: 1px solid var(--border-color);
-    color: var(--success-color); /* 글자색에 포인트 */
-    font-weight: 400;
-}
-.btn-success:hover { 
-    background-color: var(--success-color); 
-    color: var(--bg-color);
-}
+    .btn-success {
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+        color: var(--success-color);
+        font-weight: 400;
+    }
+    .btn-success:hover { 
+        background-color: var(--success-color); 
+        color: var(--bg-color);
+    }
 
-/* 4. 기타 요소 */
-.dropdown-menu {
-    background-color: var(--surface-color);
-    border: 1px solid var(--border-color);
-}
-.dropdown-item { color: var(--text-color); }
-.dropdown-item:hover {
-    background-color: var(--table-hover-color);
-    color: var(--text-high);
-}
-.form-check-input:checked {
-    background-color: var(--text-muted);
-    border-color: var(--text-muted);
+    /* 6. 기타 요소 */
+    .dropdown-menu {
+        background-color: var(--surface-color);
+        border: 1px solid var(--border-color);
+    }
+    .dropdown-item { color: var(--text-color); }
+    .dropdown-item:hover {
+        background-color: var(--table-hover-color);
+        color: var(--text-high);
+    }
+    .form-check-label {
+    color : var(--text-color) !important;
+    }
+    .form-check-input:checked {
+        background-color: var(--text-muted);
+        border-color: var(--text-muted);
+    }
+    .modal-content .list-group-item {
+        background-color: var(--surface-color);
+        border-color: var(--border-color);
+        color: var(--text-color);
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .modal-content .list-group-item:hover {
+        /* 다크모드에서는 배경을 조금 더 진하게 (20% 농도) */
+        background-color: rgba(4, 138, 129, 0.2) !important;
+        /* 글자색을 포인트 컬러 혹은 밝은 텍스트로 */
+        color: #ffffff !important;
+        border-left: 5px solid #048A81 !important;
+        padding-left: 20px !important;
+    }
+     /* 필요 시 다크 모드 전용 테이블이나 텍스트 색상을 여기에 추가하세요 */
 }
