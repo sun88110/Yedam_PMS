@@ -368,7 +368,7 @@
 	      , u.username
 	      , j.title
 	      , j.user_id    AS worker_id
-          , j.manager_id AS 
+          , j.manager_id
           , j.public_role 
 	      , jt.job_type
 	      , j.job_type_no
