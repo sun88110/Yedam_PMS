@@ -4,7 +4,7 @@ bin/
 .settings/
 
 db.properties
-*.properties
+application.properties
 target/
 build/
 *.log
