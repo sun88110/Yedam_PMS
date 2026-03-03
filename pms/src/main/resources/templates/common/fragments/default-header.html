@@ -19,16 +19,6 @@
                     <a class="nav-link" th:href="@{/settings/}">관리</a>
                 </li>
             </ul>
-		<!-- 알림 -->
-		<!-- 
-		<ul class="header-nav ms-auto">
-			<li class="nav-item dropdown">
-				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
-					<svg class="icon icon-lg">
-						<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell}"></use>
-            		</svg>
-					<span id="notificationBadge" class="badge badge-sm badge-pill bg-danger position-absolute top-0 end-0 d-none">0</span>
-				</button>
 
             <ul class="header-nav ms-auto">
                 <li class="nav-item dropdown">
@@ -96,13 +86,6 @@
             </ul>
         </div>
     </header>
-		<li class="nav-item py-1">
-			<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
-		</li>
-		 -->
-
-		<!-- 테마 + 프로필 -->
-		<ul class="header-nav">
 
     <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -161,48 +144,5 @@
         });
     </script>
 </th:block>
-
-</html>
-				<!-- 드롭다운 -->
-				<div class="dropdown-menu dropdown-menu-end pt-0">
-					<!-- <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold my-2">Settings</div> -->
-
-					<a class="dropdown-item" th:href="@{/home}"> <svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-globe-alt}"></use>
-                		</svg> 대시보드
-					</a> <a class="dropdown-item" th:href="@{/project/read}"> <svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-file}"></use>
-              			</svg> 프로젝트 <span class="badge badge-sm bg-primary ms-2"></span>
-					</a> <a class="dropdown-item" th:href="@{/}"> <svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-settings}"></use>
-              			</svg> 마이페이지
-					</a>
-
-					<div class="dropdown-divider"></div>
-
-					<!-- 로그아웃 -->
-					<form id="logoutForm" th:action="@{/user/logout}" method="post" style="display: none"></form>
-					<a class="dropdown-item" id="logoutBtn" style="cursor: pointer;"> <svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-account-logout}"></use>
-              			</svg> 로그아웃
-					</a>
-
-				</div>
-			</li>
-		</ul>
-	</div>
-
-	<script>
-    	const logoutBtn = document.getElementById('logoutBtn');
-    	const logoutForm = document.getElementById('logoutForm');
-    	logoutBtn.addEventListener('click', function (e) {
-      		e.preventDefault();
-      		if (confirm('로그아웃 하시겠습니까?')) {
-        		logoutForm.submit();
-      		}
-    	});
-	</script>
-
-</header>
 
 </html>
