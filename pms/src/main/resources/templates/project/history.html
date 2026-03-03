@@ -4,8 +4,6 @@
       layout:fragment="Content">
 <head>
     <style>
-        /* 깔끔한 텍스트 기반 인덴트(들여쓰기)를 위한 최소한의 CSS */
-        .date-header { background-color: #f1f1f1; padding: 5px 10px; font-weight: bold; border-radius: 4px; }
         .history-item { border-left: 3px solid #d8dbe0; padding-left: 15px; margin-bottom: 1.5rem; }
         .history-content { font-style: italic; color: #6c757d; font-size: 0.9rem; }
         .history-author { font-size: 0.85rem; color: #8a93a2; }
@@ -13,36 +11,78 @@
 </head>
 <body>
     <div class="container-fluid">
-        <h4 class="mb-3 fw-bold">작업내역</h4>
-        <p class="text-muted small mb-4">작업 내역 목록</p> <th:block th:each="entry : ${groupedHistory}">
-            
-            <div class="date-header mb-3 fs-5" th:text="${entry.key}">오늘</div>
-
-            <div class="mb-4 ps-2">
-                <div class="history-item" th:each="history : ${entry.value}">
-                    
-                    <div>
-                        <span th:text="|${history.jobStatus}(${#dates.format(history.historyDate, 'HH:mm')}) |"></span>
-                        
-                        <a th:href="@{/issue/detail(jobNo=${history.jobNo})}" class="text-decoration-none fw-bold"
-                           th:text="|${history.jobType}#${history.jobNo}: |"></a>
-                        <span class="fw-bold" th:text="${history.title}"></span>
-                    </div>
-                    
-                    <div class="history-content mt-1" th:if="${history.desc != null and history.desc != ''}" th:text="${history.desc}">
-                    </div>
-                    
-                    <div class="history-author mt-1" th:text="${history.username}">
-                    </div>
-                    
-                </div>
-            </div>
-        </th:block>
-
-        <nav aria-label="History pagination" class="mt-4 border-top pt-3">
+        <div class="mb-3">
+            <h2 class="fw-bold m-0 text-dark" 
+                th:text="|${info.projectName}|">
+            </h2>
+        </div>
+        <p class="text-muted small mb-4">작업 내역 목록</p>
+        
+        <nav aria-label="History pagination" class="mb-4">
             <ul class="pagination pagination-sm">
-                <li class="page-item"><a class="page-link" href="#">&laquo; 이전</a></li>
-                <li class="page-item"><a class="page-link" href="#">다음 &raquo;</a></li>
+                <li class="page-item" th:classappend="${!hasPrev} ? 'disabled'">
+                    <a class="page-link" th:href="@{/project/user/{code}/issue/history/read(code=${projectCode}, page=${currentPage - 1}, days=${days})}">&laquo; 이전</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link" th:text="${currentPage} + ' 페이지'"></span>
+                </li>
+                <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
+                    <a class="page-link" th:href="@{/project/user/{code}/issue/history/read(code=${projectCode}, page=${currentPage + 1}, days=${days})}">다음 &raquo;</a>
+                </li>
+            </ul>
+        </nav> 
+
+        <div class="accordion" id="historyAccordion">
+            <th:block th:each="entry, iterStat : ${groupedHistory}">
+                <div class="accordion-item mb-3 border-0">
+                    <h2 class="accordion-header" th:id="|heading-${iterStat.index}|">
+                        <button class="accordion-button rounded shadow-none bg-light text-dark fw-bold" type="button" 
+                                data-bs-toggle="collapse" 
+                                th:data-bs-target="|#collapse-${iterStat.index}|" 
+                                aria-expanded="true" 
+                                th:aria-controls="|collapse-${iterStat.index}|">
+                            <span th:text="${entry.key}">2026/03/02</span>
+                            <span class="badge bg-secondary ms-2 rounded-pill" th:text="${#lists.size(entry.value)}">0</span>
+                        </button>
+                    </h2>
+                    
+                    <div th:id="|collapse-${iterStat.index}|" class="accordion-collapse collapse show" 
+                         th:aria-labelledby="|heading-${iterStat.index}|">
+                        <div class="accordion-body ps-2 pt-3 pb-0">
+                            
+                            <div class="history-item" th:each="history : ${entry.value}" th:if="${!#lists.isEmpty(entry.value)}">
+                                <div>
+                                    <span th:text="|${history.jobStatus}(${#dates.format(history.historyDate, 'HH:mm')}) |"></span>
+                                    
+                                    <a th:href="@{/project/user/{code}/issue/info(code=${projectCode}, jobNo=${history.jobNo})}" 
+                                       class="text-decoration-none fw-bold"
+                                       th:text="|${history.jobType}#${history.jobNo}: |"></a>
+                                    <span class="fw-bold" th:text="${history.title}"></span>
+                                </div>
+                                <div class="history-content mt-1" th:if="${history.desc != null and history.desc != ''}" th:text="${history.desc}"></div>
+                                <div class="history-author mt-1" th:text="${history.username}"></div>
+                            </div>
+                            
+                            <div th:if="${#lists.isEmpty(entry.value)}" class="text-muted small ps-3 mb-4">
+                                작업 내역이 없습니다.
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+        </div>
+        <nav aria-label="History pagination" class="mt-2 border-top pt-3">
+            <ul class="pagination pagination-sm justify-content-center">
+                <li class="page-item" th:classappend="${!hasPrev} ? 'disabled'">
+                    <a class="page-link" th:href="@{/project/user/{code}/issue/history/read(code=${projectCode}, page=${currentPage - 1}, days=${days})}">&laquo; 이전</a>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link" th:text="${currentPage} + ' 페이지'"></span>
+                </li>
+                <li class="page-item" th:classappend="${!hasNext} ? 'disabled'">
+                    <a class="page-link" th:href="@{/project/user/{code}/issue/history/read(code=${projectCode}, page=${currentPage + 1}, days=${days})}">다음 &raquo;</a>
+                </li>
             </ul>
         </nav>
     </div>

@@ -7,8 +7,10 @@
 		  , common_desc
 		  , display_yn
 		FROM common
-		WHERE DISPLAY_YN = 'Y'
-			AND parent_common_no = 300
+		WHERE parent_common_no = 300 
+		<if test="!isAdmin">
+			AND display_yn = 'Y'
+		</if>
 		ORDER BY common_no
 	</select>
 </mapper>

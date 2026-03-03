@@ -4,10 +4,12 @@
 
 	<select id="selectIsPM" resultType="PMGroupDTO">
 	SELECT 
-	  project_no
-      , group_no
-      , pm
+	  gp.project_no
+      , gp.group_no
+      , gp.pm
+      , p.project_code
 	FROM g_project gp
+	JOIN project p ON gp.project_no = p.project_no
 	WHERE gp.pm = 1
 	AND EXISTS (
 	    SELECT 1
@@ -15,6 +17,12 @@
 	    WHERE m.group_no = gp.group_no
 	    AND m.user_id = #{userId}
 	)
+	</select>
+	<select id="selectAssigneeNames" resultType="string">
+	    SELECT DISTINCT u.username
+	    FROM users u
+	    JOIN project p ON p.user_id = u.user_id
+	    ORDER BY u.username
 	</select>
 	<resultMap id="projectMap" type="ProjectSelectDTO" autoMapping="true">
     	<id property="projectNo" column="project_no"/>
@@ -62,74 +70,57 @@
 	    </foreach>
 	</select>
 	
-	<select id="selectProjectsByOptions" parameterType="com.pms.project.dto.ProjectSearchDTO" resultType="ProjectSelectDTO">
-        SELECT
-            p.project_no,
-            p.project_name,
-            p.project_desc,
-            -- 1. 통합 인원수 (삭제 사용자 제외)
-            (SELECT COUNT(DISTINCT m.user_id)
-             FROM g_project gp
-             JOIN members m ON gp.group_no = m.group_no
-             JOIN users u ON m.user_id = u.user_id
-             WHERE u.status != 190
-               AND gp.project_no IN (
-                   SELECT project_no FROM project
-                   START WITH project_no = p.project_no
-                   CONNECT BY PRIOR project_no = parent_project_no
-               )) AS member_count,
-            -- 2. 통합 일감수 (중단 일감 제외)
-            (SELECT COUNT(*)
-             FROM job j
-             WHERE j.job_status_no != 3
-               AND j.project_no IN (
-                   SELECT project_no FROM project
-                   START WITH project_no = p.project_no
-                   CONNECT BY PRIOR project_no = parent_project_no
-               )) AS total_job_count,
-            -- 3. 최신 일감 내용
-            (SELECT content
-             FROM (
-                 SELECT j.content, j.project_no,
-                        ROW_NUMBER() OVER (PARTITION BY j.project_no ORDER BY j.add_date DESC, j.job_no DESC) as rn
-                 FROM job j
-             )
-             WHERE rn = 1 AND project_no = p.project_no) AS latest_job_content,
-            -- 4. 최신 일감 제목
-            (SELECT title
-             FROM (
-                 SELECT j.title, j.project_no,
-                        ROW_NUMBER() OVER (PARTITION BY j.project_no ORDER BY j.add_date DESC, j.job_no DESC) as rn
-                 FROM job j
-             )
-             WHERE rn = 1 AND project_no = p.project_no) AS latest_job_title,
-            -- 5. 로그인 사용자가 프로젝트에 참여했는지 여부 - 현재 로그인된 사용자 정보가 필요
-            (SELECT CASE WHEN COUNT(m.user_id) > 0 THEN 1 ELSE 0 END
-             FROM members m
-             JOIN g_project gp ON m.group_no = gp.group_no
-             WHERE gp.project_no = p.project_no
-             AND m.user_id = #{currentUserId}) AS has_login_user_joined
-        FROM project p
-        <where>
-            AND p.status != 390
-            <if test="projectName != null and projectName != ''">
-                AND p.project_name LIKE '%' || #{projectName} || '%'
-            </if>
-            <if test="projectStatus != null">
-                AND p.status = #{projectStatus}
-            </if>
-            <if test="projectAssignee != null and projectAssignee != ''">
-                AND p.user_id = #{projectAssignee}
-            </if>
-            <!-- 검색할 때도 사용자의 접근 권한을 고려해야 함 -->
-            AND (p.project_no IN (
-                  SELECT gp.project_no FROM g_project gp
-                  JOIN members m ON gp.group_no = m.group_no
-                  WHERE m.user_id = #{currentUserId}
-              ) OR p.public_yn = 1)
-        </where>
-        ORDER BY p.create_at ASC
-    </select>
+	<select id="selectProjectsByOptions" parameterType="com.pms.project.dto.ProjectSearchDTO" resultMap="projectMap">
+		SELECT 
+	        p.le, p.project_no, p.parent_project_no, p.project_name, 
+	        p.project_desc, p.project_code, p.project_home, p.status, p.public_yn,
+	        p.start_date, p.end_date,
+	        FN_GET_CODE_NAME(p.status) AS project_status,
+	        j.title AS latest_job_title
+	    FROM vw_project p
+	    LEFT JOIN users u ON p.user_id = u.user_id 
+	    LEFT JOIN (
+	        SELECT project_no, title 
+	        FROM (SELECT project_no, title, ROW_NUMBER() OVER (PARTITION BY project_no ORDER BY add_date DESC) as rn FROM job)
+	        WHERE rn = 1
+	    ) j ON j.project_no = p.project_no
+	    <where>
+	        <if test="search.projectName != null and search.projectName != ''">
+	            AND p.project_name LIKE '%' || #{search.projectName} || '%'
+	        </if>
+	        <if test="search.projectStatus != null">
+	            AND p.status = #{search.projectStatus}
+	        </if>
+	        <if test="search.projectAssignee != null and search.projectAssignee != ''">
+	            AND u.username LIKE '%' || #{search.projectAssignee} || '%' 
+	        </if>
+	        
+	        <if test="search.startDate != null">
+	            AND p.start_date &gt;= #{search.startDate}
+	        </if>
+	        <if test="search.endDate != null">
+	            AND p.end_date &lt;= #{search.endDate}
+	        </if>
+	        
+	        <if test="!isAdmin">
+	            AND (
+	                p.status != 390 
+	                OR 
+	                (p.status = 390 AND EXISTS (
+	                    SELECT 1 FROM g_project gp 
+	                    JOIN members m ON gp.group_no = m.group_no 
+	                    WHERE gp.project_no = p.project_no 
+	                      AND m.user_id = #{currentUserId} 
+	                      AND gp.pm = 1
+	                ))
+	            )
+	            AND (
+	                EXISTS (SELECT 1 FROM vw_member WHERE project_no = p.project_no AND user_id = #{currentUserId}) 
+	                OR p.public_yn = 1
+	            )
+	        </if>
+	        </where>
+	</select>
     
     <!--/* insert-from에서 조회 할 프로젝트 목록 */-->
     <select id="selectParentProjects" resultType="ParentProjectDTO">
@@ -187,6 +178,23 @@
 	        #{newProjectNo},  group_no, 
 	        pm                FROM g_project
 	    WHERE project_no = #{parentProjectNo}
+	</insert>
+	<!-- PM이면 소속된 그룹들이 -->
+	<insert id="insertCreatorGroupAsPM">
+	    <if test="pmGroupNos != null and pmGroupNos.size() > 0">
+	        MERGE INTO g_project gp
+	        USING (
+	            <foreach collection="pmGroupNos" item="groupNo" separator=" UNION ALL ">
+	                SELECT #{groupNo} AS group_no FROM DUAL
+	            </foreach>
+	        ) m 
+	        ON (gp.project_no = #{projectNo} AND gp.group_no = m.group_no)
+	        WHEN MATCHED THEN
+	            UPDATE SET gp.pm = 1
+	        WHEN NOT MATCHED THEN
+	            INSERT (project_no, group_no, pm)
+	            VALUES (#{projectNo}, m.group_no, 1)
+	    </if>
 	</insert>
 	<!--/* 상위프로젝트 기간 조회 */-->
 	<select id="selectParentProjectDuration">
@@ -292,7 +300,7 @@
 	  , u.username AS "worker_name"
 	  , c.common_name AS "job_priority"
 	  , description
-	  , job_status_no, job_type_no, public_role
+	  , job_status_no, job_type_no, public_role, files_no, worker_id, manager_id
 	FROM (
 	  SELECT
 	    'p' || pt.project_no AS id
@@ -306,11 +314,13 @@
 	      END AS parent
 	    , NULL AS project_id
 	    , NULL AS worker_id
+	    , NULL AS manager_id
 	    , NULL AS job_priority
 	    , pt.project_desc AS description
 	    , NULL AS job_status_no
 	    , NULL AS job_type_no
 	    , NULL AS public_role
+	    , NULL AS files_no
 	  FROM project_tree pt
 	
 	  UNION ALL
@@ -327,11 +337,13 @@
 	      END AS parent
 	    , 'p' || j.project_no AS project_id
 	    , j.user_id AS worker_id
+	    , j.manager_id
 	    , j.priority AS job_priority
 	    , j.content AS description
 	    , j.job_status_no
 	    , j.job_type_no
 	    , j.public_role
+	    , j.files_no
 	    FROM job j
 	    JOIN project_tree pt ON pt.project_no = j.project_no
 	  )
@@ -346,26 +358,44 @@
 	</select>
 	
 	<!-- 변경 이력조회 -->
-	<select id="selectHistoryByCode" resultType="HistoryDTO">
-		SELECT h.history_no
-		  , h.change_comment AS "desc"
-		  , h.history_date
-		  , h.delete_date
-		  , h.job_no
-		  , h.user_id
-		  , u.username
-		  , j.title
-		  , jt.job_type
-		  , j.job_type_no
-		  , js.job_status
-		  , j.job_status_no
-		FROM history h
-		JOIN job j ON h.job_no = j.job_no
-		JOIN project p ON j.project_no = p.project_no
-		JOIN users u ON u.user_id = h.user_id
-		JOIN job_type jt ON jt.job_type_no = j.job_type_no
-		JOIN job_status js ON js.job_status_no = j.job_status_no
-		WHERE p.project_code = #{projectCode}
-		ORDER BY h.history_date DESC
+	<select id="selectHistoryByCodeAndDate" parameterType="map" resultType="HistoryDTO">
+	    SELECT h.history_no
+	      , h.change_comment AS "desc"
+	      , h.history_date
+	      , h.delete_date
+	      , h.job_no
+	      , h.user_id
+	      , u.username
+	      , j.title
+	      , jt.job_type
+	      , j.job_type_no
+	      , js.job_status
+	      , j.job_status_no
+	    FROM history h
+	    JOIN job j ON h.job_no = j.job_no
+	    JOIN (
+	        SELECT project_no
+	        FROM project
+	        START WITH project_code = #{projectCode}
+	        CONNECT BY PRIOR project_no = parent_project_no
+	    ) p                ON j.project_no = p.project_no
+	    JOIN users u       ON u.user_id = h.user_id
+	    JOIN job_type jt   ON jt.job_type_no = j.job_type_no JOIN job_status js ON js.job_status_no = j.job_status_no
+	    WHERE h.history_date BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') 
+	                             AND TO_DATE(#{endDate}, 'YYYY-MM-DD HH24:MI:SS')
+	    ORDER BY h.history_date DESC
+	</select>
+	
+	<select id="selectCountOlderHistory" parameterType="map" resultType="int">
+	    SELECT COUNT(h.history_no)
+	    FROM history h
+	    JOIN job j ON h.job_no = j.job_no
+	    JOIN (
+	        SELECT project_no
+	        FROM project
+	        START WITH project_code = #{projectCode}
+	        CONNECT BY PRIOR project_no = parent_project_no
+	    ) p ON j.project_no = p.project_no
+	    WHERE h.history_date &lt; TO_DATE(#{startDate}, 'YYYY-MM-DD HH24:MI:SS')
 	</select>
 </mapper>

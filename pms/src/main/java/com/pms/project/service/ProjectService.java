@@ -23,9 +23,8 @@ public interface ProjectService {
 	// 새프로젝트 생성버튼 표시용도 - PM여부 반환해서
 	List<PMGroupDTO> findIsPM(String userId);
 	List<ProjectSelectDTO> findUserProjects(String userId, boolean isAdmin);	    
-    
-    List<ProjectSelectDTO> findProjectByOptions(ProjectSearchDTO searchDTO);
-    
+	List<ProjectSelectDTO> findProjectByOptions(ProjectSearchDTO searchDTO, String currentUserId, boolean isAdmin);
+	public List<String> findAssigneeNames(); 
     List<ParentProjectDTO> findParentProjects();
     
     // 새 프로젝트 페이지
@@ -41,9 +40,11 @@ public interface ProjectService {
     List<ProjectSelectDTO> findFirstChildsByCode(String projectCode);
     
     // 간트차트
-    Map<String, Object> findGanttDataByCode(String projectCode, String userId);
+    Map<String, Object> findGanttDataByCode(String projectCode, String userId, boolean isAdmin);
     Set<HolidayDTO> findHolidays();
     
     // 이력조회
     List<HistoryDTO> findHistoryByCode(String projectCode);
+    List<HistoryDTO> findHistoryByCodeAndDate(Map<String, Object> params);
+    int findCountOlderHistory(Map<String, Object> params);
 }

@@ -28,7 +28,11 @@ public interface ProjectMapper {
     List<PMGroupDTO> selectIsPM(@Param("userId") String userId);
     
     // 사용자의 검색결과를 바탕으로하는 프로젝트 목록 조회 (통계 포함) 
-    List<ProjectSelectDTO> selectProjectsByOptions(ProjectSearchDTO searchDTO);
+    List<ProjectSelectDTO> selectProjectsByOptions(
+    	    @Param("search") ProjectSearchDTO searchDTO, 
+    	    @Param("currentUserId") String currentUserId, 
+    	    @Param("isAdmin") boolean isAdmin
+    	);
     List<ParentProjectDTO> selectParentProjects();
     
     // 조회 가속을 위한 메서드 추가 (List<Integer>를 파라미터로 받음)
@@ -40,8 +44,12 @@ public interface ProjectMapper {
     int insertProject(ProjectInsertDTO projectInsertDTO);
     // 신규 프로젝트 등록 시 상위프로젝트 멤버 상속
     int insertInheritedGroups(@Param("newProjectNo") int newProjectNo, @Param("parentProjectNo") int parentProjectNo);
+    // 생성자 그룹 PM 권한 부여
+    void insertCreatorGroupAsPM(@Param("projectNo") Integer projectNo, @Param("pmGroupNos") List<Integer> pmGroupNos);
     // 상위 프로젝트의 시작-종료 기간 조회 
     ProjectInsertDTO selectParentProjectDuration(ProjectInsertDTO projectInsertDTO);
+    // 프로젝트 관리자 이름 목록조회
+    List<String> selectAssigneeNames();
     
     // 프로젝트 개요 페이지 
     ProjectInsertDTO selectInfoByCode(@Param("projectCode") String projectCode);
@@ -63,4 +71,8 @@ public interface ProjectMapper {
     
     // History
     List<HistoryDTO> selectHistoryByCode(@Param("projectCode") String projectCode);
+    // 선택된 기간의 이력 조회
+    List<HistoryDTO> selectHistoryByCodeAndDate(Map<String, Object> params);
+    // 과거의 일감 존재 여부 확인
+    int selectCountOlderHistory(Map<String, Object> params);
 }

@@ -3,6 +3,8 @@ package com.pms.project.controller;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.pms.config.CustomUserDetails;
+import com.pms.files.dto.FileListDto;
+import com.pms.files.service.FileListService;
 import com.pms.issue.service.IssueService;
 import com.pms.issue.web.IssueDto;
 import com.pms.project.common.mapper.ProjectCommonStatusMapper;
@@ -47,6 +51,7 @@ public class ProjectController {
     private final ProjectService projectService;
     private final ProjectCommonStatusMapper projectCommonStatusMapper;
     private final IssueService issueService;
+    private final FileListService fileListService;
     
     @GetMapping("/read")
     public String listProjects(Model model 
@@ -60,24 +65,24 @@ public class ProjectController {
         boolean isAdmin = customUser.getUserEntity().isAdmin();
         
         // 검색 조건이 있는지 확인 (projectName, projectStatus, projectAssignee 중 하나라도 값이 있으면 검색 조건으로 간주)
-        boolean hasSearchCriteria = searchDTO.getProjectName() != null && !searchDTO.getProjectName().isEmpty() ||
-                                    searchDTO.getProjectStatus() != null ||
-                                    searchDTO.getProjectAssignee() != null && !searchDTO.getProjectAssignee().isEmpty();
+        boolean hasSearchCriteria = 
+        	    (searchDTO.getProjectName() != null && !searchDTO.getProjectName().isEmpty()) ||
+        	    (searchDTO.getProjectStatus() != null) ||
+        	    (searchDTO.getProjectAssignee() != null && !searchDTO.getProjectAssignee().isEmpty()) ||
+        	    (searchDTO.getStartDate() != null) || (searchDTO.getEndDate() != null);
 
         if (hasSearchCriteria) {
-            // 검색 조건이 있으면 검색 결과 반환
-            // 현재 로그인 사용자 ID를 searchDTO에 추가하여 쿼리에서 활용 (예: has_login_user_joined 필드)
-            searchDTO.setCurrentUserId(currentUserId); // ProjectSearchDTO에 currentUserId 필드 추가 필요
-            model.addAttribute("projects", projectService.findProjectByOptions(searchDTO));
+            // DTO 세팅 삭제, 서비스 메서드에 직관적으로 인자 전달
+            model.addAttribute("projects", projectService.findProjectByOptions(searchDTO, currentUserId, isAdmin));
         } else {
-            // 검색 조건이 없으면 사용자 프로젝트 전체 목록 반환
             model.addAttribute("projects", projectService.findUserProjects(currentUserId, isAdmin));
         }
         
-        model.addAttribute("commons" , projectCommonStatusMapper.selectProjectCommonStatusAll());
+        model.addAttribute("commons" , projectCommonStatusMapper.selectProjectCommonStatusAll(isAdmin));
         model.addAttribute("searchDTO", searchDTO); // 검색 폼의 값 유지를 위해 모델에 추가
         model.addAttribute("admin", isAdmin);
         model.addAttribute("pm", projectService.findIsPM(currentUserId).size() > 0);
+        model.addAttribute("assignees", projectService.findAssigneeNames());
         
         return "project/list";
     }
@@ -129,6 +134,9 @@ public class ProjectController {
     	// 세션을 활용하여 pathVal 사용하지않는 페이지에서 프로젝트 코드값 조회
     	session.setAttribute("projectCode", projectCode);
     	
+    	boolean isPm = projectService.findIsPM(customUser.getUserEntity().getUserId()).stream()
+                .anyMatch(pmDto -> projectCode.equals(pmDto.getProjectCode()));
+    	
     	model.addAttribute("info", projectService.findInfoByCode(projectCode));
     	model.addAttribute("trackerData", projectService.findJobTrackerPivot(projectCode));
     	model.addAttribute("groupMembers", projectService.findGroupMemberByCode(projectCode));
@@ -137,7 +145,7 @@ public class ProjectController {
     	
 		// 권한을 바탕으로 프로젝트 수정버튼이 보임
 		model.addAttribute("admin", customUser.getUserEntity().isAdmin() );
-        model.addAttribute("pm", projectService.findIsPM(customUser.getUserEntity().getUserId()).size() > 0);
+        model.addAttribute("pm", isPm);
 		
 		return "project/info";
     }
@@ -146,8 +154,9 @@ public class ProjectController {
     @GetMapping("/user/{projectCode}/issue/gantt/read")
     public String getGantProject(@PathVariable String projectCode, Model model, @AuthenticationPrincipal CustomUserDetails customUser) {
         String userId = customUser.getUserEntity().getUserId();
+        boolean isAdmin = customUser.getUserEntity().isAdmin();
         // 서비스에서 병렬 처리된 전체 데이터를 받아옴
-        Map<String, Object> initData = projectService.findGanttDataByCode(projectCode, userId);
+        Map<String, Object> initData = projectService.findGanttDataByCode(projectCode, userId, isAdmin);
         model.addAttribute("initData", initData);
         return "project/gantt";
     }
@@ -157,8 +166,18 @@ public class ProjectController {
     @ResponseBody 
     public Map<String, Object> getGanttDataApi(@PathVariable String projectCode, @AuthenticationPrincipal CustomUserDetails customUser) {
         String userId = customUser.getUserEntity().getUserId();
+        boolean isAdmin = customUser.getUserEntity().isAdmin();
         // 동일한 병렬 처리 서비스를 호출하여 순수 JSON 데이터만 반환
-        return projectService.findGanttDataByCode(projectCode, userId);
+        return projectService.findGanttDataByCode(projectCode, userId, isAdmin);
+    }
+    @GetMapping("/user/{projectCode}/issue/gantt/files/read")
+    @ResponseBody
+    public List<FileListDto> getGanttIssueFiles(@RequestParam(required = false) Integer filesNo) {
+        // filesNo가 없거나 0이면 빈 배열 반환 (신규 일감이거나 파일이 없는 경우)
+        if (filesNo == null || filesNo == 0) {
+            return new ArrayList<>(); 
+        }
+        return fileListService.findFileList(filesNo);
     }
 	
     @PostMapping("/user/{projectCode}/issue/gantt/create")
@@ -215,24 +234,63 @@ public class ProjectController {
     
     
     @GetMapping("/user/{projectCode}/issue/history/read")
-    public String getHistory(@PathVariable String projectCode, Model model) {
-    	
-    	List<HistoryDTO> historyList = projectService.findHistoryByCode(projectCode);
-    	// 오늘 날짜 구하기
+    public String getHistory(
+            @PathVariable String projectCode,
+            @RequestParam(defaultValue = "1") int page, // 현재 페이지
+            @RequestParam(defaultValue = "7") int days, // 페이징 단위 (7일 기본)
+            Model model) {
+        
+        // 1. 날짜 범위 계산
+        LocalDate toDate = LocalDate.now().minusDays((page - 1) * days);
+        LocalDate fromDate = toDate.minusDays(days - 1);
+
+        String startDate = fromDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 00:00:00";
+        String endDate = toDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + " 23:59:59";
+
+        // 2. 파라미터 맵 세팅
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectCode", projectCode);
+        params.put("startDate", startDate);
+        params.put("endDate", endDate);
+
+        // 3. 서비스 호출
+        List<HistoryDTO> historyList = projectService.findHistoryByCodeAndDate(params);
+        int olderHistoryCount = projectService.findCountOlderHistory(params);
+
+        // 4. 날짜별 뼈대 생성 및 그룹핑 로직
         String todayStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+        Map<String, List<HistoryDTO>> groupedHistory = new LinkedHashMap<>();
 
-        // 날짜(yyyy/MM/dd)를 Key로, 해당 날짜의 작업내역 List를 Value로 묶기 - 순서를 보장하기 위해 반드시 LinkedHashMap을 사용
-        Map<String, List<HistoryDTO>> groupedHistory = historyList.stream()
-            .collect(Collectors.groupingBy(
-                dto -> {
-                    String dateStr = new SimpleDateFormat("yyyy/MM/dd").format(dto.getHistoryDate());
-                    return dateStr.equals(todayStr) ? "오늘" : dateStr; // 오늘이면 "오늘"로 변환
-                },
-                LinkedHashMap::new, // 내림차순 정렬 순서 유지
-                Collectors.toList()
-            ));
+        // 4-1. Map의 Key를 빈 리스트와 함께 미리 세팅
+        LocalDate currentDateIter = toDate;
+        while (!currentDateIter.isBefore(fromDate)) {
+            String dateStr = currentDateIter.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            // 날짜 뒤에 (오늘) 병기
+            String key = dateStr.equals(todayStr) ? dateStr + " (오늘)" : dateStr;
+            groupedHistory.put(key, new ArrayList<>());
+            
+            currentDateIter = currentDateIter.minusDays(1);
+        }
 
+        // 4-2. DB 조회 결과를 Map에 분류
+        for (HistoryDTO dto : historyList) {
+            String dateStr = new SimpleDateFormat("yyyy/MM/dd").format(dto.getHistoryDate());
+            String key = dateStr.equals(todayStr) ? dateStr + " (오늘)" : dateStr;
+            
+            if (groupedHistory.containsKey(key)) {
+                groupedHistory.get(key).add(dto);
+            }
+        }
+
+        // 5. 뷰(View)로 데이터 전달
+        model.addAttribute("info", projectService.findInfoByCode(projectCode));
         model.addAttribute("groupedHistory", groupedHistory);
+        model.addAttribute("projectCode", projectCode);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("days", days);
+        model.addAttribute("hasPrev", page > 1); 
+        model.addAttribute("hasNext", olderHistoryCount > 0); 
+
         return "project/history";
     }
 }

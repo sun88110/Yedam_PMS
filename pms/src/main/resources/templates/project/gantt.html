@@ -122,7 +122,8 @@
             jobStatusNo:   parseInt(savedTask.jobStatusNo),
             job_status_no: parseInt(savedTask.jobStatusNo),
             jobTypeNo:     parseInt(savedTask.jobTypeNo),
-            job_type_no:   parseInt(savedTask.jobTypeNo)
+            job_type_no:   parseInt(savedTask.jobTypeNo),
+            filesNo:       savedTask.filesNo
         };
     }
 
@@ -204,6 +205,18 @@
             const startDateInput    = document.getElementById('startDate');
             const endDateInput      = document.getElementById('endDate');
 
+            // 첨부파일 UI 초기화 및 비동기 로드
+            const fileUl = document.getElementById('modalFileList');
+            const noFileMsg = document.getElementById('noFileMessage');
+            const deleteContainer = document.getElementById('deleteFilesContainer');
+
+            fileUl.innerHTML = '';
+            deleteContainer.innerHTML = '';
+            noFileMsg.style.display = 'none';
+            
+            // 첨부파일 목록정보 세팅
+            const currentFilesNo = currentTaskInfo.filesNo;
+            
             // 숨김 필드 세팅 (부모가 프로젝트인지 일감인지 분기)
             const rawParentId = String(currentTaskInfo.parent);
             if (rawParentId.startsWith("p")) {
@@ -288,6 +301,40 @@
                 // 진척도
                 const pct = currentTaskInfo.progress ? Math.round(currentTaskInfo.progress * 100) : 0;
                 progressSelect.value = String(pct);
+                
+                // 파일 상세 정보
+                if (currentFilesNo) {
+                    fetch(`/project/user/${projectCode}/issue/gantt/files/read?filesNo=${currentFilesNo}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error("네트워크 응답 오류");
+                        return res.json();
+                    })
+                    .then(files => {
+                        if (files.length === 0) {
+                            noFileMsg.style.display = 'block';
+                        } else {
+                            files.forEach(f => {
+                                const li = document.createElement('li');
+                                li.className = 'list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-1';
+                                li.innerHTML = `
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-earmark me-2 text-primary"></i>
+                                        <a href="/download/${f.detailsNo}" class="text-decoration-none text-dark small fw-bold">${f.filesName}</a>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="markFileForDelete(${f.detailsNo}, this)">삭제</button>
+                                `;
+                                fileUl.appendChild(li);
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error("첨부파일 목록 로드 실패:", err);
+                        noFileMsg.style.display = 'block';
+                    });
+                } else {
+                    // 파일 그룹 번호 자체가 없는 경우 (파일 미등록 상태)
+                    noFileMsg.style.display = 'block';
+                }
             }
 
             ganttIssueModal.show();
@@ -303,7 +350,6 @@
     // 부트스트랩 모달 이벤트 및 Fetch 전송
     // ==========================================
     document.addEventListener("DOMContentLoaded", function() {
-
         // 모달 닫힐 때 신규 임시 task 정리
         document.getElementById('ganttCustomModal').addEventListener('hidden.bs.modal', function() {
             if (currentTaskInfo?.$new) {
@@ -312,6 +358,83 @@
             currentTaskInfo = null;
         });
 
+        // 첨부파일 선택 시 화면에 목록(미리보기) 렌더링
+        const fileInput = document.querySelector('input[name="files"]');
+        const modalFileList = document.getElementById('modalFileList'); // 기존 파일이 그려지는 ul 태그 활용
+        
+        // 파일을 관리할 자바스크립트 전역 변수(배열)
+        let selectedFiles = [];
+        
+        fileInput.addEventListener('change', function(e) {
+            const noFileMsg = document.getElementById('noFileMessage');
+            
+            // 기존 선택된 파일 배열에 새로 선택한 파일들을 누적
+            const newFiles = Array.from(e.target.files);
+            selectedFiles = selectedFiles.concat(newFiles);
+
+            // 파일이 하나라도 있으면 "파일이 없습니다" 메시지 숨김
+            if(selectedFiles.length > 0 || modalFileList.children.length > 0) {
+                noFileMsg.style.display = 'none';
+            }
+
+            renderNewFilesUI();
+        });
+
+        // 선택된 신규 파일 배열을 바탕으로 UI를 그리는 함수
+        function renderNewFilesUI() {
+            // 1. 이전에 그려진 '신규 파일' UI만 삭제 (기존 서버 파일은 건드리지 않음)
+            const existingNewFileLi = document.querySelectorAll('.new-file-item');
+            existingNewFileLi.forEach(li => li.remove());
+
+            // 2. selectedFiles 배열을 순회하며 목록 추가
+            selectedFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                // 'new-file-item' 클래스를 주어 나중에 지울 때 식별할 수 있게 함
+                li.className = 'list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0 py-1 new-file-item';
+                
+                li.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-file-earmark-plus me-2"></i>
+                        <span class="small fw-bold">${file.name}</span>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="removeNewFile(${index})">취소</button>
+                `;
+                modalFileList.appendChild(li);
+            });
+            
+            // 3. 실제 <input type="file"> 객체 동기화 (DataTransfer 객체 사용)
+            // 브라우저 보안 상 input.files는 직접 수정이 불가능하여 우회하는 정석적인 방법
+            const dataTransfer = new DataTransfer();
+            selectedFiles.forEach(f => dataTransfer.items.add(f));
+            fileInput.files = dataTransfer.files;
+        }
+
+        // 신규 추가된 파일의 '취소' 버튼 클릭 시 호출
+        window.removeNewFile = function(index) {
+            // 배열에서 해당 파일 삭제
+            selectedFiles.splice(index, 1);
+            // UI 다시 그리기 (인덱스 동기화)
+            renderNewFilesUI();
+            
+            // 모든 파일이 지워졌는지 체크
+            const noFileMsg = document.getElementById('noFileMessage');
+            if(selectedFiles.length === 0 && modalFileList.children.length === 0) {
+                 noFileMsg.style.display = 'block';
+            }
+        };
+
+        // 모달 닫힐 때 신규 파일 배열 초기화 로직 추가 (중복 방지)
+        document.getElementById('ganttCustomModal').addEventListener('hidden.bs.modal', function() {
+            if (currentTaskInfo?.$new) {
+                gantt.deleteTask(currentTaskInfo.id);
+            }
+            currentTaskInfo = null;
+            
+            // 배열 초기화 및 input 값 초기화
+            selectedFiles = [];
+            fileInput.value = '';
+        });
+        
         // 등록/수정 버튼 클릭
         document.getElementById('btnIssueSubmit').addEventListener('click', function(e) {
             e.preventDefault();
@@ -327,7 +450,7 @@
             submitBtn.disabled = true;
 
             const isNew     = !!(currentTaskInfo?.$new);
-            const reqMethod = isNew ? 'POST' : 'PUT';
+            const reqMethod = 'POST';
             const targetUrl = isNew ? add_url : update_url;
             const formData  = new FormData(form);
 
@@ -338,6 +461,13 @@
                 formData.append("duration", 1);
             } else {
                 formData.append("jobNo", String(currentTaskInfo.id).replace("j", ""));
+                
+                const curFilesNo = currentTaskInfo.filesNo;
+                if (curFilesNo && curFilesNo !== "null" && curFilesNo !== "undefined") {
+                    formData.append("filesNo", curFilesNo);
+                }
+                
+                formData.append("_method", "PUT"); // 스프링에게 이 POST 요청을 PUT으로 취급하라고 지시!
             }
 
             fetch(targetUrl, { method: reqMethod, body: formData })
@@ -559,6 +689,18 @@
             console.error("데이터 갱신 오류:", err);
             gantt.message({text: "데이터 갱신 중 오류가 발생했습니다.", type: "error"});
         });
+    }
+    // 화면에서 파일을 숨기고, 삭제할 파일 번호를 form에 추가하는 함수
+    function markFileForDelete(detailsNo, btnElement) {
+        const container = document.getElementById('deleteFilesContainer');
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'deleteFiles'; // IssueController의 수정 로직과 완벽히 매핑됨
+        input.value = detailsNo;
+        container.appendChild(input);
+
+        // UI에서 해당 파일 줄(li) 삭제
+        btnElement.closest('li').remove();
     }
 
     // 실행

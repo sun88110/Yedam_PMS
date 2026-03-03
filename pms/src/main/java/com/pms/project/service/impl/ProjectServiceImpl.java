@@ -62,36 +62,72 @@ public class ProjectServiceImpl implements ProjectService {
 	public List<PMGroupDTO> findIsPM(String userId) {
 		return projectMapper.selectIsPM(userId);
 	}
+	@Override
+	public List<String> findAssigneeNames() {
+	    return projectMapper.selectAssigneeNames();
+	}
 
+	private void applyBulkStats(List<ProjectSelectDTO> projects, String userId, boolean isAdmin) {
+	    if (projects == null || projects.isEmpty()) return;
+
+	    List<Integer> projectNos = projects.stream().map(ProjectSelectDTO::getProjectNo).toList();
+	    List<JobDTO> allJobs = projectMapper.selectJobsByProjectNos(projectNos);
+	    List<MemberDTO> allMembers = projectMapper.selectMembersByProjectNos(projectNos);
+	    
+	    // 캐싱된 휴일 데이터 로드
+	    Set<LocalDate> holidaySet = selfProxy.findHolidays().stream()
+	            .filter((HolidayDTO h) -> "Y".equals(h.getIsHoliday()))
+	            .map((HolidayDTO h) -> convertToLocalDate(h.getHolidayDt()))
+	            .collect(Collectors.toSet());
+	    
+	    // PM으로 있는 프로젝트 번호 
+	    Set<Integer> pmProjectNos = selfProxy.findIsPM(userId).stream()
+	            .map(PMGroupDTO::getProjectNo)
+	            .collect(Collectors.toSet());
+	    
+	    Map<Integer, List<JobDTO>> jobMap = allJobs.stream().collect(Collectors.groupingBy(JobDTO::getProjectNo));
+	    Map<Integer, List<MemberDTO>> memberMap = allMembers.stream().collect(Collectors.groupingBy(MemberDTO::getProjectNo));
+
+	    // [디버깅 로그] 로그인 사용자 및 권한 정보 출력
+	    log.info("====== PM 권한 체크 로그 ======");
+	    log.info("로그인 아이디: {}, 관리자 여부: {}", userId, isAdmin);
+	    log.info("사용자가 PM으로 등록된 프로젝트 번호 목록: {}", pmProjectNos);
+	    
+	    for (ProjectSelectDTO p : projects) {
+	    	p.setIsPm(pmProjectNos.contains(p.getProjectNo()));
+	    	
+	    	boolean isPmAuth = pmProjectNos.contains(p.getProjectNo());
+	    	// 부모가 목록에 없으면 부모 번호를 0(루트)으로 초기화
+	    	if (p.getParentProjectNo() != null && p.getParentProjectNo() > 0) {
+	            if (!projectNos.contains(p.getParentProjectNo())) {
+	                p.setParentProjectNo(0); // View 렌더링을 위해 Root 강제 승격
+	            }
+	        }
+	    	log.info("프로젝트 [{}] (코드: {}) - 계산된 isPm 값: {}", p.getProjectName(), p.getProjectCode(), isPmAuth);
+	    	
+	        p.setProjectTotalDTO(calculateSubtreeStats(p, projects, jobMap, memberMap, holidaySet)); 
+	    }
+	    log.info("===============================");
+	}
+	
+	// 전체 조회
 	@Override
 	@Transactional(readOnly = true)
 	public List<ProjectSelectDTO> findUserProjects(String userId, boolean isAdmin) {
 	    List<ProjectSelectDTO> allProjects = projectMapper.selectUserProjects(userId, isAdmin);
-	    if (allProjects.isEmpty()) return allProjects;
-
-	    List<Integer> projectNos = allProjects.stream().map(ProjectSelectDTO::getProjectNo).toList();
-
-	    List<JobDTO> allJobs = projectMapper.selectJobsByProjectNos(projectNos);
-	    List<MemberDTO> allMembers = projectMapper.selectMembersByProjectNos(projectNos);
-	    
-	    // ★ 휴일 데이터 캐싱 (is_holiday == 'Y'인 날짜만 모음)
-	    Set<LocalDate> holidaySet = selfProxy.findHolidays().stream()
-	            .filter((HolidayDTO h) -> "Y".equals(h.getIsHoliday()))
-	            .map((HolidayDTO h) -> {
-	                return convertToLocalDate(h.getHolidayDt());
-	            })
-	            .collect(Collectors.toSet());
-
-	    Map<Integer, List<JobDTO>> jobMap = allJobs.stream().collect(Collectors.groupingBy(JobDTO::getProjectNo));
-	    Map<Integer, List<MemberDTO>> memberMap = allMembers.stream().collect(Collectors.groupingBy(MemberDTO::getProjectNo));
-
-	    for (ProjectSelectDTO p : allProjects) {
-	        // holidaySet 파라미터 추가
-	        p.setProjectTotalDTO(calculateSubtreeStats(p, allProjects, jobMap, memberMap, holidaySet)); 
-	    }
-
+	    applyBulkStats(allProjects, userId, isAdmin); // 공통 로직 태우기
 	    return allProjects;
 	}
+
+	// 검색 조회
+	@Override
+	@Transactional(readOnly = true)
+	public List<ProjectSelectDTO> findProjectByOptions(ProjectSearchDTO searchDTO, String currentUserId, boolean isAdmin) {
+	    List<ProjectSelectDTO> searchResults = projectMapper.selectProjectsByOptions(searchDTO, currentUserId, isAdmin);
+	    applyBulkStats(searchResults, currentUserId, isAdmin); 
+	    return searchResults;
+	}
+	
 
 	/**
 	 * 계층형 통계 합산 로직 (재귀 활용)
@@ -205,12 +241,6 @@ public class ProjectServiceImpl implements ProjectService {
 		}
 		return workingDays;
 	}
-
-	@Override
-	public List<ProjectSelectDTO> findProjectByOptions(ProjectSearchDTO searchDTO) {
-		return projectMapper.selectProjectsByOptions(searchDTO);
-	}
-
 	@Override
 	public List<ParentProjectDTO> findParentProjects() {
 		return projectMapper.selectParentProjects();
@@ -242,14 +272,8 @@ public class ProjectServiceImpl implements ProjectService {
 	@Override
 	@Transactional
 	public boolean addProject(ProjectInsertDTO projectInsertDTO) {
-		// 프로젝트 생성일이 오늘이면 활성프로젝트 아니면 보관 프로젝트로 생성
-		LocalDate startDate = convertToLocalDate(projectInsertDTO.getStartDate());
-		LocalDate today = LocalDate.now();
-		if (startDate.equals(today)) {
-			projectInsertDTO.setStatus(ProjectStatus.ACTIVE.getCode());
-		} else {
-			projectInsertDTO.setStatus(ProjectStatus.PAUSED.getCode());
-		}
+		// 프로젝트 기본 상태 지정
+		projectInsertDTO.setStatus(ProjectStatus.ACTIVE.getCode());
 
 		// 2. 프로젝트 단일 INSERT 실행
 		// 결과가 0이면 WHERE NOT EXISTS에 걸려 중복 처리된 것임
@@ -258,19 +282,28 @@ public class ProjectServiceImpl implements ProjectService {
 			return false; // 중복 식별자 발생으로 생성 실패
 		}
 
-		// 이 시점에서 insertProject 매퍼의 <selectKey> 덕분에
-		// projectInsertDTO.getProjectNo()에는 방금 생성된 PK 값이 들어있습니다.
-
-		// 3. 부모 프로젝트 멤버 상속 여부에 따라 분기 (Null 방어를 위해 Integer.valueOf 활용)
 		if (Integer.valueOf(1).equals(projectInsertDTO.getParentMemberYn())
-				&& projectInsertDTO.getParentProjectNo() != null && projectInsertDTO.getParentProjectNo() > 0) {
+	            && projectInsertDTO.getParentProjectNo() != null 
+	            && projectInsertDTO.getParentProjectNo() > 0) {
+	        projectMapper.insertInheritedGroups(
+	                projectInsertDTO.getProjectNo(), 
+	                projectInsertDTO.getParentProjectNo()
+	        );
+	    }
+		
+		List<PMGroupDTO> pmGroups = projectMapper.selectIsPM(projectInsertDTO.getUserId());
 
-			// 부모의 그룹-프로젝트 매핑 정보를 내 프로젝트로 복사
-			projectMapper.insertInheritedGroups(projectInsertDTO.getProjectNo(), // 내 프로젝트 번호 (새로 생성됨)
-					projectInsertDTO.getParentProjectNo() // 부모 프로젝트 번호
-			);
-		}
-
+		if (pmGroups != null && !pmGroups.isEmpty()) {
+	        // 중복 그룹 번호를 제거하고 List<Integer>로 변환
+	        List<Integer> myPmGroupNos = pmGroups.stream()
+	                .map(PMGroupDTO::getGroupNo)
+	                .distinct()
+	                .toList();
+	                
+	        // PM 그룹이 존재할 때만, 해당 그룹 번호 목록을 매개변수로 넘겨서 쿼리 실행
+	        projectMapper.insertCreatorGroupAsPM(projectInsertDTO.getProjectNo(), myPmGroupNos);
+	    }
+		
 		return true;
 	}
 
@@ -349,7 +382,7 @@ public class ProjectServiceImpl implements ProjectService {
 	}
 
 	@Override
-    public Map<String, Object> findGanttDataByCode(String projectCode, String userId) {
+    public Map<String, Object> findGanttDataByCode(String projectCode, String userId, boolean isAdmin) {
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("currentUserId", userId);
 
@@ -358,7 +391,7 @@ public class ProjectServiceImpl implements ProjectService {
         
         long totalStartTime = System.currentTimeMillis();
 
-        // 1. 병렬 작업 정의 및 개별 시간 측정
+        // 병렬 작업
         CompletableFuture<List<IssueDto>> statusFuture = CompletableFuture.supplyAsync(() -> {
             long s = System.currentTimeMillis();
             List<IssueDto> res = issueMapper.selectIssueStatus(paramDto);
@@ -402,12 +435,29 @@ public class ProjectServiceImpl implements ProjectService {
             return res;
         });
 
+        // 내가 PM인지 권한체크
+        CompletableFuture<Boolean> isPmFuture = CompletableFuture.supplyAsync(() -> {
+            List<PMGroupDTO> pmList = projectMapper.selectIsPM(userId);
+            return pmList.stream().anyMatch(pm -> projectCode.equals(pm.getProjectCode()));
+        });
         // 기존 findGanttDataByCode에 있던 로직을 비동기 블록 내부에 배치
         CompletableFuture<Map<String, Object>> ganttDataFuture = CompletableFuture.supplyAsync(() -> {
             long s = System.currentTimeMillis();
             List<GanttDTO> list = projectMapper.selectGanttData(projectCode);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-
+            
+            boolean isPm = isPmFuture.join();// 비동기조회가 끝날때까지 대기
+            if (!isAdmin && !isPm) {
+                list = list.stream()
+                    .filter(dto -> 
+                        dto.getId().startsWith("p") || // 프로젝트 행 통과
+                        (dto.getPublicRole() != null && dto.getPublicRole() == 1) || // 전체공개 통과
+                        userId.equals(dto.getWorkerId()) // 내가 작업자인 경우 통과
+                        || userId.equals(dto.getManagerId()) // 내가 매니저인 경우 통과
+                    )
+                    .collect(Collectors.toList());
+            }
+            
             list.forEach(dto -> {
                 // ★ raw 데이터가 존재할 때 WAS에서 변환 수행
                 if (dto.getRawStartDate() != null && dto.getRawEndDate() != null) {
@@ -461,6 +511,14 @@ public class ProjectServiceImpl implements ProjectService {
 	@Override
 	public List<HistoryDTO> findHistoryByCode(String projectCode) {
 		return projectMapper.selectHistoryByCode(projectCode);
+	}
+	@Override
+	public List<HistoryDTO> findHistoryByCodeAndDate(Map<String, Object> params) {
+		return projectMapper.selectHistoryByCodeAndDate(params);
+	}
+	@Override
+	public int findCountOlderHistory(Map<String, Object> params) {
+		return projectMapper.selectCountOlderHistory(params);
 	}
 
 }

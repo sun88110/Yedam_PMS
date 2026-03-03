@@ -40,7 +40,7 @@ public class ProjectSelectDTO {
     // [3] 최신 일감 제목
     private String latestJobTitle;
     
-    // [4] 집계 프로젝트 PM여부 (메인 쿼리에서 판별): DB데이터없음 + 구조변경 으로 미사용 
+    // [4] 집계 프로젝트 PM여부
     private Boolean isPm;  
     
     // [4] 집계 데이터 (한 번의 서브쿼리로 싹 다 가져옴) 

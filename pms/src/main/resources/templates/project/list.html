@@ -43,49 +43,44 @@
     </div>
 
     <!--/* search-menu */-->
-    <form method="get" th:action="@{/projects}" class="card bg-transparent shadow-none border-0">
-      <div
-        class="card-body py-4 px-0 d-flex flex-wrap justify-content-between align-items-center gap-3"
-      >
-        <div class="d-flex flex-wrap gap-2" style="flex: 1">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="프로젝트명"
-            name="projectName"
-            th:value="${searchDTO?.projectName}"
-            style="max-width: 200px"
-          />
-          <select class="form-select" name="projectStatus" style="max-width: 150px">
-            <option value="" disabled selected hidden>상태</option>
-            <option
-              th:each="common : ${commons}"
-              th:value="${common.commonNo}"
-              th:text="${common.commonName}"
-              th:selected="${searchDTO?.projectStatus != null and searchDTO.projectStatus == common.commonNo}"
-            ></option>
-          </select>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="담당자"
-            name="projectAssignee"
-            th:value="${searchDTO?.projectAssignee}"
-            style="max-width: 200px"
-          />
-        </div>
-
-        <div class="d-flex align-items-center gap-2">
-          <i class="cil-search text-dark" style="font-size: 1.5rem"></i>
-          <button type="submit" class="btn btn-primary px-4 fw-bold" name="projectSearchiBtn">
-            조회
-          </button>
-        </div>
-      </div>
-    </form>
+	<form method="get" th:action="@{/project/read}" th:object="${searchDTO}" class="card bg-transparent shadow-none border-0">
+	  <div class="card-body py-4 px-0 d-flex flex-wrap justify-content-between align-items-center gap-3">
+	    
+	    <div class="d-flex flex-wrap gap-2" style="flex: 1">
+	      <input type="text" class="form-control" placeholder="프로젝트명" th:field="*{projectName}" style="max-width: 150px" />
+	      
+	      <select class="form-select" th:field="*{projectStatus}" style="max-width: 130px">
+	        <option value="" selected>상태 (전체)</option>
+	        <option th:each="common : ${commons}" th:value="${common.commonNo}" th:text="${common.commonName}"></option>
+	      </select>
+	      
+	      <select class="form-select" th:field="*{projectAssignee}" style="max-width: 160px">
+		    <option value="" selected>담당자 (전체)</option>
+		    <option th:each="name : ${assignees}" th:value="${name}" th:text="${name}"></option>
+		  </select>
+	
+	      <div class="input-group input-group-sm ms-2" style="max-width: 350px;">
+	          <span class="input-group-text"><i class="cil-calendar me-1"></i> 기간</span>
+	          <input type="date" class="form-control" th:field="*{startDate}" />
+	          <span class="input-group-text">~</span>
+	          <input type="date" class="form-control" th:field="*{endDate}" />
+	      </div>
+	    </div>
+	
+	    <div class="d-flex align-items-center gap-2">
+	      <button type="submit" class="btn btn-primary px-4 fw-bold">
+	        <i class="cil-search me-1"></i> 조회
+	      </button>
+	    <a th:href="@{/project/read}" class="btn btn-outline-secondary px-3 fw-bold">
+    		<i class="cil-reload me-1"></i> 초기화
+  		</a>
+	    </div>
+	    
+	  </div>
+	</form>
   </div>
   <!--/* Card */-->
-<div class="card mb-4 shadow-sm" th:each="project : ${projects}" th:if="${project.le == 1}">
+<div class="card mb-4 shadow-sm" th:each="project : ${projects}" th:if="${project.parentProjectNo == null or project.parentProjectNo == 0}">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-start">
             
@@ -96,6 +91,7 @@
                            th:href="@{/project/user/{code}/read(code=${project.projectCode})}" 
                            class="text-decoration-none"></a>
                     </h5>
+                    <i th:if="${project.isPm}" class="cil-user" style="font-size: 1.2rem;"></i>
                     <span th:if="${project.publicYn == 1}" class="badge bg-info-light text-info small" style="font-size: 0.7rem;">Public</span>
                 </div>
                 <p class="text-muted small mb-3" th:text="${project.projectDesc}"></p>
@@ -133,6 +129,7 @@
                 <a th:href="@{/project/user/{code}/read(code=${sub.projectCode})}" 
                    th:text="${sub.projectName}" class="text-decoration-none"></a>
             </h6>
+            <i th:if="${sub.isPm}" class="cil-user" style="font-size: 1.2rem;"></i>
             <span th:if="${sub.publicYn == 1}" class="badge bg-info-light text-info small" style="font-size: 0.65rem;">Public</span>
         </div>
         <p class="text-muted mb-0" style="font-size: 0.85rem;" th:text="${sub.projectDesc}"></p>
@@ -174,6 +171,19 @@
 	$(document).ready(function() {
 	    $('[data-url]').on('click', function() {
 	        location.href = $(this).data('url');
+	    });
+	});
+	$(document).ready(function() {
+	    // 검색 폼 전송 가로채기
+	    $('form[action="/project/read"]').on('submit', function(e) {
+	        // 폼 안의 모든 input, select 요소를 순회
+	        $(this).find('input, select').each(function() {
+	            // 값이 비어있다면 (빈 문자열)
+	            if ($(this).val() === '') {
+	                // 해당 입력 필드를 비활성화 (서버로 전송되지 않음)
+	                $(this).prop('disabled', true); 
+	            }
+	        });
 	    });
 	});
 </script>

@@ -16,5 +16,6 @@ public class PMGroupDTO {
 	private Integer projectNo;
 	private Integer groupNo;
 	private Integer pm;
+	private String projectCode;
 	
 }
