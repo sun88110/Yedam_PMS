@@ -1,155 +1,148 @@
 <!doctype html>
-<html xmlns:th="http://www.thymeleaf.org">
-<header class="header header-sticky p-0 mb-4" th:fragment="DefaultHeader">
-	<div class="container-fluid border-bottom px-4">
-		<button class="header-toggler" type="button" onclick="
-          coreui.Sidebar.getInstance(
-            document.querySelector('#sidebar'),
-          ).toggle()
-        " style="margin-inline-start: -14px">
-			<svg class="icon icon-lg">
-          <use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-menu}"></use>
-        </svg>
-		</button>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-		<ul class="header-nav d-none d-lg-flex">
-			<li class="nav-item">
-				<a class="nav-link" th:href="@{/home}">대시보드</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link" th:href="@{/}">마이페이지</a>
-			</li>
-			<li sec:authorize="hasRole('ROLE_ADMIN')" class="nav-item">
-				<a class="nav-link" th:href="@{/settings/}">관리</a>
-			</li>
-		</ul>
+<th:block th:fragment="DefaultHeader">
+    <header class="header header-sticky p-0 mb-4">
+        <div class="container-fluid border-bottom px-4">
+            <button class="header-toggler" type="button"
+                onclick="coreui.Sidebar.getInstance(document.querySelector('#sidebar')).toggle()"
+                style="margin-inline-start: -14px">
+                <svg class="icon icon-lg">
+                    <use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-menu}"></use>
+                </svg>
+            </button>
 
-		<!-- 알림 -->
-		<ul class="header-nav ms-auto">
-			<li class="nav-item dropdown">
-				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" data-coreui-toggle="dropdown" aria-expanded="false">
-					<svg class="icon icon-lg">
-						<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell}"></use>
-            		</svg>
-					<span id="notificationBadge" class="badge badge-sm badge-pill bg-danger position-absolute top-0 end-0 d-none">0</span>
-				</button>
+            <ul class="header-nav d-none d-lg-flex">
+                <li class="nav-item"><a class="nav-link" th:href="@{/home}">대시보드</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/}">마이페이지</a></li>
+                <li sec:authorize="hasRole('ROLE_ADMIN')" class="nav-item">
+                    <a class="nav-link" th:href="@{/settings/}">관리</a>
+                </li>
+            </ul>
 
-				<div class="dropdown-menu dropdown-menu-end pt-0" style="min-width: 320px;">
-				<div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">최근 알림</div>
+            <ul class="header-nav ms-auto">
+                <li class="nav-item dropdown">
+                    <button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" data-coreui-toggle="dropdown">
+                        <svg class="icon icon-lg">
+                            <use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell}"></use>
+                        </svg>
+                        <span id="notificationBadge" class="badge badge-sm badge-pill bg-danger position-absolute top-0 end-0 d-none">0</span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end pt-0" style="min-width: 320px;">
+                        <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold rounded-top mb-2">최근 알림</div>
+                        <div id="notificationList" class="list-group list-group-flush">
+                            <div id="emptyNotification" class="text-center py-4 text-body-secondary">
+                                <svg class="icon icon-xl mb-2 opacity-50">
+                                    <use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell-exclamation}"></use>
+                                </svg>
+                                <p class="small mb-0">새로운 알림이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
 
-				<div id="notificationList" class="list-group list-group-flush">
-					<div id="emptyNotification" class="text-center py-4 text-body-secondary">
-						<svg class="icon icon-xl mb-2 opacity-50">
-							<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-bell-exclamation}"></use>
-                   		</svg>
-						<p class="small mb-0">새로운 알림이 없습니다.</p>
-					</div>
-				</div>
-			</li>
-		</ul>
+            <ul class="header-nav">
+                <li class="nav-item py-1"><div class="vr h-100 mx-2 text-body text-opacity-75"></div></li>
+                
+                <li class="nav-item dropdown">
+                    <button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" data-coreui-toggle="dropdown">
+                        <svg class="icon icon-lg theme-icon-active">
+                            <use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-contrast}"></use>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button class="dropdown-item d-flex align-items-center" data-coreui-theme-value="light">
+                            <svg class="icon icon-lg me-3"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-sun}"></use></svg>Light</button></li>
+                        <li><button class="dropdown-item d-flex align-items-center" data-coreui-theme-value="dark">
+                            <svg class="icon icon-lg me-3"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-moon}"></use></svg>Dark</button></li>
+                    </ul>
+                </li>
 
+                <li class="nav-item py-1"><div class="vr h-100 mx-2 text-body text-opacity-75"></div></li>
 
-		<!-- 테마 + 프로필 -->
-		<ul class="header-nav">
-			<li class="nav-item py-1">
-				<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
-			</li>
+                <li class="nav-item dropdown">
+                    <button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" data-coreui-toggle="dropdown">
+                        <svg class="icon icon-lg"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-user}"></use></svg>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end pt-0">
+                        <a class="dropdown-item" th:href="@{/home}">
+                            <svg class="icon me-2"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-globe-alt}"></use></svg>대시보드
+                        </a>
+                        <a class="dropdown-item" th:href="@{/project/read}">
+                            <svg class="icon me-2"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-file}"></use></svg>프로젝트
+                        </a>
+                        <a class="dropdown-item" th:href="@{/}">
+                            <svg class="icon me-2"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-settings}"></use></svg>마이페이지
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        
+                        <form id="logoutForm" th:action="@{/user/logout}" method="post" style="display: none"></form>
+                        <a class="dropdown-item text-danger" id="logoutBtn" style="cursor: pointer;">
+                            <svg class="icon me-2"><use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-account-logout}"></use></svg>로그아웃
+                        </a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </header>
 
-			<!-- 테마 -->
-			<li class="nav-item dropdown">
-				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" aria-expanded="false" data-coreui-toggle="dropdown">
-					<svg class="icon icon-lg theme-icon-active">
-              			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-contrast}"></use>
-            		</svg>
-				</button>
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fw-bold">로그아웃 확인</h5>
+                    <button type="button" class="btn-close btn-close-white" data-coreui-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <p class="mb-0 fw-semibold fs-5">정말 로그아웃 하시겠습니까?</p>
+                    <p class="small text-muted mb-0">안전하게 로그아웃 후 로그인 페이지로 이동합니다.</p>
+                </div>
+                <div class="modal-footer border-0 bg-light d-flex justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4" data-coreui-dismiss="modal">취소</button>
+                    <button type="button" id="confirmLogoutBtn" class="btn btn-danger px-4 fw-bold">로그아웃</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-				<ul class="dropdown-menu dropdown-menu-end" style="--cui-dropdown-min-width: 8rem">
-					<li>
-						<button class="dropdown-item d-flex align-items-center" type="button" data-coreui-theme-value="light">
-							<svg class="icon icon-lg me-3">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-sun}"></use>
-			                </svg>
-							Light
-						</button>
-					</li>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const logoutForm = document.getElementById('logoutForm');
+            const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+            const logoutModalEl = document.getElementById('logoutConfirmModal');
 
-					<li>
-						<button class="dropdown-item d-flex align-items-center" type="button" data-coreui-theme-value="dark">
-							<svg class="icon icon-lg me-3">
-								<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-moon}"></use>
-                			</svg>
-							Dark
-						</button>
-					</li>
-				</ul>
-			</li>
+            // 1. CoreUI 모달 인스턴스 초기화
+            let logoutModal = null;
+            if (logoutModalEl) {
+                logoutModal = coreui.Modal.getOrCreateInstance(logoutModalEl);
+            }
 
-			<!-- 프로필 -->
-			<li class="nav-item py-1">
-				<div class="vr h-100 mx-2 text-body text-opacity-75"></div>
-			</li>
+            // 2. 드롭다운에서 로그아웃 클릭 시 모달 오픈
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (logoutModal) logoutModal.show();
+                });
+            }
 
-			<!-- User Dropdown -->
-			<li class="nav-item dropdown">
-				<button class="btn btn-link nav-link py-2 px-2 d-flex align-items-center" type="button" aria-expanded="false" data-coreui-toggle="dropdown">
-					<svg class="icon icon-lg theme-icon-active">
-						<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-user}"></use>
-              		</svg>
-				</button>
-
-				<!-- 드롭다운 -->
-				<div class="dropdown-menu dropdown-menu-end pt-0">
-					<!-- <div class="dropdown-header bg-body-tertiary text-body-secondary fw-semibold my-2">Settings</div> -->
-
-					<a class="dropdown-item" th:href="@{/home}">
-						<svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-globe-alt}"></use>
-                		</svg>
-						대시보드
-					</a>
-
-					<a class="dropdown-item" th:href="@{/project/read}">
-						<svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-file}"></use>
-              			</svg>
-						프로젝트
-						<span class="badge badge-sm bg-primary ms-2"></span>
-					</a>
-
-					<a class="dropdown-item" th:href="@{/}">
-						<svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-settings}"></use>
-              			</svg>
-						마이페이지
-					</a>
-
-					<div class="dropdown-divider"></div>
-
-					<!-- 로그아웃 -->
-					<form id="logoutForm" th:action="@{/user/logout}" method="post" style="display: none"></form>
-					<a class="dropdown-item" id="logoutBtn" style="cursor: pointer;">
-						<svg class="icon me-2">
-                			<use th:href="@{/coreui/vendors/@coreui/icons/svg/free.svg#cil-account-logout}"></use>
-              			</svg>
-						로그아웃
-					</a>
-
-				</div>
-			</li>
-		</ul>
-	</div>
-
-	<script>
-    	const logoutBtn = document.getElementById('logoutBtn');
-    	const logoutForm = document.getElementById('logoutForm');
-    	logoutBtn.addEventListener('click', function (e) {
-      		e.preventDefault();
-      		if (confirm('로그아웃 하시겠습니까?')) {
-        		logoutForm.submit();
-      		}
-    	});
-	</script>
-
-</header>
+            // 3. 모달 내부 '로그아웃' 버튼 클릭 시 최종 실행
+            if (confirmLogoutBtn) {
+                confirmLogoutBtn.addEventListener('click', function() {
+                    // 로그인 페이지 이동 후 띄워줄 토스트 데이터 저장
+                    sessionStorage.setItem('pendingToast', JSON.stringify({
+                        message: '성공적으로 로그아웃되었습니다.',
+                        type: 'success'
+                    }));
+                    
+                    if (logoutForm) {
+                        logoutForm.submit();
+                    }
+                });
+            }
+        });
+    </script>
+</th:block>
 
 </html>
