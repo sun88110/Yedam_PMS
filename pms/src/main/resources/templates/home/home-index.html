@@ -435,328 +435,283 @@
 		</div>
 	</div>
 
-	<script th:inline="javascript">
-	// 📍 타임리프로 현재 사용자의 어드민 여부를 JS 변수에 할당
-    const isAdmin = /*[[${#authorization.expression('hasRole("ROLE_ADMIN")')}]]*/ false;
-/* --- 1. 초기화 로직 (스크롤 활성화 및 위젯 정렬) --- */
-document.addEventListener("DOMContentLoaded", function () {
-    // [수정 핵심] 모든 hidden-item을 제거하되, 메모 입력 폼(#memoInputForm)은 제외합니다.
-    // 이렇게 하면 페이징 때문에 숨겨졌던 아이템들만 나타나고 메모 폼은 숨김 상태를 유지합니다.
-    const itemsToShow = document.querySelectorAll('.hidden-item:not(#memoInputForm)');
-    itemsToShow.forEach(el => el.classList.remove('hidden-item'));
+	<div class="modal fade" id="confirmModal" tabindex="-1"
+		aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content border-0 shadow">
+				<div class="modal-header bg-danger text-white">
+					<h5 class="modal-title">
+						<i class="cil-warning me-2"></i>작업 확인
+					</h5>
+					<button type="button" class="btn-close btn-close-white"
+						data-coreui-dismiss="modal"></button>
+				</div>
+				<div class="modal-body p-4 text-center">
+					<p id="confirmModalMessage" class="fs-5 mb-0"></p>
+				</div>
+				<div class="modal-footer bg-light border-0">
+					<button type="button" class="btn btn-secondary"
+						data-coreui-dismiss="modal">취소</button>
+					<button type="button" class="btn btn-danger px-4"
+						id="btnConfirmExecute">확인</button>
+				</div>
+			</div>
+		</div>
+	</div>
 
-    // 대시보드 그리드 정렬 (Sortable.js)
-    const grid = document.getElementById("dashboardGrid");
-    if (grid) {
-        new Sortable(grid, {
-            animation: 250, 
-            handle: ".section-title", // 타이틀을 잡고 드래그
-            ghostClass: "drag-ghost",
-            onEnd: () => {
-                const order = Array.from(document.querySelectorAll(".dashboard-item")).map(el => el.dataset.id);
-                localStorage.setItem("dashboardOrder", JSON.stringify(order));
-            }
+	<div class="toast-container position-fixed bottom-0 end-0 p-3"
+		style="z-index: 9999;">
+		<div id="pmsToast" class="toast hide" role="alert"
+			aria-live="assertive" aria-atomic="true">
+			<div class="toast-header text-white" id="toastHeader">
+				<strong class="me-auto" id="toastTitle">알림</strong>
+				<button type="button" class="btn-close btn-close-white"
+					data-coreui-dismiss="toast"></button>
+			</div>
+			<div class="toast-body" id="toastBody"></div>
+		</div>
+	</div>
+
+<script th:inline="javascript">
+    // 1. 전역 변수 설정
+    const isAdmin = /*[[${#authorization.expression('hasRole("ROLE_ADMIN")')}]]*/ false;
+    let confirmModal;
+    let pmsToast;
+    let confirmCallback = null;
+
+    // --- [공통 유틸리티 함수] ---
+    
+    // ✅ 토스트 표시 함수
+    function showToast(message, type = 'success') {
+        const pmsToastElement = document.getElementById('pmsToast');
+        if (!pmsToastElement) return;
+
+        const header = $('#toastHeader');
+        const title = $('#toastTitle');
+        const body = $('#toastBody');
+
+        header.removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
+        title.text(type === 'success' ? '성공' : '알림');
+        body.text(message);
+
+        if (!pmsToast) pmsToast = new coreui.Toast(pmsToastElement);
+        pmsToast.show();
+    }
+
+    // ✅ 저장소에 알림 예약 (새로고침 후 표시용)
+    function reserveToast(message, type = 'success') {
+        const toastData = { message, type };
+        sessionStorage.setItem('pendingToast', JSON.stringify(toastData));
+    }
+
+    // 커스텀 확인 모달 표시
+    function askConfirm(message, callback) {
+        $('#confirmModalMessage').text(message);
+        confirmCallback = callback;
+        confirmModal.show();
+    }
+
+    const getCsrf = () => {
+        const token = document.querySelector('meta[name="_csrf"]')?.content;
+        const header = document.querySelector('meta[name="_csrf_header"]')?.content;
+        return (token && header) ? { token, header } : null;
+    };
+
+    $(document).ready(function () {
+        // CoreUI 객체 초기화
+        confirmModal = new coreui.Modal(document.getElementById('confirmModal'));
+        
+        // 확인 모달의 '확인' 버튼 이벤트 바인딩
+        $('#btnConfirmExecute').on('click', function() {
+            if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+            confirmModal.hide();
         });
 
-        // 저장된 순서 복원
-        const saved = JSON.parse(localStorage.getItem("dashboardOrder"));
-        if (saved) {
-            saved.forEach(id => { 
+        // 📍 [중요] 페이지 로드 시 예약된 토스트가 있는지 확인
+        const pendingToast = sessionStorage.getItem('pendingToast');
+        if (pendingToast) {
+            const { message, type } = JSON.parse(pendingToast);
+            showToast(message, type);
+            sessionStorage.removeItem('pendingToast'); // 표시 후 삭제
+        }
+
+        // 위젯 드래그 정렬 (기존 동일)
+        const grid = document.getElementById("dashboardGrid");
+        if (grid) {
+            new Sortable(grid, {
+                animation: 250, 
+                handle: ".section-title",
+                ghostClass: "drag-ghost",
+                onEnd: () => {
+                    const order = Array.from(document.querySelectorAll(".dashboard-item")).map(el => el.dataset.id);
+                    localStorage.setItem("dashboardOrder", JSON.stringify(order));
+                }
+            });
+            const saved = JSON.parse(localStorage.getItem("dashboardOrder"));
+            if (saved) saved.forEach(id => { 
                 const el = document.querySelector(`.dashboard-item[data-id="${id}"]`); 
                 if (el) grid.appendChild(el); 
             });
         }
-    }
-});
-
-/* --- 2. 공통 CSRF --- */
-const getCsrf = () => {
-    const token = document.querySelector('meta[name="_csrf"]')?.content;
-    const header = document.querySelector('meta[name="_csrf_header"]')?.content;
-   
-    // 값이 "undefined" 문자열이거나 진짜 없는 경우 체크
-    return {
-        token: (token && token !== "undefined") ? token : null,
-        header: (header && header !== "undefined") ? header : null
-    };
-};
-
-/* --- 3. 공지사항 (Notice) API --- (변동 없음) */
-function showNoticeAddModal() {
-    document.getElementById('noticeForm').reset();
-    document.getElementById('noticeId').value = '';
-    document.getElementById('noticeModalLabel').innerText = '공지사항 등록';
-    document.getElementById('btnDeleteNotice').style.display = 'none';
-    document.getElementById('existingFileList').innerHTML = ''; 
-    new bootstrap.Modal(document.getElementById('noticeModal')).show();
-    
-    const deleteBtn = document.getElementById('btnDeleteNotice');
-    if (deleteBtn) {
-        deleteBtn.style.display = 'none';
-    }
-    
-    const formFields = ['noticeTitle', 'noticeContent', 'noticePrivacy', 'noticeFiles'];
-    formFields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.readOnly = false;
-            el.disabled = false;
-        }
+        
+        $('.hidden-item:not(#memoInputForm)').removeClass('hidden-item');
+        loadDashboardIssues();
     });
-}
 
-async function showNoticeEditModal(noticeNo) {
-    try {
-        const res = await fetch(`/api/notices/${noticeNo}`);
-        if (!res.ok) throw new Error("데이터를 가져오지 못했습니다.");
-        const data = await res.json();
-        document.getElementById('noticeId').value = data.noticeNo;
-        document.getElementById('noticeTitle').value = data.title;
-        document.getElementById('noticeContent').value = data.content;
-        document.getElementById('noticePrivacy').value = data.privacySettings;
-        document.getElementById('noticeModalLabel').innerText = '공지사항 상세/수정';
-
-        const deleteBtn = document.getElementById('btnDeleteNotice');
-        if (deleteBtn) {
-            deleteBtn.style.display = 'block';
-        }
-        
-        const fileListDiv = document.getElementById('existingFileList');
-        fileListDiv.innerHTML = ''; 
-        if (data.files && data.files.length > 0) {
-            let fileHtml = '<p class="fw-bold mb-1 small mt-2 text-dark">기존 첨부파일:</p>';
-            fileHtml += '<ul class="list-group list-group-sm shadow-sm mb-3">';
-            data.files.forEach(file => {
-                fileHtml += `
-                    <li class="list-group-item d-flex justify-content-between align-items-center py-2">
-                        <div class="text-truncate" style="max-width: 85%;">
-                            <i class="cil-file text-primary me-2"></i> 
-                            <a href="/download/${file.detailsNo}" class="text-decoration-none small text-dark fw-semibold">${file.filesName}</a>
-                        </div>
-                        
-                        ${isAdmin ? `
-                        <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" onclick="deleteIndividualFile(${file.detailsNo}, this)">
-                            <span aria-hidden="true" style="font-size:1.2rem;">&times;</span>
-                        </button>
-                        ` : ''}
-                    </li>`;
-            });
-            fileHtml += '</ul>';
-            fileListDiv.innerHTML = fileHtml;
-        } else {
-            fileListDiv.innerHTML = '<p class="text-muted small mt-2">첨부된 파일이 없습니다.</p>';
-        }
-        
-        const formFields = ['noticeTitle', 'noticeContent', 'noticePrivacy', 'noticeFiles'];
-        formFields.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                // isAdmin이 false면 true(막음), isAdmin이 true면 false(품)
-                el.readOnly = !isAdmin;
-                el.disabled = !isAdmin;
-            }
-        });
-        
+    /* --- [공지사항 로직] --- */
+    function showNoticeAddModal() {
+        document.getElementById('noticeForm').reset();
+        document.getElementById('noticeId').value = '';
+        document.getElementById('noticeModalLabel').innerText = '공지사항 등록';
+        $('#btnDeleteNotice').hide();
+        $('#existingFileList').empty();
+        $('#noticeForm input, #noticeForm textarea, #noticeForm select').prop('disabled', false).prop('readonly', false);
         new bootstrap.Modal(document.getElementById('noticeModal')).show();
-    } catch (e) { console.error(e); alert("오류가 발생했습니다."); }
-}
-
-async function handleDeleteNotice() {
-    const noticeNo = document.getElementById('noticeId').value;
-    if (!noticeNo || !confirm("이 공지사항을 정말 삭제하시겠습니까?")) return;
-    const csrf = getCsrf();
-    try {
-        const res = await fetch(`/api/notices/${noticeNo}`, {
-            method: 'DELETE',
-            headers: { [csrf.header]: csrf.token }
-        });
-        if (res.ok) { alert("삭제되었습니다."); location.reload(); }
-        else { alert("삭제 실패"); }
-    } catch (error) { alert("네트워크 오류"); }
-}
-
-async function deleteIndividualFile(detailsNo, btn) {
-    if (!confirm("파일을 삭제하시겠습니까?")) return;
-    
-    const csrf = getCsrf();
-    const headers = {};
-    
-    // 📍 [핵심] 헤더 이름과 값이 모두 있을 때만 헤더 객체에 추가!
-    if (csrf.header && csrf.token) {
-        headers[csrf.header] = csrf.token;
     }
 
-    try {
-        const res = await fetch(`/api/notices/files/${detailsNo}`, {
-            method: 'DELETE',
-            headers: headers // 조립된 headers 사용 (비어있어도 fetch는 에러 안 남)
-        });
-        
-        if (res.ok) {
-            const listItem = btn.closest('li');
-            if (listItem) {
-                listItem.style.opacity = '0';
-                setTimeout(() => listItem.remove(), 300);
+    async function showNoticeEditModal(noticeNo) {
+        try {
+            const res = await fetch(`/api/notices/${noticeNo}`);
+            const data = await res.json();
+            document.getElementById('noticeId').value = data.noticeNo;
+            document.getElementById('noticeTitle').value = data.title;
+            document.getElementById('noticeContent').value = data.content;
+            document.getElementById('noticePrivacy').value = data.privacySettings;
+            $('#btnDeleteNotice').toggle(isAdmin);
+            
+            const fileListDiv = $('#existingFileList').empty();
+            if (data.files?.length > 0) {
+                let fileHtml = '<p class="fw-bold mb-1 small mt-2">기존 첨부파일:</p><ul class="list-group list-group-sm mb-3">';
+                data.files.forEach(file => {
+                    fileHtml += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <div class="text-truncate" style="max-width: 85%;">
+                                <i class="cil-file text-primary me-2"></i> 
+                                <a href="/download/${file.detailsNo}" class="text-decoration-none small text-dark fw-semibold">${file.filesName}</a>
+                            </div>
+                            ${isAdmin ? `<button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="deleteIndividualFile(${file.detailsNo}, this)">&times;</button>` : ''}
+                        </li>`;
+                });
+                fileListDiv.append(fileHtml + '</ul>');
             }
-        } else {
-            alert("파일 삭제에 실패했습니다.");
-        }
-    } catch (error) { 
-        console.error(error); 
-        alert("네트워크 오류가 발생했습니다.");
-    }
-}
-
-document.getElementById('noticeForm').onsubmit = async function(e) {
-    e.preventDefault();
-    const id = document.getElementById('noticeId').value;
-    const csrf = getCsrf();
-    const formData = new FormData(this);
-    
-    const headers = {};
-    if (csrf.header && csrf.token) {
-        headers[csrf.header] = csrf.token;
+            $('#noticeForm input, #noticeForm textarea, #noticeForm select').prop('disabled', !isAdmin).prop('readonly', !isAdmin);
+            new bootstrap.Modal(document.getElementById('noticeModal')).show();
+        } catch (e) { showToast("데이터 로딩 실패", "error"); }
     }
 
-    // 📍 서버 컨트롤러 설정에 맞춰 id가 있으면 PUT, 없으면 POST
-    const method = id ? 'PUT' : 'POST';
-    const url = id ? `/api/notices/${id}` : '/api/notices';
+    function handleDeleteNotice() {
+        const noticeNo = document.getElementById('noticeId').value;
+        askConfirm("이 공지사항을 정말 삭제하시겠습니까?", async () => {
+            const csrf = getCsrf();
+            const headers = {};
+            if (csrf) headers[csrf.header] = csrf.token;
 
-    try {
-        const res = await fetch(url, {
-            method: method,   // 💡 여기가 핵심! id가 있을 때 'PUT'이 들어갑니다.
-            headers: headers,
-            body: formData 
+            const res = await fetch(`/api/notices/${noticeNo}`, { method: 'DELETE', headers: headers });
+            if (res.ok) { 
+                reserveToast("공지사항이 삭제되었습니다."); 
+                location.reload(); 
+            } else showToast("삭제 실패", "error");
         });
-        
-        if (res.ok) { 
-            alert("저장되었습니다."); 
-            location.reload(); 
-        } else {
-            // 405 에러가 다시 난다면 서버 콘솔을 다시 확인해야 합니다.
-            const errorMsg = await res.text();
-            alert("저장 실패 (Status: " + res.status + ")\n사유: " + errorMsg);
-        }
-    } catch (error) { 
-        console.error(error); 
-        alert("네트워크 오류 발생"); 
     }
-};
 
-/* --- 4. 메모 (Memo) API --- */
-function showMemoForm() { 
-    document.getElementById('memoInputForm').classList.remove('hidden-item'); 
-    document.getElementById('noMemoMsg')?.classList.add('hidden-item'); 
-    document.getElementById('memoTextarea').focus(); 
-}
-function hideMemoForm() { 
-    document.getElementById('memoInputForm').classList.add('hidden-item'); 
-    document.getElementById('memoTextarea').value = ''; 
-    document.getElementById('noMemoMsg')?.classList.remove('hidden-item');
-}
-function saveMemo() {
-    const content = document.getElementById('memoTextarea').value.trim();
-    if (!content) return;
-    const csrf = getCsrf();
-    fetch('/api/memos', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json', [csrf.header]: csrf.token }, 
-        body: JSON.stringify({ content }) 
-    }).then(res => res.ok && location.reload());
-}
-function deleteMemo(memoNo, event) {
-    if (event) event.stopPropagation();
-    if (!confirm("삭제하시겠습니까?")) return;
-    const csrf = getCsrf();
-    fetch(`/api/memos/${memoNo}`, { 
-        method: 'DELETE', 
-        headers: { [csrf.header]: csrf.token } 
-    }).then(res => res.ok && location.reload());
-}
-function viewMemoDetail(content) { 
-    document.getElementById('fullMemoContent').innerText = content; 
-    new bootstrap.Modal(document.getElementById('memoDetailModal')).show(); 
-}
+    document.getElementById('noticeForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('noticeId').value;
+        const csrf = getCsrf();
+        const formData = new FormData(this);
+        const url = id ? `/api/notices/${id}` : '/api/notices';
+        const headers = {};
+        if (csrf) headers[csrf.header] = csrf.token;
 
-/* --- 대시보드 일감 로드 (통합 버전) --- */
-async function loadDashboardIssues() {
-    // 📍 타임리프 변수가 아니라, 셀렉트 박스에서 현재 선택된 값을 직접 가져옵니다.
-    const selectEl = document.getElementById('dashProjectSelect');
-    
-    // 셀렉트 박스가 있으면 그 값을 쓰고, 페이지 처음 로딩 시 없으면 'all'을 기본값으로 씁니다.
-    const projectCode = selectEl ? selectEl.value : 'all'; 
+        try {
+            const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: headers, body: formData });
+            if (res.ok) { 
+                reserveToast("저장되었습니다."); 
+                location.reload(); 
+            } else showToast("저장 실패", "error");
+        } catch (error) { showToast("네트워크 오류", "error"); }
+    };
 
-    const isOnlyMe = document.getElementById('dashShowOnlyMe').checked ? 'Y' : 'N';
-    const listContainer = document.getElementById('dash-issue-list');
+    /* --- [메모 로직] --- */
+    function showMemoForm() { 
+        $('#memoInputForm').removeClass('hidden-item'); 
+        $('#noMemoMsg').addClass('hidden-item'); 
+        $('#memoTextarea').focus(); 
+    }
+    function hideMemoForm() { 
+        $('#memoInputForm').addClass('hidden-item'); 
+        $('#memoTextarea').val(''); 
+        $('#noMemoMsg').removeClass('hidden-item');
+    }
 
-    try {
-        // 📍 이제 projectCode에 "all"이 담겨서 /api/dashboard/all/issues... 로 호출됩니다!
-        const response = await fetch(`/api/dashboard/${projectCode}/issues?showOnlyMe=${isOnlyMe}`);
-        
-        if (!response.ok) throw new Error('API 응답 에러');
-        
-        const issues = await response.json();
+    function saveMemo() {
+        const content = $('#memoTextarea').val().trim();
+        if (!content) return;
+        const csrf = getCsrf();
+        const headers = { 'Content-Type': 'application/json' };
+        if (csrf) headers[csrf.header] = csrf.token;
 
-        // 📍 우선순위 및 날짜순 정렬
-        const priorityMap = { "긴급": 1, "높음": 2, "보통": 3, "낮음": 4 };
-
-        issues.sort((a, b) => {
-            // 1순위: 우선순위 가중치 비교
-            const pA = priorityMap[a.priorityName] || 99;
-            const pB = priorityMap[b.priorityName] || 99;
-            if (pA !== pB) return pA - pB;
-
-            // 2순위: 작성일(혹은 시작일) 최신순 (데이터 필드명에 따라 수정 필요)
-            return new Date(b.addDate || 0) - new Date(a.addDate || 0);
+        fetch('/api/memos', { method: 'POST', headers: headers, body: JSON.stringify({ content }) }).then(res => {
+            if(res.ok) { 
+                reserveToast("메모가 저장되었습니다."); 
+                location.reload(); 
+            }
         });
+    }
 
-        // 📍 리스트 렌더링
-        listContainer.innerHTML = '';
-        if (issues.length === 0) {
-            listContainer.innerHTML = '<div class="text-center text-muted py-4">해당하는 일감이 없습니다.</div>';
-            return;
-        }
+    function deleteMemo(memoNo, event) {
+        if (event) event.stopPropagation();
+        askConfirm("이 메모를 정말 삭제하시겠습니까?", () => {
+            const csrf = getCsrf();
+            const headers = {};
+            if (csrf) headers[csrf.header] = csrf.token;
 
-        issues.forEach(issue => {
-            let badgeColor = 'bg-info';
-            if(issue.priorityName === '긴급') badgeColor = 'bg-danger';
-            else if(issue.priorityName === '높음') badgeColor = 'bg-warning text-dark';
+            fetch(`/api/memos/${memoNo}`, { method: 'DELETE', headers: headers }).then(res => {
+                if(res.ok) { 
+                    reserveToast("메모가 삭제되었습니다."); 
+                    location.reload(); 
+                } else showToast("삭제 오류", "error");
+            });
+        });
+    }
 
-            // 📍 전체보기일 때만 프로젝트 이름 표시 (issue 객체에 projectName이 있어야 함)
-            const currentSelect = document.getElementById('dashProjectSelect').value;
-            const projectTag = (currentSelect === "") ? 
-                `<span class="badge bg-light text-dark border me-1" style="font-size: 0.65rem;">${issue.projectName || '알수없음'}</span>` : '';
+    function viewMemoDetail(content) { 
+        document.getElementById('fullMemoContent').innerText = content; 
+        new bootstrap.Modal(document.getElementById('memoDetailModal')).show(); 
+    }
 
-            const itemHtml = `
-                <div class="list-group-item px-0 py-2 border-bottom" style="cursor:pointer;" 
-                     onclick="location.href='/project/user/${issue.projectCode}/issue/info?jobNo=${issue.jobNo}'">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="text-truncate" style="max-width: 80%;">
-                            ${projectTag}
-                            <small class="text-muted" style="font-size: 0.7rem;">#${issue.jobNo}</small>
-                            <span class="fw-bold d-block" style="font-size: 0.85rem;">${issue.title}</span>
+    /* --- [일감 현황 로직] --- */
+    async function loadDashboardIssues() {
+        const selectEl = document.getElementById('dashProjectSelect');
+        const projectCode = selectEl ? selectEl.value : 'all'; 
+        const isOnlyMe = document.getElementById('dashShowOnlyMe').checked ? 'Y' : 'N';
+        const listContainer = document.getElementById('dash-issue-list');
+
+        try {
+            const response = await fetch(`/api/dashboard/${projectCode}/issues?showOnlyMe=${isOnlyMe}`);
+            const issues = await response.json();
+            listContainer.innerHTML = '';
+            if (issues.length === 0) {
+                listContainer.innerHTML = '<div class="text-center text-muted py-4">해당하는 일감이 없습니다.</div>';
+                return;
+            }
+            issues.forEach(issue => {
+                let badgeColor = issue.priorityName === '긴급' ? 'bg-danger' : (issue.priorityName === '높음' ? 'bg-warning text-dark' : 'bg-info');
+                listContainer.insertAdjacentHTML('beforeend', `
+                    <div class="list-group-item px-0 py-2 border-bottom" style="cursor:pointer;" onclick="location.href='/project/user/${issue.projectCode}/issue/info?jobNo=${issue.jobNo}'">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-truncate" style="max-width: 80%;">
+                                <small class="text-muted">#${issue.jobNo}</small>
+                                <span class="fw-bold d-block" style="font-size: 0.85rem;">${issue.title}</span>
+                            </div>
+                            <span class="badge ${badgeColor}" style="font-size: 0.7rem;">${issue.priorityName}</span>
                         </div>
-                        <span class="badge ${badgeColor}" style="font-size: 0.7rem;">${issue.priorityName}</span>
-                    </div>
-                </div>`;
-            listContainer.insertAdjacentHTML('beforeend', itemHtml);
-        });
-    } catch (error) {
-        console.error("일감 로드 에러:", error);
-        listContainer.innerHTML = '<div class="text-center text-danger py-4">데이터를 가져오지 못했습니다.</div>';
+                    </div>`);
+            });
+        } catch (error) { listContainer.innerHTML = '<div class="text-center text-danger py-4">데이터 로딩 에러</div>'; }
     }
-}
 
-// 스위치 클릭 시 재로드
-function filterDashIssues() {
-    loadDashboardIssues();
-}
-
-// 페이지 로드 시 최초 실행
-document.addEventListener("DOMContentLoaded", loadDashboardIssues);
-
-/* --- 5. 기타 --- */
-function goToProjectInfo(projectCode) { location.href = `/project/user/${projectCode}/read`; }
+    function goToProjectInfo(projectCode) { location.href = `/project/user/${projectCode}/read`; }
 </script>
 </body>
 </html>
