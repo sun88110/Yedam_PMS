@@ -48,14 +48,17 @@ public class FilesUploadService {
 		// 파일 부모 생성
 		FilesEntity filesEntity = null;
 		if (filesNo != null) {
-			filesEntity = filesRepository.findById(filesNo).orElse(null);
+			filesEntity = filesRepository.findById(filesNo).orElseGet(() -> {
+				FilesEntity newEntity = FilesEntity.builder()
+													.userId(userId)
+													.build();
+				return filesRepository.save(newEntity);
+			});
+		} else {
+			// 없으면 새로 생성
+			filesEntity = FilesEntity.builder().userId(userId).build();
+			filesRepository.save(filesEntity);
 		}
-		
-		// 없으면 새로 생성
-		if (filesNo == null) {
-            filesEntity = FilesEntity.builder().userId(userId).build();
-            filesRepository.save(filesEntity);
-        }
 		
 		// AWS 저장
 		filesUploadProcess(filesEntity, files);
