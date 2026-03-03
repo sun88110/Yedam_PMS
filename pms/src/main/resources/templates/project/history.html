@@ -54,7 +54,7 @@
                                 <div>
                                     <span th:text="|${history.jobStatus}(${#dates.format(history.historyDate, 'HH:mm')}) |"></span>
                                     
-                                    <a th:href="@{/project/user/{code}/issue/info(code=${projectCode}, jobNo=${history.jobNo})}" 
+                                    <a th:href="@{/project/user/{code}/issue/info/read(code=${projectCode}, jobNo=${history.jobNo})}" 
                                        class="text-decoration-none fw-bold"
                                        th:text="|${history.jobType}#${history.jobNo}: |"></a>
                                     <span class="fw-bold" th:text="${history.title}"></span>
