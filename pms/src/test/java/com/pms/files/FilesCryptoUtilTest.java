@@ -18,10 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import com.pms.files.util.FileCryptoUtil;
 
-import lombok.RequiredArgsConstructor;
-
 @SpringBootTest
-@RequiredArgsConstructor
 public class FilesCryptoUtilTest {
 
 	@Autowired
