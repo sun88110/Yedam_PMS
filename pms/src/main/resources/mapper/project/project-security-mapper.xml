@@ -32,7 +32,7 @@
 		JOIN G_PROJECT g ON m.GROUP_NO = g.GROUP_NO
 		JOIN PROJECT p ON g.PROJECT_NO = p.PROJECT_NO
 		WHERE u.USER_ID = #{userId}
-		AND p.PROJECT_CODE = #{projectCode}
+		AND p.PROJECT_NO = #{projectCode}
 		AND g.PM = 1
 	</select>
 	

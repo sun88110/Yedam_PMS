@@ -45,7 +45,7 @@ public class ProjectSecurityService {
 	// DB에서 url 검색
 	public ProjectSecurityMenuDto findMenu(String url) {
 		return projectSecurityMapper.selectAllMenus().stream().filter(m -> pathMatcher.match(m.getUrlData(), url))
-				.max((m1, m2) -> pathMatcher.getPatternComparator(url).compare(m1.getUrlData(), m2.getUrlData()))
+				.min((m1, m2) -> pathMatcher.getPatternComparator(url).compare(m1.getUrlData(), m2.getUrlData()))
 				.orElse(null);
 	}
 

@@ -46,6 +46,7 @@ public class ProjectAuthorizationManager implements AuthorizationManager<Request
 		if (menu != null && menu.getMenuId() == 410) {
 			projectNo = request.getParameter("projectNo");
 		}
+		
 		// PM 체크
 		if (projectNo != null) {
 			boolean result = projectSecurityService.isPm(userId, projectNo);
