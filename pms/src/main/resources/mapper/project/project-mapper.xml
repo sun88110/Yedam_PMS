@@ -246,7 +246,7 @@
 		JOIN users u      ON m.user_id = u.user_id
 		JOIN groups gs    ON m.group_no = gs.group_no
 		WHERE p.project_code = #{projectCode}
-		ORDER BY gs.groupname
+		ORDER BY gs.groupname, u.username
 	</select>
 	
 	<!--/* 최신 뉴스목록 상위 2개 까지만 출력 */-->
