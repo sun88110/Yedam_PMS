@@ -17,7 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.pms.files.entity.FilesDetailsEntity;
 import com.pms.files.repository.FilesDetailsRepository;
-import com.pms.files.repository.FilesRepository;
 import com.pms.issue.service.IssueService;
 import com.pms.issue.web.IssueDto;
 import com.pms.issue.web.IssueSelectDto;
@@ -71,128 +70,118 @@ public class IssueMockTest {
 
 	@Test
 	@DisplayName("등록된 일감 번호를 제대로 반환하는지 확인")
-	public void insertIssueMockTest() {
+	public void insertIssueMockTest() throws Exception {
 		System.out.println("[H2 DB] INSERT ISSUE TEST START");
-
 		// given
 		String userId = "testUser";
 		IssueDto issueDto = new IssueDto();
 		issueDto.setTitle("MyBatis 이슈 번호 반환 테스트");
 		issueDto.setUserId(userId);
 
-		try {
-			// when
-			List<MultipartFile> files = Collections.emptyList();
-			Integer jobNo;
-			
-			jobNo = issueService.addIssue(issueDto, files);
-			
-			// then
-			assertThat(jobNo).isNotNull();
-			assertThat(jobNo).isGreaterThan(0);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// when
+		List<MultipartFile> files = Collections.emptyList();
+		Integer jobNo;
 
+		jobNo = issueService.addIssue(issueDto, files);
+
+		// then
+		assertThat(jobNo).isNotNull();
+		assertThat(jobNo).isGreaterThan(0);
 
 		System.out.println("[H2 DB] INSERT ISSUE TEST END");
 	}
 
 	@Test
 	@DisplayName("일감 제목이 없을 시 예외 발생 확인")
-	public void issueNullTitleMockTest() {
+	public void issueNullTitleMockTest() throws Exception {
 		System.out.println("[H2 DB] NULL TITLE TEST START");
-				
+
 		// given
 		IssueDto issueDto = new IssueDto();
-		
+
 		// when -> then
 		List<MultipartFile> files = Collections.emptyList();
-		assertThatThrownBy(() -> issueService.addIssue(issueDto, files))
-								.isInstanceOf(RuntimeException.class)
-								.hasMessageContaining("제목은 필수 입력 사항입니다.");
+		assertThatThrownBy(() -> issueService.addIssue(issueDto, files)).isInstanceOf(RuntimeException.class)
+				.hasMessageContaining("제목은 필수 입력 사항입니다.");
 
 		System.out.println("[H2 DB] NULL TITLE TEST END");
 	}
 	
 	@Test
 	@DisplayName("첨부파일 등록 시 상세정보까지 저장되는지 확인")
-	public void insertIssueAndFileMockTest() {
+	public void insertIssueAndFileMockTest() throws Exception {
 		System.out.println("[H2 DB] FILE UPLOAD TEST START");
-		
 		// given
 		String userId = "testUser";
 		IssueDto issueDto = new IssueDto();
 		issueDto.setTitle("첨부파일 등록 테스트");
 		issueDto.setUserId(userId);
-		
+
 		List<MultipartFile> files = new ArrayList<>();
-		files.add(new MockMultipartFile(
-				"testFiles01", 
-				"test_txt.txt",
-				"text/plain",
-				"H2 DB txt".getBytes()
-				));
-		files.add(new MockMultipartFile(
-				"testFiles02", 
-				"test_img.png",
-				"image/png",
-				"H2 DB png".getBytes()
-				));
-		
+		files.add(new MockMultipartFile("testFiles01", "test_txt.txt", "text/plain", "H2 DB txt".getBytes()));
+		files.add(new MockMultipartFile("testFiles02", "test_img.png", "image/png", "H2 DB png".getBytes()));
+
 		// when
-		try {
-			Integer jobNo = issueService.addIssue(issueDto, files);
-			
-			// then
-			assertThat(jobNo).isNotNull();
-			assertThat(issueDto.getFilesNo()).isNotNull();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
+
+		Integer jobNo = issueService.addIssue(issueDto, files);
+
+		// then
+		assertThat(jobNo).isNotNull();
+		assertThat(issueDto.getFilesNo()).isNotNull();
+
 		System.out.println("[H2 DB] FILE UPLOAD TEST END");
 	}
 	
 	@Test
-	@DisplayName("일감 수정 및 파일 삭제 테스트, 모든 파일 삭제 시 files_no가 null 되는지 확인")
-	public void modifyIssueTest() {
+	@DisplayName("일감 등록 후 파일 추가 업로드 시 부모 번호가 유지되는지 확인")
+	public void modifyIssueTest() throws Exception {
 		System.out.println("[H2 DB] MODIFY ISSUE TEST START");
-		
-		try {
-			// given
-			IssueDto issueDto = createBaseIssueDto("song", "원본 제목");
-			Integer jobNo;
-			jobNo = issueService.addIssue(issueDto, createMockFiles(3));
 
-			Integer filesNo = getJobDetail(jobNo).getFilesNo();
-			List<FilesDetailsEntity> beforeDetails = filesDetailsRepository.findByFilesEntity_FilesNo(filesNo);
-		    Integer deleteNo = beforeDetails.get(0).getDetailsNo();
+		// given
+		// 더미 데이터
+		IssueDto issueDto = createBaseIssueDto("song", "원본 제목");
+		List<MultipartFile> initialFiles = createMockFiles(3);
 
-			// when: 한 개 파일 삭제 -> 추가
-			issueDto.setJobNo(jobNo);
-			issueDto.setTitle("수정된 제목");
-			issueDto.setChangeComment("수정 코멘트");
-			issueDto.setFilesNo(filesNo);
-			List<Integer> deleteFilesList = List.of(deleteNo);
-		    List<MultipartFile> newFiles = List.of(
-		    		new MockMultipartFile("files", 
-		    							"new_upload.txt",
-		    							"text/plain",
-		    							"new content".getBytes()));
-			issueService.modifyIssue(issueDto, deleteFilesList, newFiles);
+		// 일감 등록
+		Integer jobNo = issueService.addIssue(issueDto, initialFiles);
 
-			// then
-			IssueSelectDto updatedIssue = getJobDetail(jobNo);
-			List<FilesDetailsEntity> afterDetails = filesDetailsRepository.findByFilesEntity_FilesNo(updatedIssue.getFilesNo());
-			
-			assertThat(updatedIssue.getTitle()).isEqualTo("수정된 제목");
-			assertThat(afterDetails.size()).isEqualTo(3);
-			boolean hasNewFile = afterDetails.stream().anyMatch(d -> d.getFilesName().equals("new_upload.txt"));
-		    assertThat(hasNewFile).isTrue();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// 결과 조회
+		IssueSelectDto savedIssue = issueService.findIssue(jobNo);
+		Integer filesNo = savedIssue.getFilesNo();
+
+		assertThat(filesNo).isNotNull();
+		List<FilesDetailsEntity> firstDetails = filesDetailsRepository.findByFilesEntity_FilesNo(filesNo);
+		assertThat(firstDetails).hasSize(3);
+
+		// when
+		// 파일 추가 등록
+		IssueDto modifyDto = new IssueDto();
+		modifyDto.setJobNo(jobNo);
+		modifyDto.setTitle("수정된 제목");
+		modifyDto.setUserId(issueDto.getUserId());
+		modifyDto.setFilesNo(filesNo);
+		modifyDto.setHistoryUserId(issueDto.getUserId());
+		modifyDto.setJobTypeNo("1");
+		modifyDto.setJobStatusNo("1");
+		modifyDto.setProjectNo(1);
+		modifyDto.setPriority(210);
+		modifyDto.setPublicRole(1);
+
+		List<MultipartFile> newFiles = List
+				.of(new MockMultipartFile("files", "added_04.txt", "text/plain", "Added Content 4".getBytes()));
+
+		// 수정
+		issueService.modifyIssue(modifyDto, null, newFiles);
+
+		// then
+		// 검증
+		// 파일 번호 확인
+		IssueSelectDto updatedIssue = issueService.findIssue(jobNo);
+		assertThat(updatedIssue.getFilesNo()).isEqualTo(filesNo);
+
+		// 파일 개수 확인
+		List<FilesDetailsEntity> finalDetails = filesDetailsRepository.findByFilesEntity_FilesNo(filesNo);
+		assertThat(finalDetails).hasSize(4);
 
 		System.out.println("[H2 DB] MODIFY ISSUE TEST END");
 	}
@@ -205,6 +194,10 @@ public class IssueMockTest {
 		dto.setTitle(title);
 		dto.setProjectNo(1);
 		dto.setProjectCode("PMS100");
+		dto.setJobTypeNo("1");
+	    dto.setJobStatusNo("1");
+	    dto.setPriority(210);
+	    dto.setPublicRole(1);
 		return dto;
 	}
 
@@ -217,15 +210,4 @@ public class IssueMockTest {
 		return files;
 	}
 
-	/** 일감 조회 */
-	private IssueSelectDto getJobDetail(Integer jobNo) {
-		IssueSelectDto selectDto = new IssueSelectDto();
-		selectDto.setProjectCode("PMS100");
-		return issueService.findIssueList(selectDto)
-							.stream()
-							.filter(i -> i.getJobNo().equals(jobNo))
-							.findFirst()
-							.orElseThrow(() -> new RuntimeException("일감을 찾을 수 없습니다. jobNo: " + jobNo));
-	}
-	
 }
