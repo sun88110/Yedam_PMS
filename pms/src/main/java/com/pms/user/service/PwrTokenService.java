@@ -1,6 +1,7 @@
 package com.pms.user.service;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,9 @@ public class PwrTokenService {
 	private final PwrTokenRepository pwrTokenRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final EmailService emailService;
+	
+	private static final String PW_REGEX = "^(?=.*[!@#$%^&*()])[A-Za-z\\d!@#$%^&*()]{8,}$";
+    private static final Pattern PATTERN = Pattern.compile(PW_REGEX);
 
 	@Transactional
 	public String sendResetMail(String userId) {
@@ -54,6 +58,8 @@ public class PwrTokenService {
 	// 토큰 확인 후 PW 변경
 	@Transactional
 	public void modifyPwService(String token, String newPw) {
+		validate(newPw);
+		
 		PwrTokenEntity pwrToken = pwrTokenRepository.findByTokenValue(token)
 				.orElseThrow(() -> new IllegalArgumentException("토큰이 존재하지 않습니다."));
 
@@ -66,5 +72,11 @@ public class PwrTokenService {
 		// PW 변경 후 Redis에서 토큰 삭제
 		pwrTokenRepository.delete(pwrToken);
 	}
+	
+	private void validate(String password) {
+        if (password == null || !PATTERN.matcher(password).matches()) {
+            throw new IllegalArgumentException("비밀번호는 8자 이상이며, 최소 하나의 특수문자를 포함해야 합니다.");
+        }
+    }
 
 }

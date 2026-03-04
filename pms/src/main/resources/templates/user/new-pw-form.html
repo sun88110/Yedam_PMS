@@ -41,13 +41,19 @@
 
 								<!-- 새 비밀번호 -->
 								<div class="mb-3">
-									<label for="newPw" class="form-label"> 새 비밀번호 </label>
-									<input type="password" id="newPw" name="newPw" class="form-control" placeholder="새 비밀번호 입력" required>
+									<label for="newPw" class="form-label small fw-bold">새 비밀번호</label>
+									<input type="password" class="form-control" id="newPw" name="newPw" placeholder="8자 이상, 특수문자 포함" required>
+								</div>
+
+								<div class="mb-3">
+									<label for="confirmPw" class="form-label small fw-bold">비밀번호 확인</label>
+									<input type="password" class="form-control" id="confirmPw" placeholder="비밀번호를 다시 입력하세요" required>
+									<div id="pwMatchMessage" class="small mt-1"></div>
 								</div>
 
 								<!-- 버튼 -->
 								<div class="d-grid">
-									<button type="submit" class="btn btn-primary rounded-3">비밀번호 변경 완료</button>
+									<button type="submit" id="submitBtn" class="btn btn-primary rounded-3">비밀번호 변경 완료</button>
 								</div>
 
 							</form>
@@ -60,6 +66,54 @@
 		</div>
 
 	</div>
+	<script>
+		document
+				.addEventListener(
+						"DOMContentLoaded",
+						function() {
+							const newPw = document.getElementById("newPw");
+							const confirmPw = document
+									.getElementById("confirmPw");
+							const message = document
+									.getElementById("pwMatchMessage");
+							const submitBtn = document
+									.getElementById("submitBtn");
 
+							const pwRegex = /^(?=.*[!@#$%^&*()])[A-Za-z\d!@#$%^&*()]{8,}$/;
+
+							function validatePassword() {
+								const pwValue = newPw.value;
+								const confirmValue = confirmPw.value;
+
+								if (!pwRegex.test(pwValue)) {
+									message.textContent = "비밀번호는 8자 이상이며, 최소 하나의 특수문자를 포함해야 합니다.";
+									message.style.color = "red";
+									submitBtn.disabled = true;
+									return;
+								}
+
+								if (confirmValue.length === 0) {
+									message.textContent = "비밀번호 확인을 입력해주세요.";
+									message.style.color = "orange";
+									submitBtn.disabled = true;
+									return;
+								}
+
+								if (pwValue === confirmValue) {
+									message.textContent = "비밀번호가 일치하며 사용 가능합니다.";
+									message.style.color = "green";
+									submitBtn.disabled = false;
+								} else {
+									message.textContent = "비밀번호가 일치하지 않습니다.";
+									message.style.color = "red";
+									submitBtn.disabled = true;
+								}
+							}
+
+							newPw.addEventListener("input", validatePassword);
+							confirmPw.addEventListener("input",
+									validatePassword);
+						});
+	</script>
 </body>
 </html>

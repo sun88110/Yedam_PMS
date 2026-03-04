@@ -55,9 +55,9 @@ public class PwrTokenController {
 
 	// PW 변경
 	@PutMapping("/pw")
-	public String updatePwProcess(@RequestParam("token") String token, @RequestParam("newPw") String newPw,
+	public String updatePwProcess(@RequestParam("token") String token, @RequestParam("newPw") String newPw, Model model,
 			RedirectAttributes rttr) {
-		
+
 		try {
 			pwrTokenService.modifyPwService(token, newPw);
 			rttr.addFlashAttribute("msg", "PW가 성공적으로 변경되었습니다.");

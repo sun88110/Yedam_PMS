@@ -1,152 +1,144 @@
 <!DOCTYPE html>
-<html lang="ko"
-      xmlns:th="https://www.thymeleaf.org/"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="ko" xmlns:th="https://www.thymeleaf.org/" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 
 <head>
 <meta charset="utf-8" />
 <title>회원 등록</title>
 
-<link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/css/coreui.min.css"
-      rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/css/coreui.min.css" rel="stylesheet">
 
 <style>
-    /* 📍 필수 항목 시각적 표시 스타일 */
-    .required-label::after {
-        content: " *";
-        color: #e55353; /* CoreUI Danger 컬러 */
-        font-weight: bold;
-    }
-    .mandatory-notice {
-        font-size: 0.85rem;
-        background-color: #f0f2f5;
-        padding: 8px 12px;
-        border-radius: 6px;
-        border-left: 4px solid #3c4b64;
-    }
+/* 📍 필수 항목 시각적 표시 스타일 */
+.required-label::after {
+	content: " *";
+	color: #e55353; /* CoreUI Danger 컬러 */
+	font-weight: bold;
+}
+
+.mandatory-notice {
+	font-size: 0.85rem;
+	background-color: #f0f2f5;
+	padding: 8px 12px;
+	border-radius: 6px;
+	border-left: 4px solid #3c4b64;
+}
 </style>
 </head>
 
 <body class="bg-body-tertiary">
 
-<div layout:fragment="Content">
+	<div layout:fragment="Content">
 
-    <div class="container min-vh-100 d-flex align-items-center justify-content-center">
-        <div class="row justify-content-center w-100">
-            <div class="col-md-6 col-lg-5">
+		<div class="container min-vh-100 d-flex align-items-center justify-content-center">
+			<div class="row justify-content-center w-100">
+				<div class="col-md-6 col-lg-5">
 
-                <div class="card shadow-lg border-0 rounded-4">
-                    <div class="card-body p-4">
+					<div class="card shadow-lg border-0 rounded-4">
+						<div class="card-body p-4">
 
-                        <div class="text-center mb-4">
-                            <h3 class="fw-bold">회원 등록</h3>
-                            <p class="text-medium-emphasis small">
-                                새로운 계정을 생성합니다
-                            </p>
-                        </div>
+							<div class="text-center mb-4">
+								<h3 class="fw-bold">회원 등록</h3>
+								<p class="text-medium-emphasis small">새로운 계정을 생성합니다</p>
+							</div>
 
-<!--                         <div class="mandatory-notice mb-4">
+							<!--                         <div class="mandatory-notice mb-4">
                             <span class="text-danger fw-bold">*</span> 
                             <span class="text-dark">모든 필드는 필수 입력 항목입니다.</span>
                         </div> -->
 
-                        <div th:if="${error}" 
-                             class="alert alert-danger"
-                             th:text="${error}">
-                        </div>
+							<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-                        <form th:action="@{/user/}"
-                              th:object="${userDto}"
-                              method="post">
+							<form th:action="@{/user/}" th:object="${userDto}" method="post">
 
-                            <div class="mb-3">
-                                <label class="form-label required-label">유저 ID</label>
-                                <input type="text"
-                                       th:field="*{userId}"
-                                       class="form-control"
-                                       placeholder="아이디 입력">
+								<div class="mb-3">
+									<label class="form-label required-label">유저 ID</label>
+									<input type="text" th:field="*{userId}" class="form-control" placeholder="아이디 입력">
 
-                                <div class="invalid-feedback d-block"
-                                     th:if="${#fields.hasErrors('userId')}"
-                                     th:errors="*{userId}">
-                                </div>
-                            </div>
+									<div class="invalid-feedback d-block" th:if="${#fields.hasErrors('userId')}" th:errors="*{userId}"></div>
+								</div>
 
-                            <div class="mb-3">
-                                <label class="form-label required-label">비밀번호</label>
-                                <input type="password"
-                                       th:field="*{password}"
-                                       class="form-control"
-                                       placeholder="비밀번호 입력">
+								<div class="mb-3">
+									<label class="form-label required-label">비밀번호</label>
+									<input type="password" id="password" th:field="*{password}" class="form-control" placeholder="8자 이상, 특수문자 포함">
 
-                                <div class="invalid-feedback d-block"
-                                     th:if="${#fields.hasErrors('password')}"
-                                     th:errors="*{password}">
-                                </div>
-                            </div>
+									<div class="invalid-feedback d-block" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+								</div>
 
-                            <div class="mb-3">
-                                <label class="form-label required-label">이름</label>
-                                <input type="text"
-                                       th:field="*{username}"
-                                       class="form-control"
-                                       placeholder="이름 입력">
+								<div class="mb-3">
+									<label class="form-label required-label">비밀번호 확인</label>
+									<input type="password" id="passwordConfirm" class="form-control" placeholder="비밀번호 재입력">
+									<div id="pwMatchMessage" class="small mt-1" style="height: 20px;"></div>
+								</div>
 
-                                <div class="invalid-feedback d-block"
-                                     th:if="${#fields.hasErrors('username')}"
-                                     th:errors="*{username}">
-                                </div>
-                            </div>
+								<div class="mb-3">
+									<label class="form-label required-label">이름</label>
+									<input type="text" th:field="*{username}" class="form-control" placeholder="이름 입력">
 
-                            <div class="mb-3">
-                                <label class="form-label required-label">이메일</label>
-                                <input type="email"
-                                       th:field="*{email}"
-                                       class="form-control"
-                                       placeholder="example@email.com">
-                                
-                                <div class="invalid-feedback d-block"
-                                     th:if="${#fields.hasErrors('email')}"
-                                     th:errors="*{email}">
-                                </div>
-                            </div>
+									<div class="invalid-feedback d-block" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
+								</div>
 
-                            <div class="form-check mb-4 mt-4"
-                                 sec:authorize="hasRole('ROLE_ADMIN')">
-                                <input type="checkbox"
-                                       id="adminCheck"
-                                       th:field="*{admin}"
-                                       class="form-check-input">
-                                <label for="adminCheck" class="form-check-label text-primary fw-semibold">
-                                    관리자 권한 부여
-                                </label>
-                            </div>
+								<div class="mb-3">
+									<label class="form-label required-label">이메일</label>
+									<input type="email" th:field="*{email}" class="form-control" placeholder="example@email.com">
 
-                            <div class="d-grid gap-2 mt-4">
-                                <button type="submit"
-                                        class="btn btn-primary rounded-3 py-2 fw-bold">
-                                    회원 등록 완료
-                                </button>
+									<div class="invalid-feedback d-block" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+								</div>
 
-                                <a th:href="@{/}"
-                                   class="btn btn-outline-secondary rounded-3">
-                                    취소
-                                </a>
-                            </div>
+								<div class="form-check mb-4 mt-4" sec:authorize="hasRole('ROLE_ADMIN')">
+									<input type="checkbox" id="adminCheck" th:field="*{admin}" class="form-check-input">
+									<label for="adminCheck" class="form-check-label text-primary fw-semibold"> 관리자 권한 부여 </label>
+								</div>
 
-                        </form>
+								<div class="d-grid gap-2 mt-4">
+									<button type="submit" id="submitBtn" class="btn btn-primary rounded-3 py-2 fw-bold">회원 등록 완료</button>
 
-                    </div>
-                </div>
+									<a th:href="@{/}" class="btn btn-outline-secondary rounded-3"> 취소 </a>
+								</div>
 
-            </div>
-        </div>
-    </div>
+							</form>
 
-</div>
+						</div>
+					</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/js/coreui.bundle.min.js"></script>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/@coreui/coreui@5.0.0/dist/js/coreui.bundle.min.js"></script>
+	<script>
+		document.addEventListener("DOMContentLoaded", function() {
+			const password = document.getElementById("password");
+			const passwordConfirm = document.getElementById("passwordConfirm");
+			const message = document.getElementById("pwMatchMessage");
+			const submitBtn = document.getElementById("submitBtn");
+
+			function checkMatch() {
+				const val = password.value;
+				const confirmVal = passwordConfirm.value;
+
+				if (confirmVal.length === 0) {
+					message.textContent = "";
+					submitBtn.disabled = true;
+					return;
+				}
+
+				if (val === confirmVal) {
+					message.textContent = "비밀번호가 일치합니다.";
+					message.style.color = "#2eb85c";
+					submitBtn.disabled = false;
+				} else {
+					message.textContent = "비밀번호가 일치하지 않습니다.";
+					message.style.color = "#e55353";
+					submitBtn.disabled = true;
+				}
+			}
+
+			password.addEventListener("input", checkMatch);
+			passwordConfirm.addEventListener("input", checkMatch);
+		});
+	</script>
 
 </body>
 </html>
