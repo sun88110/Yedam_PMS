@@ -8,6 +8,7 @@ import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.PathMatcher;
 
 import com.pms.project.dto.ProjectSecurityMenuDto;
 import com.pms.project.service.ProjectSecurityService;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class ProjectAuthorizationManager implements AuthorizationManager<RequestAuthorizationContext> {
 
 	private final ProjectSecurityService projectSecurityService;
+	private final PathMatcher pathMatcher;
 
 	@Override
 	public AuthorizationDecision check(Supplier<Authentication> authentication, RequestAuthorizationContext context) {
@@ -33,6 +35,10 @@ public class ProjectAuthorizationManager implements AuthorizationManager<Request
 		if (customUser.getUserEntity().isAdmin()) {
 			return new AuthorizationDecision(true);
 		}
+		
+		System.out.println();
+		System.out.println();
+		System.out.println();
 
 		String userId = auth.getName();
 		HttpServletRequest request = context.getRequest();
@@ -40,19 +46,28 @@ public class ProjectAuthorizationManager implements AuthorizationManager<Request
 	    
 	    // 프로젝트 관리 url 확인
 	    ProjectSecurityMenuDto menu = projectSecurityService.findMenu(reqUri);
+	    String projectNo = request.getParameter("projectNo");
 	    
-		// 410번(프로젝트 설정)일 경우 처리
-		String projectNo = null;
-		if (menu != null && menu.getMenuId() == 410) {
-			projectNo = request.getParameter("projectNo");
-		}
+	    System.out.println("[reqUri]: " + reqUri);
+		System.out.println("[menu]: " + menu);
+	    if (projectNo == null && menu != null && menu.getUrlData() != null) {
+	        String pattern = menu.getUrlData();
+	        if (pathMatcher.match(pattern, reqUri)) {
+	            var vars = pathMatcher.extractUriTemplateVariables(pattern, reqUri);
+	            projectNo = vars.getOrDefault("projectNo", vars.get("projectCode"));
+	        }
+	    }
 		
 		// PM 체크
-		if (projectNo != null) {
-			boolean result = projectSecurityService.isPm(userId, projectNo);
-			return new AuthorizationDecision(result);
-		}
+	    if (projectNo != null && projectSecurityService.isPm(userId, projectNo)) {
+	        System.out.println("[PM 승인]: " + userId + ", Key: " + projectNo);
+	        return new AuthorizationDecision(true);
+	    }
 	    
+		System.out.println();
+		System.out.println();
+		System.out.println();
+		
 	    // 권한 체크
 		String method = getMethod(request);
 		boolean isAuth = projectSecurityService.isAuth(userId, reqUri, method);
