@@ -41,11 +41,38 @@ public class ProjectSecurityService {
 
 		return projectSecurityMapper.checkAuth(userId, value, menuId, method);
 	}
+	
+	// 프로젝트 key 추출
+	public String extractProjectKey(String url) {
+		ProjectSecurityMenuDto menu = findMenu(url);
+		if (menu == null || menu.getUrlData() == null) {
+			return null;
+		}
+
+		String pattern = menu.getUrlData();
+		if (!pathMatcher.match(pattern, url)) {
+			return null;
+		}
+
+		Map<String, String> result = pathMatcher.extractUriTemplateVariables(pattern, url);
+		String projectNo = result.get("projectNo");
+		String projectCode = result.get("projectCode");
+
+		if (projectNo != null) {
+			return projectNo;
+		}
+		if (projectCode != null) {
+			projectCode = projectSecurityMapper.findProjectNoByCode(projectCode);
+			return projectCode;
+		}
+		return null;
+	}
 
 	// DB에서 url 검색
 	public ProjectSecurityMenuDto findMenu(String url) {
 		return projectSecurityMapper.selectAllMenus().stream().filter(m -> pathMatcher.match(m.getUrlData(), url))
-				.min((m1, m2) -> pathMatcher.getPatternComparator(url).compare(m1.getUrlData(), m2.getUrlData()))
+				.sorted((m1, m2) -> pathMatcher.getPatternComparator(url).compare(m1.getUrlData(), m2.getUrlData()))
+				.findFirst()
 				.orElse(null);
 	}
 
@@ -63,4 +90,5 @@ public class ProjectSecurityService {
 		}
 	    return projectSecurityMapper.checkPm(userId, projectNo);
 	}
+	
 }
