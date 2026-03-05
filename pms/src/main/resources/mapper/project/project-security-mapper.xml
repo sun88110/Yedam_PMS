@@ -4,18 +4,18 @@
 	<select id="checkAuth" resultType="boolean">
 		SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
 		FROM VW_SECURITY_AUTH v
-		
-    	<if test="value != null">
-    	JOIN G_PROJECT gp ON v.GROUP_NO = gp.GROUP_NO
-    	JOIN PROJECT p ON gp.PROJECT_NO = p.PROJECT_NO
-    	</if>
-    	
-		WHERE v.user_id = #{userId}
-		
+
 		<if test="value != null">
-    	AND p.project_code = #{value}
-    	</if>
-		
+			JOIN G_PROJECT gp ON v.GROUP_NO = gp.GROUP_NO
+			JOIN PROJECT p ON gp.PROJECT_NO = p.PROJECT_NO
+		</if>
+
+		WHERE v.user_id = #{userId}
+
+		<if test="value != null">
+			AND p.project_code = #{value}
+		</if>
+
 		AND v.menu_id = #{menuId}
 		AND (
 		(#{method} = 'READ' AND V.CRUD_READ = 1) OR
@@ -35,13 +35,19 @@
 		AND p.PROJECT_NO = #{projectCode}
 		AND g.PM = 1
 	</select>
-	
+
 	<select id="selectAllMenus" resultType="ProjectSecurityMenuDto">
-        SELECT 
-            MENU_ID as menuId,
-            MENU_NAME as menuName,
-            URL_DATA as urlData,
-            TYPE as type
-        FROM MENU
-    </select>
+		SELECT
+		MENU_ID as menuId,
+		MENU_NAME as menuName,
+		URL_DATA as urlData,
+		TYPE as type
+		FROM MENU
+	</select>
+
+	<select id="findProjectNoByCode" resultType="String">
+		SELECT PROJECT_NO
+		FROM PROJECT
+		WHERE PROJECT_CODE = #{projectCode}
+	</select>
 </mapper>

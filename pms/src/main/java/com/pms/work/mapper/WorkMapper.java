@@ -31,6 +31,8 @@ public interface WorkMapper {
 	List<WorkReportDto> selectJobReport(WorkReportDto workReportDto);
 	// 프로젝트별 소요시간 보고서
 	List<WorkReportDto> selectProjectReport(WorkReportDto workReportDto);
+	// 작업분류 별 소요시간 보고서
+	List<WorkReportDto> selectWorkTypeReport(WorkReportDto workReportDto);
 	// 사용자별 소요시간 보고서
 	List<WorkReportDto> selectUserReport(WorkReportDto workReportDto);
 	// 프로젝트 주별 소요시간 보고서

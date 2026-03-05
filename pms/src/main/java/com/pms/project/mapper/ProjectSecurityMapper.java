@@ -10,11 +10,11 @@ import com.pms.project.dto.ProjectSecurityMenuDto;
 @Mapper
 public interface ProjectSecurityMapper {
 	boolean checkAuth(
-		@Param("userId") String userId,
-		@Param("value") String value,
-		@Param("menuId") Integer menuId,
-		@Param("method") String method
-		);
+			@Param("userId") String userId,
+			@Param("value") String value,
+			@Param("menuId") Integer menuId,
+			@Param("method") String method
+			);
 	
 	boolean checkPm(
 			@Param("userId") String userId, 
@@ -22,4 +22,6 @@ public interface ProjectSecurityMapper {
 			);
 	
 	List<ProjectSecurityMenuDto> selectAllMenus();
+	
+	String findProjectNoByCode(@Param("projectCode") String projectCode);
 }

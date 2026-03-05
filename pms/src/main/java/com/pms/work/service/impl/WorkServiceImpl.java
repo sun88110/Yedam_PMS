@@ -106,6 +106,8 @@ public class WorkServiceImpl implements WorkService {
 			return workMapper.selectJobReport(workReportDto);
 		case "users":
 			return workMapper.selectUserReport(workReportDto);
+		case "work":
+			return workMapper.selectWorkTypeReport(workReportDto);
 		case "week":
 			return workMapper.selectWeekReport(workReportDto);
 		case "month":

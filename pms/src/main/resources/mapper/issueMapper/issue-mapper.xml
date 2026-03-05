@@ -96,7 +96,7 @@
 	  ORDER BY u.username
 	</select>
 	
-	<!-- 프로젝트의  조회 project와 join-->
+	<!-- 프로젝트의  일감 조회 project와 join-->
 	<select id="selectParentIssue" resultType="IssueDto">
 	  SELECT j.job_no
                 , j.title
@@ -121,6 +121,7 @@
       WHERE h.job_no = #{jobNo}
       ORDER BY h.history_date DESC
 	</select>
+	
     <!-- 일감 등록 기능 -->
 	<insert id="insertIssue" parameterType="IssueDto">
 		<selectKey keyProperty="jobNo" resultType="Integer" order="BEFORE">
@@ -232,8 +233,7 @@
     ON j.user_id = u.user_id
     WHERE job_no = #{jobNo}
 	</select>
-	
-	
+		
 	<select id="findIssueList" resultType="IssueSelectDto">
     SELECT i.*, p.project_name
     FROM pms_issue i

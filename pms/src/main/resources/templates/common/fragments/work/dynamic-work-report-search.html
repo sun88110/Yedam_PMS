@@ -39,6 +39,26 @@
 				   placeholder="담당자명을 입력하세요" />
 	</div>
 </div>
+<!-- 작업분류별 -->
+<div th:fragment="workTypeReportField"
+		class="col-md-3 condition-field d-none"
+		id="field-workType">
+	<div class="card card-body shadow-sm">
+		<div class="d-flex justify-content-between align-items-center mb-2">
+			<label class="fw-bold small">작업분류 선택</label>
+			<!-- x버튼 -->
+			<button type="button" 
+						 class="btn-close btn-remove"
+					  	 data-target="field-workType"></button>
+		</div>
+	    <input type="hidden" name="type" value="work" /> 
+		<input type="text" 
+				   name="workType" 
+				   class="form-control form-control-sm"
+				   placeholder="작업분류명을 입력하세요" />
+	</div>
+</div>
+
 <!-- 프로젝트 주별 -->
 <div th:fragment="WeekReportField"
 		class="col-md-3 condition-field d-none" 
