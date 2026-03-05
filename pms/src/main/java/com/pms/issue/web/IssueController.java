@@ -24,6 +24,7 @@ import com.pms.issue.service.IssueService;
 import com.pms.project.service.ProjectService;
 import com.pms.user.entity.UserEntity;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -173,9 +174,16 @@ public class IssueController {
 			                                    @PathVariable String projectCode,
 			                                    @RequestParam("jobNo") Integer jobNo,
 			                                    IssueDto issueDto,
-			                                    Model model) {
-		
+			                                    Model model,
+			                                    RedirectAttributes redirectAttributes,
+			                                    HttpServletRequest req) {
 		UserEntity user = customUser.getUserEntity();
+		
+		if(!issueService.myIssueCheck(customUser, jobNo, req)) {
+			redirectAttributes.addFlashAttribute("message", "수정 권한이 없습니다.");
+			return "redirect:/project/user/" + projectCode + "/issue/list/read";
+		}
+		
 		IssueSelectDto issue =  issueService.findIssue(jobNo);
 		// 프로젝트 참여중인 멤버 목록
 		List<IssueDto> managerList = issueService.getManagerList(issueDto);

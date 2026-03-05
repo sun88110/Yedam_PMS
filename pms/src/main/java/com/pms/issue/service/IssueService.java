@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.pms.config.CustomUserDetails;
 import com.pms.files.entity.FilesDetailsEntity;
 import com.pms.files.repository.FilesDetailsRepository;
 import com.pms.files.service.FilesDeleteService;
@@ -16,14 +17,18 @@ import com.pms.files.util.FilesHasUtil;
 import com.pms.issue.mapper.IssueMapper;
 import com.pms.issue.web.IssueDto;
 import com.pms.issue.web.IssueSelectDto;
+import com.pms.project.service.ProjectSecurityService;
+import com.pms.user.entity.UserEntity;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class IssueService {
-
+	
+	private final ProjectSecurityService projectSecurityService;
 	private final FilesUploadService filesUploadService;
 	private final FilesDeleteService filesDeleteService;
 	private final FilesDetailsRepository filesDetailsRepository;
@@ -108,9 +113,24 @@ public class IssueService {
 	                }
 	            });
 		
-		
 		issueMapper.updateIssue(issueDto);
 		issueMapper.insertIssueHistory(issueDto);
+	}
+	
+	// 본인의 일감이 맞는지 확인
+	public boolean myIssueCheck(CustomUserDetails customUser, Integer jobNo, HttpServletRequest req) {
+		String uri = projectSecurityService.extractProjectKey(req.getRequestURI());
+		UserEntity user = customUser.getUserEntity();
+		IssueSelectDto issue = findIssue(jobNo);
+		boolean isAdmin = user.isAdmin();
+		boolean isPm = projectSecurityService.isPm(user.getUserId(), uri);
+		
+		if(!isAdmin && !isPm) {
+			if (!user.getUserId().equals(issue.getUserId())){
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	// ✅ 대시보드 전용 메서드 추가
