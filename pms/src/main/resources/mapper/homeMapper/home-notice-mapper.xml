@@ -2,8 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.pms.home.notice.mapper.HomeNoticeMapper">
 
-	<resultMap id="NoticeDetailMap"
-		type="com.pms.home.notice.dto.HomeNoticeDto">
+	<resultMap id="NoticeDetailMap" type="com.pms.home.notice.dto.HomeNoticeDto">
 		<constructor>
 			<idArg column="noticeNo" javaType="Integer" />
 			<arg column="title" javaType="String" />
@@ -12,8 +11,7 @@
 			<arg column="userId" javaType="String" />
 			<arg column="filesNo" javaType="Integer" />
 			<arg column="addDate" javaType="java.time.LocalDateTime" />
-			<arg column="filesNo" select="selectFilesDetailsByNo"
-				javaType="java.util.List" />
+			<arg column="filesNo" select="selectFilesDetailsByNo" javaType="java.util.List" />
 		</constructor>
 	</resultMap>
 
@@ -27,6 +25,10 @@
 		files_no AS filesNo,
 		add_date AS addDate
 		FROM notice
+		WHERE privacy_settings = 1
+		<if test="isAdmin or isPm">
+			OR privacy_settings = 0
+		</if>
 		ORDER BY add_date DESC, notice_no DESC
 	</select>
 
@@ -44,8 +46,7 @@
 		#{noticeNo}
 	</select>
 
-	<select id="selectFilesDetailsByNo"
-		resultType="com.pms.home.notice.dto.FileDto">
+	<select id="selectFilesDetailsByNo" resultType="com.pms.home.notice.dto.FileDto">
 		SELECT
 		details_no AS detailsNo,
 		files_name AS filesName,
@@ -60,8 +61,7 @@
 		WHERE files_no = #{filesNo}
 	</select>
 
-	<insert id="insertNotice"
-		parameterType="com.pms.home.notice.dto.HomeNoticeDto">
+	<insert id="insertNotice" parameterType="com.pms.home.notice.dto.HomeNoticeDto">
 		INSERT INTO notice (
 		notice_no,
 		title,
@@ -82,8 +82,7 @@
 		)
 	</insert>
 
-	<update id="updateNotice"
-		parameterType="com.pms.home.notice.dto.HomeNoticeDto">
+	<update id="updateNotice" parameterType="com.pms.home.notice.dto.HomeNoticeDto">
 		UPDATE notice
 		SET title = #{title},
 		content = #{content},

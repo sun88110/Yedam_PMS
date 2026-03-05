@@ -21,8 +21,7 @@ public class HomeController {
 		if (customUser == null) {
 			return "redirect:/user/login";
 		}
-		String userId = customUser.getUsername();
-		HomeDto dtoList = homeService.loadMainPage(userId);
+		HomeDto dtoList = homeService.loadMainPage(customUser);
 		model.addAttribute("list", dtoList);
 		return "home/home-index";
 	}

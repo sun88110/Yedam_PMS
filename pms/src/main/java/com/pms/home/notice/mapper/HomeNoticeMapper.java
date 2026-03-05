@@ -10,7 +10,7 @@ import com.pms.home.notice.dto.HomeNoticeDto;
 
 @Mapper
 public interface HomeNoticeMapper {
-    List<HomeNoticeDto> findNotices();
+    List<HomeNoticeDto> findNotices(boolean isAdmin, boolean isPm);
     
     // 이름을 selectNoticeDetail에서 getNotice로 변경
     HomeNoticeDto getNotice(Integer noticeNo);

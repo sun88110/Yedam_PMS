@@ -35,6 +35,16 @@
 		AND p.PROJECT_NO = #{projectCode}
 		AND g.PM = 1
 	</select>
+	
+	<select id="checkImPm" resultType="boolean">
+		SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+		FROM USERS u
+		JOIN MEMBERS m ON u.USER_ID = m.USER_ID
+		JOIN G_PROJECT g ON m.GROUP_NO = g.GROUP_NO
+		JOIN PROJECT p ON g.PROJECT_NO = p.PROJECT_NO
+		WHERE u.USER_ID = #{userId}
+		AND g.PM = 1
+	</select>
 
 	<select id="selectAllMenus" resultType="ProjectSecurityMenuDto">
 		SELECT

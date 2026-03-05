@@ -91,4 +91,9 @@ public class ProjectSecurityService {
 	    return projectSecurityMapper.checkPm(userId, projectNo);
 	}
 	
+	// home Notice에서 사용하는 메서드
+	public boolean isPm(String userId) {
+	    return projectSecurityMapper.checkImPm(userId);
+	}
+	
 }

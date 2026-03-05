@@ -40,7 +40,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 					.requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 					.requestMatchers("/coreui/**").permitAll()
-					.requestMatchers("/home/**", "/user/**", "/download/**", "/error", "/error/**").permitAll()
+					.requestMatchers("/home/**", "/user/**", "/download/**", "/error", "/error/**", "/api/notices/{noticeNo}").permitAll()
 					.requestMatchers("/settings/**").access(projectAuthorizationManager)
 					.anyRequest().access(projectAuthorizationManager)
 					)

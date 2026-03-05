@@ -21,6 +21,8 @@ public interface ProjectSecurityMapper {
 			@Param("projectCode") String projectCode
 			);
 	
+	boolean checkImPm(@Param("userId") String userId);
+	
 	List<ProjectSecurityMenuDto> selectAllMenus();
 	
 	String findProjectNoByCode(@Param("projectCode") String projectCode);
