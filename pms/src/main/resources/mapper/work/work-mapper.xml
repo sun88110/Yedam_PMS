@@ -33,7 +33,7 @@
 		 AND  j.user_id = #{userId}
   		  </if>
   		  <if test="username != null and username != ''">
-  		  AND u.username = #{username}
+  		  AND u.username LIKE '%' || #{username} || '%'
   		  </if>
 		  <if test="jobNo != null and jobNo != 0">
 		 AND we.job_no = #{jobNo}
@@ -158,6 +158,8 @@
           , j.job_no AS jobNo
           , j.start_date AS startDate
           , j.end_date AS endDate
+          , we.work_details_no
+          , wd.work_type
           , get_working_days(j.start_date, j.end_date) AS workDays
           , NVL(SUM(we.work_time), 0) AS realWorkTime
           , get_working_days(j.start_date, j.end_date) * 8 AS estimatedTime
@@ -172,6 +174,8 @@
             ON j.user_id = u.user_id
         LEFT JOIN work_entries we 
             ON j.job_no = we.job_no
+        JOIN work_details wd
+            ON we.work_details_no = wd.work_details_no
             <where>
                     p.project_code = #{projectCode}
                 <if test="title != null and title != ''">
@@ -186,6 +190,59 @@
             , j.manager_id
             , j.start_date
             , j.end_date
+            , we.work_details_no
+            , wd.work_type
+        ORDER BY
+            p.le, p.project_name
+	</select>
+	<!-- 작업분류 별 보고서 조회 -->
+		<select id="selectWorkTypeReport" resultType="WorkReportDto">
+	   SELECT
+            p.le
+          , p.project_name AS projectName
+          , u.username
+          , j.title AS title
+          , j.manager_id AS managerId
+          , j.job_no AS jobNo
+          , j.start_date AS startDate
+          , j.end_date AS endDate
+          , we.work_details_no
+          , wd.work_type
+          , get_working_days(j.start_date, j.end_date) AS workDays
+          , NVL(SUM(we.work_time), 0) AS realWorkTime
+          , get_working_days(j.start_date, j.end_date) * 8 AS estimatedTime
+        FROM
+            vw_project p
+        JOIN (SELECT DISTINCT project_no, user_id FROM vw_member) m
+            ON p.project_no = m.project_no
+            AND m.user_id = #{userId}
+        JOIN job j 
+             ON p.project_no = j.project_no
+        JOIN users u
+            ON j.user_id = u.user_id
+        LEFT JOIN work_entries we 
+            ON j.job_no = we.job_no
+        LEFT JOIN work_details wd
+            ON we.work_details_no = wd.work_details_no
+            <where>
+                    p.project_code = #{projectCode}
+                <if test="workType != null and workType != ''">
+                    AND wd.work_type LIKE '%' || #{workType} || '%'
+                </if>
+                <if test="workDetailsNo != null and workDetailsNo != ''">
+                    AND we.work_details_no = #{workDetailsNo} 
+                </if>
+            </where>
+        GROUP BY
+            p.le
+            , p.project_name
+            , u.username
+            , j.job_no, j.title
+            , j.manager_id
+            , j.start_date
+            , j.end_date
+            , we.work_details_no
+            , wd.work_type
         ORDER BY
             p.le, p.project_name
 	</select>
@@ -201,6 +258,8 @@
             , j.title AS title
             , j.start_date AS startDate
             , j.end_date AS endDate
+            , we.work_details_no
+            , wd.work_type
             , get_working_days(j.start_date, j.end_date) AS workDays
             , NVL(SUM(we.work_time), 0) AS realWorkTime
             , get_working_days(j.start_date, j.end_date) * 8 AS estimatedTime
@@ -241,9 +300,12 @@
             , j.title
             , j.start_date
             , j.end_date
+            , we.work_details_no
+            , wd.work_type
         ORDER BY 
             p.le ASC, p.project_name ASC
 	</select>
+	
 	
 	<!-- 주별 소요시간 보고서
 	오라클에서 'IW' (ISO Week) 기준은 한 주가 월요일에 시작해서 일요일에 끝납니다.
@@ -298,11 +360,13 @@
         , TO_CHAR(we.work_date, 'YYYY-MM') AS workMonth
         , SUM(we.work_time) AS realWorkTime
         , (get_working_days(TRUNC(MIN(we.work_date), 'MM'), LAST_DAY(MIN(we.work_date))) * 8) AS averageTime
-    FROM 
-        vw_project p
-    JOIN job j ON p.project_no = j.project_no
-    JOIN work_entries we ON j.job_no = we.job_no
-    JOIN work_details wd ON we.work_details_no = wd.work_details_no
+    FROM vw_project p
+    JOIN job j 
+    ON p.project_no = j.project_no
+    JOIN work_entries we 
+    ON j.job_no = we.job_no
+    JOIN work_details wd 
+    ON we.work_details_no = wd.work_details_no
     WHERE EXISTS (
         SELECT 1 FROM vw_member m 
         WHERE m.project_no = p.project_no 

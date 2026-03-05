@@ -172,13 +172,16 @@ public class WorkController {
 		workReportDto.setProjectCode(projectCode);
 		workReportDto.setUserId(user.getUserId());
 
-		// type은 job, project, users, week, month
+		// type은 job, project, workType, users, week, month
 		String type = workReportDto.getType();
 		// 보고서 페이지에서 조회를 눌렀을 때 type이 존재하면
 		if (type != null && !type.isEmpty()) {
 			// type이 "field-job,field-project" 여러개 넘어오면 인덱스 0번째 를 기준으로 처리
+			// 실제로 있는 type인지 확인
 			if (type.contains(",")) {
-				type = type.split(",")[0];
+				String[] types = type.split(",");
+				// 가장 마지막에 추가된(사용자가 현재 보고 있는) 타입을 선택
+				type = types[types.length - 1];
 			}		
 			List<WorkReportDto> reportList = workService.findWorkReport(type, workReportDto);
 						
@@ -186,6 +189,7 @@ public class WorkController {
 			model.addAttribute("reportType", workReportDto.getType());
 		}
 		// model에 담아서 보냄
+		
 		model.addAttribute("userId", user.getUserId());
 		model.addAttribute("projectCode", projectCode);
 		model.addAttribute("project", projectService.findInfoByCode(projectCode));;

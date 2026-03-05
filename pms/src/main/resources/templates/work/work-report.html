@@ -23,7 +23,7 @@
 
 <title>소요시간 보고서</title>
 </head>
-<body>
+<body> 
 	<div class="container">
 		<div class="mb-4 mt-3">
 			<h3 class="fw-bold">
@@ -53,10 +53,11 @@
 						<li><a class="dropdown-item add-condition" href="#"
 									data-target="field-username">담당자별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
+									data-target="field-workType">작업분류별</a></li>
+						<li><a class="dropdown-item add-condition" href="#"
 									data-target="field-projectWeek">프로젝트 주별</a></li>
 						<li><a class="dropdown-item add-condition" href="#"
-									data-target="field-projectMonth">프로젝트 월별</a>
-						</li>
+									data-target="field-projectMonth">프로젝트 월별</a></li>
 					</ul>
 				</div>
 				<!-- 조회 버튼 -->
@@ -73,6 +74,7 @@
 					<tr>
 						<th class="bi bi-person-badge me-1">담당자</th>
 						<th class="bi bi-card-checklist me-1">일감</th>
+						<th class="bi bi-card-checklist me-1">작업분류</th>
 						<th class="bi bi-calendar-range me-1">기간</th>
 						<th class="bi bi-alarm me-1">예상시간</th>
 						<th class="bi bi-play0circle me-1">실제 작업시간</th>
@@ -86,6 +88,10 @@
 						<td th:if="${row.title != null}"
 							   th:text="${row.title}"
 							   class="text-start"></td>	   
+						<td th:if="${row.workType != null ?
+											row.workType : '-'}"
+							   th:text="${row.workType}"
+							   class="text-start"></td>							   
 						<td>
 							<span th:if="${row.workWeek != null}"
 									  th:text="${row.workWeek}"></span> 

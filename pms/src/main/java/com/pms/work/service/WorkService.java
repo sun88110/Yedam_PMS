@@ -24,7 +24,7 @@ public interface WorkService {
 	void modifyWorkEntries(WorkUpdateDto workUpdateDto);
 	
     // 통합 보고서 조회 Method 
-	// type 은 job, users, week, month
+	// type 은 job, users, workType, week, month
 	List<WorkReportDto> findWorkReport(String type, WorkReportDto workReportDto);
 
 }
