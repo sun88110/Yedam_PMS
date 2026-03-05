@@ -78,7 +78,22 @@ document.addEventListener('DOMContentLoaded', function () {
           if (res.ok) {
             // ✅ alert 대신 토스트 예약 후 새로고침
             reserveToast('인증 메일이 발송되었습니다. (유효시간 5분)');
-            location.reload();
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/user/logout';
+
+            const csrf = getCsrf();
+            if (csrf) {
+              const csrfInput = document.createElement('input');
+              csrfInput.type = 'hidden';
+              csrfInput.name = '_csrf';
+              csrfInput.value = csrf.token;
+              form.appendChild(csrfInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
           } else {
             showToast('요청에 실패했습니다. 다시 시도해주세요.', 'error');
           }
@@ -122,7 +137,29 @@ document.addEventListener('DOMContentLoaded', function () {
         .then((res) => {
           if (res.ok) {
             // ✅ 비밀번호는 페이지 리로드 없이 바로 토스트 표시
-            showToast('재설정 메일이 발송되었습니다. (유효시간 5분)');
+            reserveToast('재설정 메일이 발송되었습니다. (유효시간 5분)');
+
+            const modalEl = document.getElementById(
+              'confirmPasswordResetModal',
+            );
+            const modal = coreui.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/user/logout';
+
+            const csrf = getCsrf();
+            if (csrf) {
+              const csrfInput = document.createElement('input');
+              csrfInput.type = 'hidden';
+              csrfInput.name = '_csrf';
+              csrfInput.value = csrf.token;
+              form.appendChild(csrfInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
           } else {
             showToast('메일 발송 실패: 사용자 정보를 확인하세요.', 'error');
           }
@@ -131,11 +168,6 @@ document.addEventListener('DOMContentLoaded', function () {
           showToast('통신 중 오류가 발생했습니다.', 'error');
         })
         .finally(() => {
-          // 모달 닫기
-          const modalEl = document.getElementById('confirmPasswordResetModal');
-          const modal = coreui.Modal.getInstance(modalEl);
-          if (modal) modal.hide();
-
           this.disabled = false;
           this.innerText = originalText;
         });
