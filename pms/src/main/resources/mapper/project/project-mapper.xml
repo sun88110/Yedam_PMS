@@ -327,8 +327,9 @@
 	)
 	SELECT
 	  id, text, rawStartDate, rawEndDate, progress, parent, project_id
-	  , u.username AS "worker_name"
-	  , c.common_name AS "job_priority"
+	  , u.username AS worker_name
+	  , uu.username AS manager_name
+	  , c.common_name AS job_priority
 	  , description
 	  , job_status_no, job_type_no, public_role, files_no, worker_id, manager_id
 	FROM (
@@ -378,6 +379,7 @@
 	    JOIN project_tree pt ON pt.project_no = j.project_no
 	  )
 	LEFT JOIN users u ON u.user_id = worker_id
+	LEFT JOIN users uu ON uu.user_id = manager_id
 	LEFT JOIN common c ON c.common_no = job_priority
 	ORDER BY parent DESC, id
 	</select>

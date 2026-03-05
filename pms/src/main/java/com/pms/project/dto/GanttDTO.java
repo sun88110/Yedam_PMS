@@ -47,6 +47,7 @@ public class GanttDTO {
     // 화면에 표시하지 않을 값, 표시하면 안되는 값
     private String jobPriority; // 일감 우선순위
     private String workerName; // 일감 배정받은 작업자 이름
+    private String managerName;
     
     // 조회 값을바탕으로 계산 한 값
     private int duration;
@@ -55,5 +56,8 @@ public class GanttDTO {
     // 조회속도상승을위한 컬럼
     private Date rawStartDate;
     private Date rawEndDate;
+    
+    // 간트차트 제어용
+    private Boolean editLocked;
     
 }

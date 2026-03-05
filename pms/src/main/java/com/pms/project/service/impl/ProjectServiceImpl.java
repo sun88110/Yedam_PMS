@@ -473,6 +473,13 @@ public class ProjectServiceImpl implements ProjectService {
                     dto.setStartDate(start.format(formatter));
                     dto.setEndDate(null);
                 }
+                
+                if (dto.getId().startsWith("p")) {
+                    dto.setEditLocked(true); 
+                } else {
+                    boolean canEdit = isAdmin || isPm || userId.equals(dto.getWorkerId()) || userId.equals(dto.getManagerId());
+                    dto.setEditLocked(!canEdit); 
+                }
             });
 
             Map<String, Object> result = new LinkedHashMap<>();
