@@ -104,8 +104,11 @@
 													${#dates.format(row.endDate, 'yyyy-MM-dd')}) :
 													'기간 정보 없음'"></span>
 						</td>
+						<!-- 예상 소요시간  -->
 						<td th:text="${row.estimatedTime ?: row.averageTime} + '시간'"></td>
+					    <!-- 실제 소요시간  --> 						
 						<td class="fw-bold text-primary" th:text="${row.realWorkTime} + '시간'"></td>
+						<!-- 진척도  --> 		
 						<td style="width: 150px">
 							<div class="progress" style="height: 10px">
 								<div class="progress-bar" role="progressbar"

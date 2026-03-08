@@ -1,9 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // 날짜 관련 변수
+  // html의 id 태그를 가져오는 변수
   const projectStart = document.getElementById("projectStartDate").value;
   const projectEnd = document.getElementById("projectEndDate").value;
 
-  // jQuery 달력
+  // jQuery를 이용한 datepicker 라이브러리 사용
   $(".datepicker").datepicker({
     format: "yyyy-mm-dd",
     language: "ko",
@@ -11,14 +11,12 @@ document.addEventListener("DOMContentLoaded", function () {
     startDate: projectStart,
     endDate: projectEnd,
   });
-  // 시작 일자를 선택하면 마감일자는 시작일자 보다 그 앞을 선택할 수 없다
+  // 일감의 시작일을 선택하면 마감일이 자동으로 적용
   $("#startDate").on("changeDate", function (event) {
-    // 시작일 선택 -> 마감일의 선택 가능한 날짜 최소화
     $("#endDate").datepicker("setStartDate", event.date);
   });
-  // 마감일이 변경될 때 시작일 범위 제한
+
   $("#endDate").on("changeDate", function (event) {
-    // 마감일 먼저 선택 그러면 시작 날짜는 마감일 뒤로 못 간다
     $("#startDate").datepicker("setEndDate", event.date);
   });
 

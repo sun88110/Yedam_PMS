@@ -195,7 +195,10 @@
         ORDER BY
             p.le, p.project_name
 	</select>
-	<!-- 작업분류 별 보고서 조회 -->
+	
+	
+	
+	<!-- 作業分類別　SELECT -->
 		<select id="selectWorkTypeReport" resultType="WorkReportDto">
 	   SELECT
             p.le

@@ -38,11 +38,11 @@ public class WorkController {
 	// 소요시간 전체 조회 + 검색기능
 	@GetMapping("/list/read")
 	public String workList(@AuthenticationPrincipal CustomUserDetails customUser, 
-									@PathVariable String projectCode,
-									@RequestParam(value = "showOnlyMe", required = false) String showOnlyMe,
-									Model model, 
-									WorkSelectDto workSelectDto,
-									IssueDto issueDto) {
+									 @PathVariable String projectCode,
+									 @RequestParam(value = "showOnlyMe", required = false) String showOnlyMe,
+									 Model model, 
+									 WorkSelectDto workSelectDto,
+									 IssueDto issueDto) {
 		// showOnlyMe 가 필수는 아니라 required = false임 없어도 controller는 작동해야 하니까
 		
 		// 현재 로그인 정보가 담긴 커스텀 객체
