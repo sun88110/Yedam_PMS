@@ -45,32 +45,18 @@ public class FilesUploadService {
             return filesNo;
         }
 		
-		System.out.println();
-		System.out.println();
-		System.out.println();
-		System.out.println("[filesNo]: " + filesNo);
-		
 		// 파일 부모 생성
 		FilesEntity filesEntity = null;
 		if (filesNo != null) {
 		    filesEntity = filesRepository.findById(filesNo).orElse(null);
-		    System.out.println("[filesNo != null]");
-		    System.out.println("[filesNo]: " + filesNo);
-		    System.out.println("[filesEntity]: " + filesEntity);
 		}
 		
 		// 없으면 새로 생성
 		if (filesEntity == null) {
 		    filesEntity = FilesEntity.builder().userId(userId).build();
-		    System.out.println("[filesNo == null]");
-		    System.out.println("[filesNo]: " + filesNo);
-		    System.out.println("[filesEntity]: " + filesEntity);
 		    filesRepository.save(filesEntity);
 		}
 		
-		System.out.println();
-		System.out.println();
-		System.out.println();
 		// AWS 저장
 		filesUploadProcess(filesEntity, files);
 		
