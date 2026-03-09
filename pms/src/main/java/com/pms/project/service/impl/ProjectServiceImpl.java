@@ -450,6 +450,12 @@ public class ProjectServiceImpl implements ProjectService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
             
             boolean isPm = isPmFuture.join();// 비동기조회가 끝날때까지 대기
+            
+            Set<LocalDate> holidaySet = selfProxy.findHolidays().stream()
+                    .filter(h -> "Y".equals(h.getIsHoliday()))
+                    .map(h -> h.getHolidayDt().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
+                    .collect(Collectors.toSet());
+            
             if (!isAdmin && !isPm) {
                 list = list.stream()
                     .filter(dto -> 
@@ -467,7 +473,8 @@ public class ProjectServiceImpl implements ProjectService {
                     LocalDate start = convertToLocalDate(dto.getRawStartDate());
                     LocalDate end = convertToLocalDate(dto.getRawEndDate());
                     
-                    dto.setDuration((int) ChronoUnit.DAYS.between(start, end) + 1);
+                    //dto.setDuration((int) ChronoUnit.DAYS.between(start, end) + 1);
+                    dto.setDuration((int) calculateWorkingDays(start, end, holidaySet));
                     
                     // 프론트엔드가 요구하는 JSON 규격에 맞게 문자열 덮어쓰기
                     dto.setStartDate(start.format(formatter));
