@@ -86,6 +86,5 @@
 ### 담당 파트 데이터베이스
 
 <!-- 내 파트 관련 DB 이미지 -->
-<!-- <img src="image/my_ERD.PNG" /> -->
-
+<img src="image/my_ERD.PNG" />
 ---
