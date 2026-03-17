@@ -69,6 +69,6 @@
 
 <!-- 주요 프로세스 설명 -->
 <p align="center">
-  <img src="images/my_process.jpg" width="800">
+  <img src="my_process.jpg" width="800">
 </p>
 ---
