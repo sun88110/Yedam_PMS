@@ -65,11 +65,10 @@
 
 ---
 
-## 프로세스 흐름도
-
-<!-- 서비스 전체 흐름도 이미지 -->
-[프로세스](images/my_process.jpg)
+##  프로세스 흐름도
 
 <!-- 주요 프로세스 설명 -->
-
+<p align="center">
+  <img src="images/my_process.jpg" width="800">
+</p>
 ---
