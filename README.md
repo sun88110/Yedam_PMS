@@ -71,3 +71,21 @@
   <img src="my_process.jpg">
 </p>
 
+---
+
+<p align="center">
+  <a href="#프로젝트-개요"><kbd>📘 프로젝트 개요</kbd></a>
+  &nbsp;&nbsp;
+  <a href="#내-파트"><kbd>🧩 내 파트</kbd></a>
+  &nbsp;&nbsp;
+  <a href="#프로젝트-소감"><kbd>📝 프로젝트 소감</kbd></a>
+</p>
+
+---
+
+### 내 파트 데이터베이스
+
+<!-- 내 파트 관련 DB 이미지 -->
+<!-- <img src="내파트_DB_이미지_경로" /> -->
+
+---
