@@ -68,7 +68,7 @@
 ## 프로세스 흐름도
 
 <!-- 서비스 전체 흐름도 이미지 -->
-<!-- <img src="![process](https://github.com/user-attachments/assets/64538b54-1867-4c62-bcac-ee6b9c753b42)" /> -->
+(my_process.jpg)
 
 <!-- 주요 프로세스 설명 -->
 
