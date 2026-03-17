@@ -67,8 +67,8 @@
 
 ##  프로세스 흐름도
 
-<!-- 주요 프로세스 설명 -->
+<!-- 담당 프로세스 -->
 <p align="center">
-  <img src="my_process.jpg" width="800">
+  <img src="my_process.jpg">
 </p>
----
+
